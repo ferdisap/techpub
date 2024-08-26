@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .dml th{
+    @apply text-center text-sm border
+  }
+  .dmlEntry td:nth-child(3) {
+    @apply text-left text-sm border
+  }
+  .dmlEntry td {
+    @apply text-center text-sm border
+  }
+}

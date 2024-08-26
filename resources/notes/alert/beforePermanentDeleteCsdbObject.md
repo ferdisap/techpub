@@ -1,0 +1,1 @@
+Are you sure want to delete ``${filename}`` ? It won't be able to restore or get content after permanently deleted.

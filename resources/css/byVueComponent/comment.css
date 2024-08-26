@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .comment .type-q {
+    @apply ml-1 mt-1
+  }
+  .comment .type-i, .comment .type-r {
+    @apply ml-2 mt-1
+  }
+
+  .comment .date {
+    @apply text-2xs italic font-light
+  }
+
+  .comment .para-container {
+    @apply hover:bg-blue-300
+  }
+
+  .comment .list .simple-para {
+    @apply text-sm
+  }
+
+  .comment .reply {
+    @apply text-2xs cursor-pointer
+  }
+
+  .comment .editor-container {
+    @apply flex w-full
+  }
+
+  .comment text-editor {
+    @apply w-full mt-1 mb-2
+  }
+
+  .comment text-editor > * {
+    @apply border-2 border-blue-400
+  }
+
+  .comment .editor-container button {
+    @apply text-base ml-2 hover:text-blue-400
+  }
+
+  .comment *[cb-window] {
+    @apply mr-2
+  }
+
+  .comment .com-filename {
+    @apply text-2xs italic
+  }
+}

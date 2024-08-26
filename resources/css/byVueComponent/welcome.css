@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.welcome h1 {
+  -webkit-text-stroke-width: 2px;
+  -webkit-text-stroke-color: white;
+}
+
+@layer components {
+  .welcome {
+    @apply p-2 border shadow-md bg-white rounded-md mr-3 pb-6
+  }
+  .welcome ul {
+    @apply list-disc ml-9
+  }
+  .welcome p {
+    @apply mb-2
+  }
+  .welcome .doctype {
+    @apply italic
+  }
+}

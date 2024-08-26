@@ -1,0 +1,1 @@
+Are you sure want to import this CSDB Object ``${filename}`` ? The import of CSDB Object may replaced previous Object. The previous object where saved in ``${previousObjectPath}``

@@ -1,0 +1,6 @@
+1. attribute icnInfoItemType, value iiit51 adalah Content-Type file
+2. attribute internalRefTargetType, value irtt51 adalah icnObject hotspot file (lihat di IMF (metafile))
+3. attribute icnInfoItemType, value iiit52 adalah default width in px
+4. attribute icnInfoItemType, value iiit53 adalah default height in px
+5. attribute icnInfoItemType, value iiit54 adalah default title. Nanti diapplikasikan ke XSL
+6. attribute quantityType, value qty51 adalah default untuk semua panel CB (Panel U1-U4,5,LH/RH bulkhead) CN235
