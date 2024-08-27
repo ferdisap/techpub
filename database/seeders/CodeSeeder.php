@@ -16,20 +16,22 @@ class CodeSeeder extends Seeder
    */
   public function run(): void
   {
-    Schema::dropIfExists('code');
-    Schema::create('code', function (Blueprint $table) {
-      $table->id();
-      $table->string('name')->unique();
-      $table->string('type')->nullable();
-      $table->text('description')->nullable();
-    });
+    // Schema::dropIfExists('code');
+    // Schema::create('code', function (Blueprint $table) {
+    //   $table->id();
+    //   $table->string('name')->unique();
+    //   $table->string('type')->nullable();
+    //   $table->text('description')->nullable();
+    // });
 
     foreach($this->getCode() as $codeArray){
-      Code::create([
-        'name' => $codeArray[0],
-        'description' => $codeArray[1],
-        'type' => $codeArray[2],
-      ]);
+      if(!(Code::where('name', $codeArray[0])->first())){
+        Code::create([
+          'name' => $codeArray[0],
+          'description' => $codeArray[1],
+          'type' => $codeArray[2],
+        ]);
+      }
     }
   }
 
@@ -73,5 +75,14 @@ class CodeSeeder extends Seeder
     $arr = array_merge($CAGECode, $CSDBHistoryCode, $USERHistoryCode, $fakeCode);
     array_walk($arr, fn(&$v) => $v = explode("|", $v));
     return $arr;
+  }
+
+  public static function seed(string $name, string $type = 'auto-generated', string $description = 'auto-generated')
+  {
+    return Code::create([
+      'name' => $name ? $name : Str::random(5),
+      'description' => $type,
+      'type' => $description,
+    ]);
   }
 }

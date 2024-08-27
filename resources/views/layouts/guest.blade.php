@@ -11,7 +11,7 @@
     </head>
     <body class="text-secondary min-vh-100 d-flex flex-column justify-content-center align-items-center pt-5">
       {{-- <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white dark:bg-gray-800 shadow-md overflow-hidden sm:rounded-lg"> --}}
-        <a href="/" class="text-decoration-none fs-1 fw-bold text-dark mb-3">SE4000: Technical Publication</a>
+        <a href="/" class="text-decoration-none fs-1 fw-bold text-dark mb-3">Technical Publication</a>
         <div class="d-flex justify-content-center">
           <div {{ $attributes->merge(['class' => 'py-3 px-5 bg-light shadow']) }}>
             {{ $slot }}

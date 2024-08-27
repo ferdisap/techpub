@@ -68,6 +68,7 @@ Route::get("/api/json/{filename}",[CsdbController::class, 'read_json'])->middlew
 Route::get("/api/content/html/{filename}",[DmlController::class, 'read_html_content'])->middleware('auth')->name('api.get_html_content');
 
 Route::get('/tesapaja',function(){
+  dd('aa');
   $DMLCSDBModel = Csdb::find(34);
   $CSLCSDBModel = $DMLCSDBModel->object->toCsl(request()->user());
   dd($CSLCSDBModel);

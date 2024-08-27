@@ -1,0 +1,3 @@
+#deployment
+1. >>> php artisan techpubroutes:write
+2. >>> php artisan db:seed-default

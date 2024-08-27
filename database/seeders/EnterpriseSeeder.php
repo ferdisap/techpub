@@ -40,7 +40,6 @@ class EnterpriseSeeder extends Seeder
     // });
 
     try {
-      # code...
       Enterprise::create([
         'name' => 'PT Dirgantara Indonesia',
         // 'code' => '0001Z',
@@ -68,5 +67,32 @@ class EnterpriseSeeder extends Seeder
     }
 
     \App\Models\Enterprise::factory()->count(3)->create();
+  }
+
+  public static function seed(
+    string $name, int $code_id, array $address = []
+  )
+  {
+    return Enterprise::create([
+      'name' => $name,
+      'code_id' => $code_id,
+      'address' => json_encode([
+        "city" => $address['city'] ?? 'default-city',
+        "country" => $address['country'] ?? "default-country",
+        'department' => '',
+        'street' => '',
+        'postOfficeBox' => '',
+        'postalZipCode' => '',
+        'state' => '',
+        'province' => '',
+        'building' => '',
+        'room' => '',
+        'phoneNumber' => [],
+        'faxNumber' => [],
+        'email' => [],
+        'internet' => [],
+        'SITA' => '',
+      ]),
+    ]);
   }
 }

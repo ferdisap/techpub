@@ -1,10 +1,8 @@
 <x-guest-layout>
     <!-- Session Status -->
-    {{-- @dump(session('status')) --}}
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
-    <h2 class="text-center mb-3">LOGIN FORM</h2>
-    {{-- <button onclick="navigator.clipboard.writeText(window.foo ?? 'aaa')">aaa</button> --}}
+    <h2 class="text-center mb-3">Login</h2>
     <form method="POST" action="{{ route('login') }}">
         @csrf
 
@@ -37,6 +35,10 @@
                     {{ __('Forgot your password?') }}
                 </a>
             @endif
+
+            <a class="btn text-decoration-underline fs-6 rounded mr-3" href="{{ route('register') }}">
+              {{ __('Register') }}
+            </a>
 
             <x-primary-button class="ml-3">
                 {{ __('Log in') }}

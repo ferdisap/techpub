@@ -2,16 +2,40 @@
 
   <x-auth-session-status class="mb-4" :status="session('status')" />
 
-    <h2 class="text-center mb-3">USER REGISTRATION FORM</h2>
+    <h2 class="text-center mb-3">Register</h2>
 
     <form method="POST" action="{{ route('register') }}">
         @csrf
 
         <!-- Name -->
         <div class="mb-3">
-            <x-input-label for="name_register" :value="__('Name')" />
-            <x-text-input id="name_register" class="form-control" type="text" name="name_register" :value="old('name_register')" required autofocus autocomplete="name" />
-            <x-input-error :messages="$errors->get('name_register')" class="mt-2" />
+            <x-input-label for="first_name_register" :value="__('First Name')" />
+            <x-text-input id="first_name_register" class="form-control" type="text" name="first_name_register" :value="old('first_name_register')" required autofocus autocomplete="first_name" />
+            <x-input-error :messages="$errors->get('first_name_register')" class="mt-2" />
+        </div>
+        <div class="mb-3">
+            <x-input-label for="middle_name_register" :value="__('Middle Name')" />
+            <x-text-input id="middle_name_register" class="form-control" type="text" name="middle_name_register" :value="old('middle_name_register')" required autofocus autocomplete="middle_name" />
+            <x-input-error :messages="$errors->get('middle_name_register')" class="mt-2" />
+        </div>
+        <div class="mb-3">
+            <x-input-label for="last_name_register" :value="__('Last Name')" />
+            <x-text-input id="last_name_register" class="form-control" type="text" name="last_name_register" :value="old('last_name_register')" required autofocus autocomplete="last_name" />
+            <x-input-error :messages="$errors->get('last_name_register')" class="mt-2" />
+        </div>
+
+        <!-- Work Enterprise -->
+        <div class="mb-3">
+            <x-input-label for="enterprise_name" :value="__('Work Enterprise')" />
+            <x-text-input id="enterprise_name" class="form-control" type="text" name="enterprise_name" :value="old('enterprise_name')" required autofocus autocomplete="work_enterprise" />
+            <x-input-error :messages="$errors->get('enterprise_name')" class="mt-2" />
+        </div>
+
+        <!-- Job Title -->
+        <div class="mb-3">
+            <x-input-label for="job_title_register" :value="__('Job Title')" />
+            <x-text-input id="job_title_register" class="form-control" type="text" name="job_title_register" :value="old('job_title_register')" required autofocus autocomplete="job_title" />
+            <x-input-error :messages="$errors->get('job_title_register')" class="mt-2" />
         </div>
 
         <!-- Email Address -->
