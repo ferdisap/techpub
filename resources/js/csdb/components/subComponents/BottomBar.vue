@@ -45,6 +45,7 @@ export default {
       this.sort(bbi, componentName);
       
       this.$props.items[componentName]['isShow'] = !this.$props.items[componentName]['isShow'];
+      if(this.$props.items[componentName]['isShow']) this.emitter.emit(componentName+'-refresh');
     },
     sort(bbi, componentName) {
       setTimeout(() => {
@@ -92,13 +93,7 @@ export default {
     this.hide(bbi);
   },
   mounted() {
-
-    window.bb = this;
-    let emitters = this.emitter.all.get('bottom-bar-switch'); // 'emitter.length < 2' artinya emitter max. hanya dua kali di instance atau baru sekali di emit, check Explorer.vue
-    if (emitters) {
-      let indexEmitter = emitters.indexOf(emitters.find((v) => v.name === 'bound click')) // 'bound addObjects' adalah fungsi, lihat scrit dibawah ini. Jika fungsi anonymous, maka output = ''
-      if (emitters.length < 1 && indexEmitter < 0) this.emitter.on('bottom-bar-switch', this.click.bind(this));
-    } else this.emitter.on('bottom-bar-switch', this.click.bind(this));
+    this.emitter.on('bottom-bar-switch', this.click);
   }
 
 }

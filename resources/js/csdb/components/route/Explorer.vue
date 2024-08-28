@@ -36,11 +36,12 @@ export default {
   },
   mounted() {
     // window.ex = this;
-    let emitters = this.emitter.all.get('Explorer-column-size'); // 'emitter.length < 2' artinya emitter max. hanya dua kali di instance atau baru sekali di emit, check ManagementData.vue
-    if (emitters) {
-      const indexEmitter = emitters.indexOf(emitters.find((v) => v.name === 'bound colSize')) // 'bound addObjects' adalah fungsi, lihat scrit dibawah ini. Jika fungsi anonymous, maka output = ''
-      if (emitters.length < 1 && indexEmitter < 0) this.emitter.on('Explorer-column-size', this.colSize);
-    } else this.emitter.on('Explorer-column-size', this.colSize);
+    // let emitters = this.emitter.all.get('Explorer-column-size'); // 'emitter.length < 2' artinya emitter max. hanya dua kali di instance atau baru sekali di emit, check ManagementData.vue
+    // if (emitters) {
+    //   const indexEmitter = emitters.indexOf(emitters.find((v) => v.name === 'bound colSize')) // 'bound addObjects' adalah fungsi, lihat scrit dibawah ini. Jika fungsi anonymous, maka output = ''
+    //   if (emitters.length < 1 && indexEmitter < 0) this.emitter.on('Explorer-column-size', this.colSize);
+    // } else this.emitter.on('Explorer-column-size', this.colSize);
+    this.emitter.on('Explorer-column-size', this.colSize);
 
     if (top.localStorage.colWidthExplorer) {
       this.colWidth = JSON.parse(top.localStorage.colWidthExplorer);
@@ -51,25 +52,26 @@ export default {
     this.emitter.on('clickFilenameFromListTree', (data) => {
       // hanya ada filename dan path di data
       // this.bottomBarItems.Folder.data = data;
-      this.emitter.emit('Folder-refresh', data);
-      // this.bottomBarItems.Preview.isShow ? this.emitter.emit('Preview-refresh', data) : this.emitter.emit('bottom-bar-switch', 'Preview');
-      this.emitter.emit('bottom-bar-switch', 'Preview');
-      this.bottomBarItems.Editor.data = data;
-      this.bottomBarItems.History.data = data;
+      if(this.bottomBarItems.Folder.isShow) this.emitter.emit('Folder-refresh', data);
+      if(this.bottomBarItems.Editor.isShow) this.emitter.emit('Editor-refresh', data);
+      if(this.bottomBarItems.History.isShow) this.emitter.emit('History-refresh', data);
+      this.emitter.emit('Preview-refresh', data);
+      if(!this.bottomBarItems.Preview.isShow) this.emitter.emit('bottom-bar-switch', 'Preview');
       getCSDBObjectModel.call(this, data);
     });
 
     this.emitter.on('clickFolderFromListTree', (data) => {
-      this.emitter.emit('Folder-refresh', data);
-      this.bottomBarItems.Folder.isShow = true;
       this.bottomBarItems.Folder.data = data; // hanya ada path saja di data
+      this.emitter.emit('Folder-refresh', data);
+      if(!this.bottomBarItems.Folder.isShow) this.emitter.emit('bottom-bar-switch', 'Folder');
     });
 
     this.emitter.on('clickFilenameFromFolder', (data) => {
       // hanya ada filename di data, bisa berguna jika perlu ambil data terbaru dari server
       this.emitter.emit('Preview-refresh', data);
-      this.bottomBarItems.Preview.isShow ? this.emitter.emit('Preview-refresh', data) : this.emitter.emit('bottom-bar-switch', 'Preview');
-      this.bottomBarItems.History.data = data;
+      if(!this.bottomBarItems.Preview.isShow) this.emitter.emit('bottom-bar-switch', 'Preview');
+      if(this.bottomBarItems.Editor.isShow) this.emitter.emit('Editor-refresh', data);
+      if(this.bottomBarItems.History.isShow) this.emitter.emit('History-refresh', data);
       getCSDBObjectModel.call(this, data);
     });
 
@@ -77,48 +79,48 @@ export default {
       // data adalah csdb file sql, bukan model/meta object
       this.emitter.emit('ListTree-refresh', data);
       this.$router.push({name: 'Explorer', params: {filename: data.filename, viewType: 'pdf'}});
-      this.bottomBarItems.Preview.isShow ? this.emitter.emit('Preview-refresh', data) : this.emitter.emit('bottom-bar-switch', 'Preview');
-      this.bottomBarItems.Preview.data = data;
-      this.bottomBarItems.History.data = data;
+      this.emitter.emit('Preview-refresh', data);
+      if(!this.bottomBarItems.Preview.isShow) this.emitter.emit('bottom-bar-switch', 'Preview');
     })
 
     this.emitter.on('createDMLFromEditorDML', (data) => {
       // data adalah csdb file sql, bukan model/meta object
       this.emitter.emit('ListTree-refresh', data);
       this.$router.push({name: 'Explorer', params: {filename: data.filename, viewType: 'pdf'}});
-      this.bottomBarItems.Preview.isShow ? this.emitter.emit('Preview-refresh', data) : this.emitter.emit('bottom-bar-switch', 'Preview');
-      this.bottomBarItems.Preview.data = data;
-      this.bottomBarItems.History.data = data.model;
+      this.emitter.emit('Preview-refresh', data);
+      if(!this.bottomBarItems.Preview.isShow) this.emitter.emit('bottom-bar-switch', 'Preview');
+      if(this.bottomBarItems.Folder.isShow) this.emitter.emit('Folder-refresh', data);
     })
 
     this.emitter.on('uploadICNFromEditor', (data) => {
       // data adalah csdb file sql, bukan model/meta object
       this.emitter.emit('ListTree-refresh', data);
       this.$router.push({name: 'Explorer', params: {filename: data.filename, viewType: 'pdf'}});
+      if(this.bottomBarItems.Folder.isShow) this.emitter.emit('Folder-refresh', data);
     });
 
     this.emitter.on('createDDNFromDispatchTo', (data) => {
       // data adalah csdb file sql, bukan model/meta object
       this.emitter.emit('ListTree-refresh', data);
+      if(this.bottomBarItems.Folder.isShow) this.emitter.emit('Folder-refresh', data);
     })
 
     this.emitter.on('updateObjectFromEditor', (data) => {
       // data adalah csdb file sql, bukan model/meta object
       this.emitter.emit('Preview-refresh', data);
-      this.emitter.emit('History-refresh', data); // sepertinya ini tidak usah. Biar ga kebanyakan request
+      if(!this.bottomBarItems.Preview.isShow) this.emitter.emit('bottom-bar-switch', 'Preview');
+      if(!this.bottomBarItems.History.isShow) this.emitter.emit('bottom-bar-switch', 'History');
     });
 
     this.emitter.on('readFileURLFromEditor', (data) => {
       // data berisi mime, source, sourceType
-      this.bottomBarItems.Preview.isShow ? this.emitter.emit('Preview-refresh', data) : this.emitter.emit('bottom-bar-switch', 'Preview');
+      if(!this.bottomBarItems.Preview.isShow) this.emitter.emit('bottom-bar-switch', 'Preview');
       setTimeout(() => this.emitter.emit('Preview-refresh', data), 0);
-      this.bottomBarItems.History.isShow = false;
-      // this.bottomBarItems.Analyzer.isShow = false;
     });
 
     this.emitter.on('readTextFileFromUploadICN', () => {
-      this.bottomBarItems.Preview.isShow = false;
-      this.bottomBarItems.History.isShow = false;
+      if(this.bottomBarItems.Preview.isShow) this.emitter.emit('bottom-bar-switch', 'Preview');
+      if(this.bottomBarItems.History.isShow) this.emitter.emit('bottom-bar-switch', 'History');
     });
 
     this.emitter.on('ChangePathCSDBObjectFromFolder', (data) => {
@@ -131,19 +133,7 @@ export default {
       this.bottomBarItems.DispatchTo.data = data;
       if(!this.bottomBarItems.DispatchTo.isShow) this.emitter.emit('bottom-bar-switch', 'DispatchTo');
     })
-
-    // this.emitter.on('AddDispatchTo', (data) => {
-      // data adalah array contains models
-      // this.bottomBarItems.DispatchTo.data = data;
-      // this.bottomBarItems.DispatchTo.isShow = true;
-    // })
-
-    // this.emitter.on('RemoveDispatchTo', (data) => {
-      // data adalah array contains models
-      // this.bottomBarItems.DispatchTo.data = data;
-      // this.bottomBarItems.DispatchTo.isShow = true;
-    // })
-
+    
     this.emitter.on('DeleteCSDBObjectFromFolder', (data) => {
       // data adalah array berisi csdb SQL CSDB Object. Bisa juga cuma filename saja karena saat delete, folder bisa saja tidak punya data csdb lengkap (path) karena yang di delete bukan file tapi folder
       this.emitter.emit('ListTree-remove', data);
@@ -159,6 +149,7 @@ export default {
     this.emitter.on('RestoreCSDBobejctFromDeletion', (data) => {
       // data adalah model SQL CSDB Object
       this.emitter.emit('ListTree-refresh', data);
+      if(this.bottomBarItems.Folder.isShow) this.emitter.emit('Folder-refresh', data);
     })
 
     this.emitter.on('CreateCOMFromPreviewComment', (data) => {
@@ -166,7 +157,6 @@ export default {
       this.emitter.emit('ListTree-refresh', data);
       this.emitter.emit('Folder-refresh', data);
     })
-
   }
 }
 </script>
@@ -209,7 +199,7 @@ export default {
         <!-- col 3 -->
         <div class="flex" :style="[col3Width]">
           <div class="overflow-auto text-wrap relative h-full w-full">
-            <div>
+            <div class="h-full overflow-auto">
               <Preview v-show="bottomBarItems.Preview.isShow" :dataProps="bottomBarItems.Preview.data" />
             </div>
             <div>

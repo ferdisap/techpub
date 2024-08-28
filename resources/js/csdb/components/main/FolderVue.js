@@ -248,7 +248,7 @@ function refresh(data) {
     });
   } else{
     // if (data.path === this.data.current_path) this.getObjs({ path: this.data.current_path })
-    this.getObjs({ path: data.path })
+    if(data.path) this.getObjs({ path: data.path })
   }
 }
 function remove(data) {

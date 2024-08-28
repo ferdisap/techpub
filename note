@@ -1,3 +1,5 @@
 #deployment
 1. >>> php artisan techpubroutes:write
 2. >>> php artisan db:seed-default
+3. Install supervisor, 
+4. Install jvm (java virtual machine),

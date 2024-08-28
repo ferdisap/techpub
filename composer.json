@@ -24,7 +24,7 @@
         "maennchen/zipstream-php": "^3.1",
         "mtdowling/jmespath.php": "^2.7",
         "nesbot/carbon": "^2.68",
-        "ptdi/mpub": "^1.07",
+        "ptdi/mpub": "^1.08",
         "shanethehat/pretty-xml": "^1.0",
         "werk365/etagconditionals": "^1.4"
     },

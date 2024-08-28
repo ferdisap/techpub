@@ -35,34 +35,29 @@ export default {
     filenameInputUploadFile() {
       return this.isUpdate && this.isFile ? (this.techpubStore.currentObjectModel.csdb ? this.techpubStore.currentObjectModel.csdb.filename : this.filenameForInputUploadFile) : this.filenameForInputUploadFile;
     },
-    // isDML(){
-    //   return (this.$route.params.filename && this.$route.params.filename.slice(0,3) === 'DML');
-    // },
   },
   methods: {
     setUpdate: setUpdate,
     setCreate: setCreate,
-    // switchEditor: switchEditor,
-    // readEntity: readEntity,
     submit: submit,
-    // submitUploadFile: submitUploadFile,
     submitCreateXml: submitCreateXml,
     submitUpdateXml: submitUpdateXml,
-
     copy: copy,
     switchTo(){
       if(this.isUpdate) this.XMLEditor.changeText('');
       else this.XMLEditor.fetchRaw();
       this.isUpdate = !this.isUpdate;
-    }
+    },
+    refresh() {
+      this.setUpdate(this.$route.params.filename);
+    },
   },
   mounted() {
     this.XMLEditor.attachEditor()
     if (this.$route.params.filename) this.setUpdate(this.$route.params.filename);
     else if(this.getTextReadFromReadFile()) this.XMLEditor.changeText(this.getTextReadFromReadFile());
-
-    // if(this.ContextMenu.register(this.contextMenuId)) this.ContextMenu.toggle(false, this.contextMenuId);
-    window.ed = this;
+    
+    this.emitter.on('EditorXML-refresh', this.refresh);
   },
 }
 </script>

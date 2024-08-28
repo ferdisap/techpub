@@ -8,19 +8,19 @@
         <fo:table-column column-number="1" column-width="7%"/>
         <fo:table-column column-number="2" column-width="13%"/>
         <fo:table-column column-number="3" column-width="6%"/>
-        <fo:table-column column-number="4" column-width="7%"/>
+        <fo:table-column column-number="4" column-width="10%"/>
         <fo:table-column column-number="5" column-width="5%"/>
         <fo:table-column column-number="6" column-width="6%"/>
-        <fo:table-column column-number="7" column-width="56%"/>
+        <fo:table-column column-number="7" column-width="53%"/>
         
         <fo:table-header border="1pt solid black">
           <fo:table-row>
             <fo:table-cell padding-top="4pt" padding-bottom="4pt" border-right="1pt solid black" display-align="center" text-align="center"><fo:block>Task No.</fo:block></fo:table-cell>
             <fo:table-cell padding-top="4pt" padding-bottom="4pt" border-right="1pt solid black" display-align="center" text-align="center"><fo:block>Ref</fo:block></fo:table-cell>
-            <fo:table-cell padding-top="4pt" padding-bottom="4pt" border-right="1pt solid black" display-align="center" text-align="center"><fo:block>Method</fo:block></fo:table-cell>
+            <fo:table-cell padding-top="4pt" padding-bottom="4pt" border-right="1pt solid black" display-align="center" text-align="center"><fo:block>Met</fo:block></fo:table-cell>
             <fo:table-cell padding-top="4pt" padding-bottom="4pt" border-right="1pt solid black" display-align="center" text-align="center"><fo:block>Freq</fo:block></fo:table-cell>
-            <fo:table-cell padding-top="4pt" padding-bottom="4pt" border-right="1pt solid black" display-align="center" text-align="center"><fo:block>Zone</fo:block></fo:table-cell>
-            <fo:table-cell padding-top="4pt" padding-bottom="4pt" border-right="1pt solid black" display-align="center" text-align="center"><fo:block>Access</fo:block></fo:table-cell>
+            <fo:table-cell padding-top="4pt" padding-bottom="4pt" border-right="1pt solid black" display-align="center" text-align="center"><fo:block>Zon</fo:block></fo:table-cell>
+            <fo:table-cell padding-top="4pt" padding-bottom="4pt" border-right="1pt solid black" display-align="center" text-align="center"><fo:block>Acc</fo:block></fo:table-cell>
             <fo:table-cell padding-top="4pt" padding-bottom="4pt" border-right="1pt solid black" display-align="center" text-align="center"><fo:block>Description</fo:block></fo:table-cell>
           </fo:table-row>
         </fo:table-header>
@@ -62,6 +62,9 @@
                 </fo:block>
               </fo:table-cell>
               <fo:table-cell border-right="1pt solid black">
+                <xsl:if test="not(preliminaryRqmts/productionMaintData/workAreaLocationGroup/zoneRef)">
+                  <fo:block/>
+                </xsl:if>
                 <xsl:for-each select="preliminaryRqmts/productionMaintData/workAreaLocationGroup/zoneRef">
                   <fo:block>
                     <xsl:apply-templates select="."/>
@@ -74,7 +77,7 @@
                 </fo:block>
               </fo:table-cell>
               <fo:table-cell text-align="left" padding-left="2pt" padding-right="2pt">
-                <xsl:apply-templates select="task"/>
+                <fo:block><xsl:apply-templates select="task"/></fo:block>
               </fo:table-cell>
             </fo:table-row>
             <xsl:if test="@applicRefId or controlAuthorityRefs or @securityClassification or @commercialClassification or @caveat">

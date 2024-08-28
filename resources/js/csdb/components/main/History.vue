@@ -6,14 +6,14 @@ import ContinuousLoadingCircle from '../../loadingProgress/ContinuousLoadingCirc
 
 export default {
   // props: ["filename", "history"],
-  props: {
-    filename: {
-      type: String
-    },
-    history: {
-      type: Object
-    }
-  },
+  // props: {
+  //   filename: {
+  //     type: String
+  //   },
+  //   history: {
+  //     type: Object
+  //   }
+  // },
   data() {
     return {
       techpubStore: useTechpubStore(),
@@ -41,10 +41,15 @@ export default {
       this.histories = response.data.csdb.histories.data;
       delete response.data.csdb.histories.data;
       this.pagination = response.data.csdb.histories;
+    },
+    refresh(){
+      this.fetchHistories(this.$route.params.filename);
     }
   },
   mounted() {
     if (this.$route.params.filename) this.fetchHistories(this.$route.params.filename);
+
+    this.emitter.on('History-refresh', this.refresh)
   },
 }
 </script>

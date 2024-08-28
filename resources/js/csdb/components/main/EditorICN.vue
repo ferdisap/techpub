@@ -25,10 +25,10 @@ export default {
   methods: {
     submit: submit,
     readEntity: readEntity,
+    refresh(){},
   },
   mounted() {
-    // this.ContextMenu.register(this.contextMenuId);
-    // this.ContextMenu.toggle(false, this.contextMenuId);
+    this.emitter.on('Editor-refresh', this.refresh)
   }
 }
 </script>

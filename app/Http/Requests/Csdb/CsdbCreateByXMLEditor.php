@@ -35,6 +35,8 @@ class CsdbCreateByXMLEditor extends FormRequest
       'xmleditor' => ['required', function(string $attribute, mixed $value, Closure $fail){
         if(!($value[0]->document instanceof \DOMDocument)) return $fail('Document must be in XML form.'); // harus return agar script dibawah tidak di eksekusi
         if(!$value[0]->document) $fail('Fail to recognize xml file as CSDB object.');
+        if(!$value[0]->document->doctype) return $fail('Document must have a type.'); // harus return agar script dibawah tidak di eksekusi
+        if($value[0]->document->doctype->nodeName !== $value[0]->document->documentElement->nodeName ) return $fail('Document type must same with root element name.'); // harus return agar script dibawah tidak di eksekusi
         if(!in_array($value[0]->document->doctype->nodeName,['dmodule', 'pm', 'icnMetadataFile'])) return $fail('Document type must be dmodule, pm, or icnMetadataFile.'); // harus return agar script dibawah tidak di eksekusi
         if($this->xsi_validate) {
           $CSDBValidator = new XSIValidator($value[0]);

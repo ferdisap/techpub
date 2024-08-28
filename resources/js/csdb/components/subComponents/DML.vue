@@ -46,7 +46,10 @@ export default {
     cancelMerge(){
       document.getElementById(this.mergeId).style.display = 'none';
     },
-    submitMerge: submitMerge
+    submitMerge: submitMerge,
+    refresh(){
+      this.DMLType === 's' ? this.showCSLContent($route.params.filename) : this.showDMLContent(this.$props.filename);
+    }
   },
   computed: {
     entries() {
@@ -59,7 +62,7 @@ export default {
   mounted() {
     // window.dml = this;
     if (this.$props.filename && (this.$props.filename.substring(0, 3) === 'DML')) {
-      this.showDMLContent(this.$props.filename);
+      this.refresh();
     }
 
     if(this.ContextMenu.register(this.contextMenuId)) this.ContextMenu.toggle(false, this.contextMenuId);
@@ -68,6 +71,8 @@ export default {
     this.CB.cbRoomAdditionalAttribute = { "use-in-modal": this.dmlEntryModalId };
 
     this.Dropdown.register(this.mergeId);
+
+    this.emitter.on('DML-refresh', this.refresh);
   }
 }
 </script>

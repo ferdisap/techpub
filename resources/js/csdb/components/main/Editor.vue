@@ -5,7 +5,7 @@ import EditorICN from './EditorICN.vue';
 import ContextMenu from '../subComponents/ContextMenu.vue';
 
 export default {
-  data(){
+  data() {
     return {
       // editorComponent: 'EditorXML',
       editorComponent: 'EditorXML',
@@ -13,56 +13,56 @@ export default {
       text: '',
     }
   },
-  provide(){
+  provide() {
     return {
       'getTextReadFromReadFile': () => this.text,
     }
   },
-  components: {EditorXML, EditorDML, EditorICN, ContextMenu},
-  computed:{
-    type(){
-      return this.$route.params.filename.substring(0,3);
+  components: { EditorXML, EditorDML, EditorICN, ContextMenu },
+  computed: {
+    type() {
+      return this.$route.params.filename.substring(0, 3);
     }
   },
-  methods:{
-    readTextFileFromUploadICN(text){
+  methods: {
+    readTextFileFromUploadICN(text) {
       this.text = text;
       this.editorComponent = 'EditorXML';
-      // this.text = '';
     },
-  },
-  mounted(){
-    // if(this.ContextMenu.register(this.contextMenuId)) this.ContextMenu.toggle(false,this.contextMenuId);
-
-    switch (this.type) {
-      case 'ICN':
-        this.editorComponent = 'EditorICN';
-        break;
-      case 'DML':
-        this.editorComponent = 'EditorDML';
-        break;    
-      default:
-        this.editorComponent = 'EditorXML';
-        // this.editorComponent = 'EditorDML';
-        break;
+    getEditorName(type) {
+      switch (this.type) {
+        case 'ICN': return 'EditorICN';
+        case 'DML': return 'EditorDML';
+        default: return 'EditorXML';
+      }
+    },
+    refresh() {
+      this.emitter.emit(this.getEditorName(this.type) + '-refresh');
     }
+  },
+  mounted() {
+    this.editorComponent = this.getEditorName(this.type);
+
+    this.emitter.on('Editor-refresh', this.refresh)
   }
 }
 </script>
 <template>
   <div class="editor">
-    <component :is="editorComponent" v-if="editorComponent"/>
-  
+    <component :is="editorComponent" v-if="editorComponent" />
+
     <ContextMenu :id="contextMenuId">
-      <div v-if="editorComponent !== 'EditorDML'"  @click="editorComponent = 'EditorDML'" class="flex hover:bg-gray-100 py-1 px-2 rounded cursor-pointer text-gray-900">
+      <div v-if="editorComponent !== 'EditorDML'" @click="editorComponent = 'EditorDML'"
+        class="flex hover:bg-gray-100 py-1 px-2 rounded cursor-pointer text-gray-900">
         <div class="text-sm">Switch to DML Editor</div>
       </div>
-      <div v-else-if="editorComponent !== 'EditorICN'"  @click="editorComponent = 'EditorICN'" class="flex hover:bg-gray-100 py-1 px-2 rounded cursor-pointer text-gray-900">
+      <div v-else-if="editorComponent !== 'EditorICN'" @click="editorComponent = 'EditorICN'"
+        class="flex hover:bg-gray-100 py-1 px-2 rounded cursor-pointer text-gray-900">
         <div class="text-sm">Switch to ICN Editor</div>
       </div>
-      <div v-else-if="editorComponent !== 'EditorXML'" @click="editorComponent = 'EditorXML'" class="flex hover:bg-gray-100 py-1 px-2 rounded cursor-pointer text-gray-900">
+      <div v-else-if="editorComponent !== 'EditorXML'" @click="editorComponent = 'EditorXML'"
+        class="flex hover:bg-gray-100 py-1 px-2 rounded cursor-pointer text-gray-900">
         <div class="text-sm">Switch to XML Editor</div>
       </div>
     </ContextMenu>
-  </div>
-</template>
+</div></template>

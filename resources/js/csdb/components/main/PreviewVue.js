@@ -3,10 +3,11 @@ import RoutesWeb from '../../RoutesWeb';
 import axios from 'axios';
 
 function refresh(data) {
-  if (data.sourceType === 'blobURL') {
-    this.renderFromBlob(data.src, data.mime)
+  if(data){
+    (data.sourceType === 'blobURL') ? this.renderFromBlob(data.src, data.mime) :
+      this.render(data.filename ?? this.$route.params.filename, data.viewType ?? this.$route.params.viewType);
   } else {
-    this.render(data.filename, data.viewType ? data.viewType : this.$route.params.viewType);
+    this.render(this.$route.params.filename, this.$route.params.viewType);
   }
 }
 

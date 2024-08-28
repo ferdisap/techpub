@@ -38,6 +38,10 @@ export default {
     
     // if(this.ContextMenu.register(this.contextMenuId)) this.ContextMenu.toggle(false, this.contextMenuId);
     this.Dropdown.register('dmlForm')
+
+    this.emitter.on('EditorDML-refresh', ()=>{
+      this.emitter.emit('DML-refresh');
+    });
   }
 }
 </script>

@@ -7,17 +7,17 @@
       <fo:table width="100%" border="1pt solid black">
         <fo:table-column column-number="1" column-width="7%"/>
         <fo:table-column column-number="2" column-width="13%"/>
-        <fo:table-column column-number="3" column-width="15%"/>
+        <fo:table-column column-number="3" column-width="19%"/>
         <fo:table-column column-number="4" column-width="15%"/>
         <fo:table-column column-number="5" column-width="5%"/>
         <fo:table-column column-number="6" column-width="10%"/>
-        <fo:table-column column-number="7" column-width="35%"/>
+        <fo:table-column column-number="7" column-width="31%"/>
         
         <fo:table-header border="1pt solid black">
           <fo:table-row>
             <fo:table-cell padding-top="4pt" padding-bottom="4pt" border-right="1pt solid black" display-align="center" text-align="center"><fo:block>Task No.</fo:block></fo:table-cell>
             <fo:table-cell padding-top="4pt" padding-bottom="4pt" border-right="1pt solid black" display-align="center" text-align="center"><fo:block>Ref</fo:block></fo:table-cell>
-            <fo:table-cell padding-top="4pt" padding-bottom="4pt" border-right="1pt solid black" display-align="center" text-align="center"><fo:block>Part No and Manufacturer</fo:block></fo:table-cell>
+            <fo:table-cell padding-top="4pt" padding-bottom="4pt" border-right="1pt solid black" display-align="center" text-align="center"><fo:block>Part No. and Manufacturer</fo:block></fo:table-cell>
             <fo:table-cell padding-top="4pt" padding-bottom="4pt" border-right="1pt solid black" display-align="center" text-align="center"><fo:block>Components Part Name</fo:block></fo:table-cell>
             <fo:table-cell padding-top="4pt" padding-bottom="4pt" border-right="1pt solid black" display-align="center" text-align="center"><fo:block>Task</fo:block></fo:table-cell>
             <fo:table-cell padding-top="4pt" padding-bottom="4pt" border-right="1pt solid black" display-align="center" text-align="center"><fo:block>Freq</fo:block></fo:table-cell>
@@ -82,7 +82,7 @@
               </fo:table-cell>
               <!-- Remarks -->
               <fo:table-cell border-right="1pt solid black" text-align="left" padding-left="2pt">
-                <xsl:apply-templates select="remarks"/>
+                <fo:block><xsl:apply-templates select="remarks"/></fo:block>
               </fo:table-cell>
             </fo:table-row>
             <xsl:if test="@applicRefId or controlAuthorityRefs or @securityClassification or @commercialClassification or @caveat">

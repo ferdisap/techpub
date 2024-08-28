@@ -23,12 +23,12 @@
           <fo:table-row>
             <fo:table-cell border-right="1pt solid black" display-align="center" text-align="center" number-rows-spanned="2"><fo:block>Task No.</fo:block></fo:table-cell>
             <fo:table-cell border-right="1pt solid black" display-align="center" text-align="center" number-rows-spanned="2"><fo:block>Ref</fo:block></fo:table-cell>
-            <fo:table-cell border-right="1pt solid black" display-align="center" text-align="center" number-rows-spanned="2"><fo:block>Method</fo:block></fo:table-cell>
-            <fo:table-cell border-right="1pt solid black" display-align="center" text-align="center" column-number="3" number-columns-spanned="2" border-bottom="1pt solid black">
+            <fo:table-cell border-right="1pt solid black" display-align="center" text-align="center" number-rows-spanned="2"><fo:block>Met</fo:block></fo:table-cell>
+            <fo:table-cell border-right="1pt solid black" display-align="center" text-align="center" column-number="4" number-columns-spanned="2" border-bottom="1pt solid black">
               <fo:block>Inspection</fo:block>
             </fo:table-cell>
-            <fo:table-cell border-right="1pt solid black" display-align="center" text-align="center" number-rows-spanned="2"><fo:block>Zone</fo:block></fo:table-cell>
-            <fo:table-cell border-right="1pt solid black" display-align="center" text-align="center" number-rows-spanned="2"><fo:block>Access</fo:block></fo:table-cell>
+            <fo:table-cell border-right="1pt solid black" display-align="center" text-align="center" column-number="6" number-rows-spanned="2"><fo:block>Zon</fo:block></fo:table-cell>
+            <fo:table-cell border-right="1pt solid black" display-align="center" text-align="center" number-rows-spanned="2"><fo:block>Acc</fo:block></fo:table-cell>
             <fo:table-cell border-right="1pt solid black" display-align="center" text-align="center" number-rows-spanned="2"><fo:block>Description</fo:block></fo:table-cell>
           </fo:table-row>
           <fo:table-row>
@@ -83,6 +83,9 @@
                 </fo:block>
               </fo:table-cell>
               <fo:table-cell border-right="1pt solid black">
+                <xsl:if test="not(preliminaryRqmts/productionMaintData/workAreaLocationGroup/zoneRef)">
+                  <fo:block/>
+                </xsl:if>
                 <xsl:for-each select="preliminaryRqmts/productionMaintData/workAreaLocationGroup/zoneRef">
                   <fo:block>
                     <xsl:apply-templates select="."/>
@@ -90,6 +93,9 @@
                 </xsl:for-each>
               </fo:table-cell>
               <fo:table-cell border-right="1pt solid black">
+                <xsl:if test="not(preliminaryRqmts/productionMaintData/workAreaLocationGroup/accessPointRef)">
+                  <fo:block/>
+                </xsl:if>
                 <xsl:for-each select="preliminaryRqmts/productionMaintData/workAreaLocationGroup/accessPointRef">
                   <fo:block>
                     <xsl:apply-templates select="."/>
@@ -97,7 +103,7 @@
                 </xsl:for-each>
               </fo:table-cell>
               <fo:table-cell text-align="left" padding-left="2pt" padding-right="2pt">
-                <xsl:apply-templates select="task"/>
+                <fo:block><xsl:apply-templates select="task"/></fo:block>
               </fo:table-cell>
             </fo:table-row>
             <xsl:if test="@applicRefId or controlAuthorityRefs or @securityClassification or @commercialClassification or @caveat">
