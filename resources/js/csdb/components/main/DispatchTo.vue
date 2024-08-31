@@ -12,18 +12,9 @@ import Checkbox from '../../Checkbox';
 export default {
   data() {
     return {
-      // model: {},
-      showLoadingProgress: false,
-      // selectionMode: false,
-      // isShowRcMenu: false,
-      // checkboxId: '',
-      // isSelectAll: false,
       techpubStore: useTechpubStore(),
-      // CbSelector: new CheckboxSelector,
       objects: [], // berisi filenames
-      // DropdownUserSearch: new DropdownInputSearch('email'),
-      // DropdownBrexSearch: new DropdownInputSearch('filename')
-
+      
       cbId: 'cbDispatchToVue',
       contextMenuId: 'cmDispatchToVue',
       CB: {},
@@ -188,7 +179,7 @@ export default {
         <button type="submit" class="button bg-violet-400 text-white hover:bg-violet-600">Submit</button>
       </div>
     </form>
-    <ContinuousLoadingCircle :show="showLoadingProgress"/>
+    <ContinuousLoadingCircle/>
     <ContextMenu :id="contextMenuId">
       <div @click.stop.prevent="CB.push" class="list">
         <div class="text-sm">select</div>

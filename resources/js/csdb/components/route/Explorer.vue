@@ -110,6 +110,7 @@ export default {
       this.emitter.emit('Preview-refresh', data);
       if(!this.bottomBarItems.Preview.isShow) this.emitter.emit('bottom-bar-switch', 'Preview');
       if(!this.bottomBarItems.History.isShow) this.emitter.emit('bottom-bar-switch', 'History');
+      this.emitter.emit('ListTree-refresh', data);
     });
 
     this.emitter.on('readFileURLFromEditor', (data) => {

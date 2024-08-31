@@ -1,11 +1,25 @@
 import RoutesWeb from "../../RoutesWeb";
 import axios from 'axios';
 
-function setUpdate(filename) {
+async function setUpdate(filename) {
   this.isUpdate = true;
   if (filename) {
     this.XMLEditor.setRoute(RoutesWeb.get('api.get_object_raw',{filename: filename}));
-    this.XMLEditor.fetchRaw();
+    if(await this.XMLEditor.fetchRaw()){
+      if(this.techpubStore.currentObjectModel.csdb) this.inputPath.value = this.techpubStore.currentObjectModel.csdb.path;
+      else {
+        axios({
+          route: {
+            name: 'api.get_csdb_model',
+            data: {filename: filename}
+          },
+        })
+        .then(rsp => {
+          if(rsp.statusText === 'OK') this.inputPath.value = rsp.data.csdb.path;
+          this.techpubStore.currentObjectModel.csdb = rsp.data.csdb;
+        })
+      }
+    }
   }
 }
 
@@ -60,46 +74,53 @@ function readEntity(event) {
   }
 }
 
-async function submit(event) {
-  this.showLoadingProgress = true;
-  this.isUpdate ? (await this.submitUpdateXml(event)) : (await this.submitCreateXml(event));
-  this.showLoadingProgress = false;
+function submit(event) {
+  this.isUpdate ? (this.submitUpdateXml(event)) : (this.submitCreateXml(event));
 }
 
 /** DEPRECATED */
 async function submitUploadFile(event) {
   const fd = new FormData(event.target);
-  const response = await axios({
+  axios({
     route: {
       name: 'api.upload_ICN',
       data: fd
-    }, useMainLoadingBar: false,
+    }, useComponentLoadingProgress: this.componentId,
+  })
+  .then(response => {
+    if (response.statusText === 'OK') this.emitter.emit('uploadICNFromEditor', response.data.csdb);
   });
-  if (response.statusText === 'OK') this.emitter.emit('uploadICNFromEditor', response.data.csdb);
 }
 
 async function submitCreateXml(event) {
   const fd = new FormData(event.target);
   fd.set('xmleditor', this.XMLEditor.editor.state.doc.toString());
-  const response = await axios({
+  axios({
     route: {
       name: 'api.create_object',
       data: fd
-    }, useMainLoadingBar: false,
+    }, useComponentLoadingProgress: this.componentId,
+  })
+  .then(response => {
+    if (response.statusText === 'OK') this.emitter.emit('createObjectFromEditor', response.data.csdb);
   });
-  if (response.statusText === 'OK') this.emitter.emit('createObjectFromEditor', response.data.csdb);
 }
 
 async function submitUpdateXml(event) {
   window.e = event;
   const fd = new FormData(event.target);
   fd.set('xmleditor', this.XMLEditor.editor.state.doc.toString());
-  const response = await axios({
+  axios({
     route: {
       name: 'api.update_object',
       data: fd
-    }, useMainLoadingBar: false,
+    }, useComponentLoadingProgress: this.componentId,
+  })
+  .then(response => {
+    if (response.statusText === 'OK') {
+      this.emitter.emit('updateObjectFromEditor', response.data.csdb);
+      this.techpubStore.currentObjectModel.csdb = response.data.csdb;
+    }
   });
-  if (response.statusText === 'OK') this.emitter.emit('updateObjectFromEditor', response.data.csdb);
 }
 export { setUpdate, setCreate, switchEditor, readEntity, submit, submitUploadFile, submitCreateXml, submitUpdateXml }

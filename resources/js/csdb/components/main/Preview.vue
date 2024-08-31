@@ -11,7 +11,6 @@ export default {
     return {
       techpubStore: useTechpubStore(),
       pathHelper: path,
-      showLoadingProgress: false,
       inIframe: undefined,
       mime: undefined, // ini bisa PDF, HTML, IMG, VIDEO, mungkin FLASH, etc
       src: undefined,
@@ -68,7 +67,7 @@ export default {
     
     <Comment :csdbFilename="$route.params.filename"/>
 
-    <ContinuousLoadingCircle :show="showLoadingProgress" />
+    <ContinuousLoadingCircle/>
     <ContextMenu :id="contextMenuId">
       <div @click.stop.prevent="copy()" class="flex hover:bg-gray-100 py-1 px-2 rounded cursor-pointer text-gray-900">
         <div class="text-sm">Copy</div>

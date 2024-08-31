@@ -68,18 +68,14 @@ axios.get('/auth/check')
  * if the'event' contains 'name' (string) then it will be emitted an event named the 'event.name', else named the 'route.name'
  * The emitted event will pass the parameter which is event combined with 'route.data'
  */
+
+// response.statusText tidak bisa kalau SSL tidak ada
 axios.interceptors.request.use(
   async (config) => {
     let headers = {};
     if (config.route) {
       let route;
-      try {
-        route = RoutesWeb.get(config.route.name, config.route.data);
-      } catch (error) {
-        console.error(error);
-        console.trace();
-        return;
-      }
+      route = RoutesWeb.get(config.route.name, config.route.data);
       config.url = route.url;
       config.method = route.method[0];
       config.data = route.data;
@@ -87,6 +83,7 @@ axios.interceptors.request.use(
     for (const i in headers) {
       config.headers.set(i, headers[i]);
     }
+    if(config.useComponentLoadingProgress) useTechpubStore().componentLoadingProgress[config.useComponentLoadingProgress] = true;
     return config;
   },
 );
@@ -97,11 +94,12 @@ axios.interceptors.response.use(
       type: response.data.infotype,
       message: response.data.message
     });
+    if(response.config.useComponentLoadingProgress) useTechpubStore().componentLoadingProgress[response.config.useComponentLoadingProgress] = false;
     return response;
   },
   (axiosError) => {
     // window.axiosError = axiosError; // jangan dihapus. Untuk dumping jika error pada user
-    useTechpubStore().showLoadingBar = false;
+    // useTechpubStore().showLoadingBar = false;
     if (axiosError.code) {
       csdb.config.globalProperties.emitter.emit('flash', {
         type: axiosError.response.data.infotype,
@@ -111,6 +109,7 @@ axios.interceptors.response.use(
     } else {
       console.error(axiosError.stack);
     }
+    if(axiosError.config.useComponentLoadingProgress) useTechpubStore().componentLoadingProgress[axiosError.config.useComponentLoadingProgress] = false;
     return axiosError.response;
   }
 );

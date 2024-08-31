@@ -7,7 +7,7 @@ async function getObjs(data = {}) {
     route: {
       name: 'api.get_deletion_list',
       data: data,
-    }
+    }, useComponentLoadingProgress: this.componentId,
   });
   if (response.statusText === 'OK') {
     this.storingResponse(response);
@@ -47,7 +47,7 @@ async function restore() {
     route: {
       name: 'api.restore_object',
       data: { filename: filenames },
-    },
+    }, useComponentLoadingProgress: this.componentId,
   });
   if (response.statusText != 'OK') return;
   

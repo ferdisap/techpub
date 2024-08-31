@@ -61,6 +61,7 @@ export default {
       params: {
         filename: ''
       }})['fullPath'];
+    this.hrefs.Br = this.$router.resolve({name: 'Br'})['fullPath'];
   },
 }
 </script>
@@ -88,6 +89,11 @@ export default {
     <div class="relative p-2 flex items-center space-x-3 mb-3">
       <a @click.prevent="to('Dispatch')" href="#" class="material-symbols-outlined bg-transparent text-blue-500 p-2 rounded-md has-tooltip-arrow"
         data-tooltip="Dispatch">sim_card_download</a>
+    </div>
+
+    <div class="relative p-2 flex items-center space-x-3 mb-3">
+      <a @click.prevent="to('Br')" href="#" class="material-symbols-outlined bg-transparent text-blue-500 p-2 rounded-md has-tooltip-arrow"
+        data-tooltip="Business Rule">rule</a>
     </div>
 
   </div>

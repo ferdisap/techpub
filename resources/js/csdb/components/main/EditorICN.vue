@@ -9,7 +9,6 @@ export default {
       techpubStore: useTechpubStore(),
       isUpdate: false,
       route: {},
-      showLoadingProgress: false,
 
       // helper
       pathForInputUploadFile: '',
@@ -60,7 +59,7 @@ export default {
       <span class="text-sm bg-yellow-200">this is for ICN meta file that provided soon</span>
     </div>
 
-    <ContinuousLoadingCircle :show="showLoadingProgress"/>
+    <ContinuousLoadingCircle/>
 
     
     <button type="submit" name="button" class="button bg-blue-400 text-white hover:bg-blue-600">Upload</button>

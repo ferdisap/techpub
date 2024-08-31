@@ -2,6 +2,7 @@ import Welcome from './components/route/Welcome.vue';
 import Explorer from './components/route/Explorer.vue';
 import Deletion from './components/route/Deletion.vue';
 import Dispatch from './components/route/Dispatch.vue';
+import Br from './components/route/Br.vue'
 
 export default [
   {
@@ -24,4 +25,9 @@ export default [
     path: '/csdb/dispatch/:filename?',
     component: Dispatch
   },
+  {
+    name: 'Br',
+    path: '/csdb/br/:filename?',
+    component: Br
+  }
 ];

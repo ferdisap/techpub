@@ -16,7 +16,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
   
-  {{-- <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script> --}}
+  <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
   {{-- <script type="text/javascript" src="/js/jquery.maphilight.min.js"></script> --}}
   <script defer src="https://use.fontawesome.com/releases/v5.0.7/js/all.js"></script>
 

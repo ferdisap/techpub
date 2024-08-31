@@ -5,21 +5,11 @@ import Pagination from '../subComponents/Pagination.vue';
 import ContinuousLoadingCircle from '../../loadingProgress/ContinuousLoadingCircle.vue';
 
 export default {
-  // props: ["filename", "history"],
-  // props: {
-  //   filename: {
-  //     type: String
-  //   },
-  //   history: {
-  //     type: Object
-  //   }
-  // },
   data() {
     return {
       techpubStore: useTechpubStore(),
       histories: {},
       pagination: {},
-      showLoadingProgress: false,
     }
   },
   components:{ Pagination, ContinuousLoadingCircle },
@@ -30,7 +20,7 @@ export default {
         route: {
           name: 'api.get_csdb_history',
           data: { filename: filename }
-        }
+        }, useComponentLoadingProgress: this.componentId,
       })
       if (response.statusText === 'OK') {
         this.storingResponse(response);
@@ -77,6 +67,6 @@ export default {
 
     <Pagination :callback="storingResponse" :data="pagination"/>
 
-    <ContinuousLoadingCircle :show="showLoadingProgress" />
+    <ContinuousLoadingCircle/>
   </div>
 </template>

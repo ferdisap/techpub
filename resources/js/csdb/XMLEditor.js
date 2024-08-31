@@ -79,24 +79,16 @@ class XMLEditor{
       this.isDone = false;
       this.timeout = setTimeout(()=>{
         if(Object.keys(this.route) < 1) return j(false);
-        let worker;
-        if(window.Worker){
-          worker = new Worker('/worker/WorkerXMLEditor.js',{type: "module"});
-          worker.onmessage = (e) => {
-            if(!this.stop) this.changeText(e.data);
-            worker.terminate();
-          }
-          worker.postMessage({route: this.route});
-        } else {
-          axios({
-            url: this.route.url,
-            method: this.route.method[0],
-            data: this.route.params
-          })
-          .then(response => {
-            if((response.statusText === 'OK') && !this.stop) this.changeText(response.data);
-          })
-        }
+        axios({
+          url: this.route.url,
+          method: this.route.method[0],
+          data: this.route.params
+        })
+        .then(response => {
+          if((response.status.toString()[0] === '2') && !this.stop) this.changeText(response.data);
+          r(true);
+        })
+        .catch(e => j(false));
       },500);
     });
 

@@ -217,6 +217,11 @@ class CsdbController extends Controller
     return $model ? $this->ret2(200, ["model" => $model->toArray()]) : $this->ret2(400, ["no such {$filename} available."]);
   }
 
+  public function get_csdb_model(Request $request, Csdb $CSDBModel)
+  {
+    return $this->ret2(200, ['csdb' => $CSDBModel]);
+  }
+
   /**
    * return csdbs which return instance of Csdb::class
    */

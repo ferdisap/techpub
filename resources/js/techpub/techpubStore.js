@@ -124,6 +124,8 @@ export const useTechpubStore = defineStore('useTechpubStore', {
        */
       currentObjectModel: {},
 
+      componentLoadingProgress: {},
+
 
     }
   },

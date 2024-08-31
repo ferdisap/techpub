@@ -5,8 +5,14 @@ import ContinuousLoadingCircle from '../../loadingProgress/Continuousloadingcirc
 import { setUpdate, setCreate, switchEditor, readEntity, submit, submitUploadFile, submitCreateXml, submitUpdateXml } from './EditorXMLVue.js';
 import { copy } from '../../helper';
 import ContextMenu from '../subComponents/ContextMenu.vue';
+import { ref } from 'vue';
+import Randomstring from 'randomstring';
 export default {
   inject:['getTextReadFromReadFile'],
+  setup(){
+    const inputPath = ref('aaa');
+    return {inputPath}
+  },
   data() {
     return {
       techpubStore: useTechpubStore(),
@@ -14,27 +20,11 @@ export default {
       isFile: false,
       route: {},
       XMLEditor: new XMLEditor('xml-editor-container'),
-      showLoadingProgress: false,
-
-      // helper
-      // pathForInputUploadFile: '',
-      pathForInputXMLFile: '',
-      // filenameForInputUploadFile: '',
-
       contextMenuId: 'cmEditorXMLVue'
     }
   },
   components: { ContinuousLoadingCircle, ContextMenu },
   computed: {
-    pathInputUploadFile() {
-      return this.isUpdate && this.isFile ? (this.techpubStore.currentObjectModel.csdb ? this.techpubStore.currentObjectModel.csdb.path : this.pathForInputUploadFile) : this.pathForInputUploadFile;
-    },
-    pathInputXMLFile() {
-      return this.isUpdate ? (this.techpubStore.currentObjectModel.csdb ? this.techpubStore.currentObjectModel.csdb.path : '') : '';
-    },
-    filenameInputUploadFile() {
-      return this.isUpdate && this.isFile ? (this.techpubStore.currentObjectModel.csdb ? this.techpubStore.currentObjectModel.csdb.filename : this.filenameForInputUploadFile) : this.filenameForInputUploadFile;
-    },
   },
   methods: {
     setUpdate: setUpdate,
@@ -49,13 +39,16 @@ export default {
       this.isUpdate = !this.isUpdate;
     },
     refresh() {
-      this.setUpdate(this.$route.params.filename);
+      if(this.$route.params.filename) this.setUpdate(this.$route.params.filename);
+      else if(this.getTextReadFromReadFile()) this.XMLEditor.changeText(this.getTextReadFromReadFile());
+
+      // set path
+      if(this.techpubStore.currentObjectModel.csdb) this.inputPath.value = this.techpubStore.currentObjectModel.csdb.path;
     },
   },
   mounted() {
     this.XMLEditor.attachEditor()
-    if (this.$route.params.filename) this.setUpdate(this.$route.params.filename);
-    else if(this.getTextReadFromReadFile()) this.XMLEditor.changeText(this.getTextReadFromReadFile());
+    this.refresh()
     
     this.emitter.on('EditorXML-refresh', this.refresh);
   },
@@ -68,7 +61,6 @@ export default {
 </style>
 <template>
   <div class="editorxml px-3 relative h-full">
-
     <h1 class="text-blue-500 w-full text-center">Editor</h1>
 
     <form @submit.prevent="submit($event)">
@@ -76,19 +68,16 @@ export default {
       <div>
         <div class="mb-1">
           <label for="object-path" class="text-sm font-bold mr-2">Path:</label>
-          <input id="object-path" name="path" :value="pathInputXMLFile" placeholder="type the fullpath eg. csdb/n219/amm"
-            type="text"
-            class="py-0 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+          <input id="object-path" name="path" ref="inputPath" placeholder="type the fullpath eg. CSDB/N219/AMM"
+            type="text" class="py-0 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
         </div>
         <div :id="XMLEditor.id" class="text-xl mb-2"></div>
         <div class="error text-sm text-red-600" v-html="techpubStore.error('xmleditor')"></div>
       </div>
       <button type="submit" name="button" 
         :class="['button text-white text-sm', !isUpdate ? 'bg-green-400 hover:bg-green-600' : 'bg-violet-400 hover:bg-violet-600']">{{ !isUpdate ? 'Create' : 'Update' }}</button>
-      <!-- <button v-if="!isUpdate" type="submit" name="button" class="button bg-green-400 text-white hover:bg-green-600">Create</button> -->
-      <!-- <button v-else type="submit" name="button" class="button bg-violet-400 text-white hover:bg-violet-600">Update</button> -->
     </form>
-    <ContinuousLoadingCircle :show="showLoadingProgress" />
+    <ContinuousLoadingCircle/>
 
     <ContextMenu :id="contextMenuId">
       <div @click.stop.prevent="$parent.editorComponent = 'EditorDML'"

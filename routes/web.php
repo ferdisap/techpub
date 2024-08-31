@@ -32,6 +32,7 @@ require __Dir__."/csdb/general.php";
 require __Dir__."/csdb/comment.php";
 require __Dir__."/csdb/ddn.php";
 require __Dir__."/csdb/dml.php";
+require __Dir__."/csdb/br.php";
 
 Route::get('/auth/check', [Controller::class, 'authcheck'])->middleware('auth'); // berguna untuk vue
 Route::get('/route/{name}', [Controller::class, 'route']); // masih digunakan di xsl

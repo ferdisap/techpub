@@ -8,7 +8,7 @@ async function submit(event) {
     route: {
       name: 'api.upload_ICN',
       data: fd
-    }, useMainLoadingBar: false,
+    }, useComponentLoadingProgress: this.componentId,
   });
   if (response.statusText === 'OK') this.emitter.emit('uploadICNFromEditor', response.data.csdb);
 

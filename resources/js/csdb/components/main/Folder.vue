@@ -18,15 +18,6 @@ export default {
       path: '',
       data: {},
       open: {},
-
-      // type: '', // kayaknya ga perlu
-      showLoadingProgress: false,
-
-      // CbSelector: new CsdbObjectCheckboxSelector(),
-
-      // selection view (becasuse clicked by user)
-      // selectedRow: undefined,
-
       contextMenuId: 'cmFolderVue',
       cbId: 'cbFolderVue',
       CB: {},
@@ -205,7 +196,7 @@ export default {
       </div>
     </div>
 
-    <ContinuousLoadingCircle :show="showLoadingProgress" />
+    <ContinuousLoadingCircle/>
     <!-- RCMenu -->
     <ContextMenu :id="contextMenuId">
       <div @click.stop.prevent="CB.push" class="list">

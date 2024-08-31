@@ -1,7 +1,8 @@
 <script>
 import { useTechpubStore } from '../../../techpub/techpubStore';
 import {getObjs, storingResponse, goto, removeList, restore, permanentDelete, refresh, select, preview, clickFilename} from './DeletionVue.js';
-import {CsdbObjectCheckboxSelector} from '../../CheckboxSelector';
+// import {CsdbObjectCheckboxSelector} from '../../CheckboxSelector';
+import Checkbox from '../../Checkbox';
 import ContinuousLoadingCircle from "../../loadingProgress/ContinuousLoadingCircle.vue";
 import Sort from "../subComponents/Sort.vue";
 import { copy } from "../../helper";
@@ -17,9 +18,6 @@ export default {
     return {
       techpubStore: useTechpubStore(),
       data: {},
-      showLoadingProgress: false,
-
-      CbSelector: new CsdbObjectCheckboxSelector(),
 
       // selection view (becasuse clicked by user)
       // selectedRow: undefined,
@@ -62,25 +60,17 @@ export default {
     copy:copy,
   },
   mounted() {
-    window.em = this.emitter;
     this.getObjs({ filenameSearch: this.filenameSearch });
-    // this.emitter.on('Deletion-refresh', refresh.bind(this));
-    let emitters =  this.emitter.all.get('Deletion-refresh'); // 'emitter.length < 2' artinya emitter max. hanya dua kali di instance atau baru sekali di emit, check Explorer.vue
-    if(emitters){
-      let indexEmitter = emitters.indexOf(emitters.find((v) => v.name === 'bound refresh')) // 'bound addObjects' adalah fungsi, lihat scrit dibawah ini. Jika fungsi anonymous, maka output = ''
-      if(emitters.length < 1 && indexEmitter < 0) this.emitter.on('Deletion-refresh', this.refresh); 
-    } else this.emitter.on('Deletion-refresh', this.refresh); 
+    this.emitter.on('Deletion-refresh', this.refresh);
 
-    // if(this.ContextMenu.register(this.contextMenuId)) this.ContextMenu.toggle(false,this.contextMenuId);
-
-    this.CB = new DeletionVueCb(this.cbId)
+    this.CB = new Checkbox(this.cbId);
   }
 }
 </script>
 <template>
   <div class="deletion overflow-auto h-full">
 
-    <div class="bg-white px-3 py-3 2xl:h-[92%] xl:h-[90%] lg:h-[88%] md:h-[90%] sm:h-[90%] h-full">
+    <div class="bg-white px-3 py-3 2xl:h-[92%] xl:h-[90%] lg:h-[88%] md:h-[90%] sm:h-[90%] h-full fix">
 
       <div class="2xl:h-[5%] xl:h-[6%] lg:h-[8%] md:h-[9%] sm:h-[11%]">
         <h1 class="text-blue-500">DELETION</h1>
@@ -120,9 +110,9 @@ export default {
 
         <Pagination :data="data.paginationInfo"/>
       </div>
+      <ContinuousLoadingCircle/>
     </div>
 
-    <ContinuousLoadingCircle :show="showLoadingProgress"/>
     <ContextMenu  :id="contextMenuId">
       <div @click="CB.push" class="flex hover:bg-gray-100 py-1 px-2 rounded cursor-pointer text-gray-900">
         <div class="text-sm">Select</div>

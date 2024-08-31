@@ -6,7 +6,6 @@ import { isArray } from '../../helper';
 import axios from 'axios';
 
 function getObjs(data = {}) {
-  this.showLoadingProgress = true;
   if (!data.sc) data.sc = '';
   if (data.path) {
     if (data.sc.search(/path::\S+\s/) < 0) data.sc += " path::" + data.path; // nambah ' path::...' ke dalam sc
@@ -19,11 +18,10 @@ function getObjs(data = {}) {
     route: {
       name: routeName,
       data: data// akan receive data: [model1, model2, ...]
-    },
+    }, useComponentLoadingProgress: this.componentId,
   })
   .then(response => {
     this.storingResponse(response);
-    this.showLoadingProgress = false;
   })
 }
 
@@ -179,7 +177,7 @@ async function changePath(event) {
     route: {
       name: 'api.change_object_path',
       data: fd
-    }
+    }, useComponentLoadingProgress: this.componentId,
   });
   if (!(response.statusText === 'OK')) throw new Error(`Failed to change path ${join(", ", filenames)}`);
   this.CB.cancel();
@@ -214,7 +212,7 @@ async function deleteObject() {
     route: {
       name: 'api.delete_objects',
       data: {filename: filenames}
-    }
+    }, useComponentLoadingProgress: this.componentId,
   });
   if (!(response.statusText === 'OK')) throw new Error(`Failed to delete ${join(", ", filenames)}`);
   this.CB.cancel();
@@ -269,7 +267,7 @@ async function download() {
     route: {
       name: 'api.download_objects',
       data: { filename: filenames },
-    },
+    }, useComponentLoadingProgress: this.componentId,
     responseType: 'blob',
   });
   if (response.statusText === 'OK') {

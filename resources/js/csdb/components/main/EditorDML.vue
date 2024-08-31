@@ -11,7 +11,6 @@ export default {
   data(){
     return{
       techpubStore: useTechpubStore(),
-      showLoadingProgress: false,
       // DropdownBrexSearch: new DropdownInputSearch('filename'),
       
       // transformed: '',
@@ -104,7 +103,7 @@ export default {
       <button type="submit" class="button-violet">Submit</button>
     </form>
 
-    <ContinuousLoadingCircle :show="showLoadingProgress"/>
+    <ContinuousLoadingCircle/>
 
     <ContextMenu :id="contextMenuId">
       <div @click.stop.prevent="$parent.editorComponent = 'EditorXML'"

@@ -30,7 +30,7 @@ async function blobRequestTransformed(routename, data, mime) {
     route: {
       name: routename,
       data: data,
-    },
+    }, useComponentLoadingProgress: this.componentId,
     responseType: responseType,
   });
   if (response.statusText === 'OK') {

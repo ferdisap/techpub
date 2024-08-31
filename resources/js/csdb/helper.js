@@ -1,9 +1,3 @@
-
-
-// const isObject = (obj) => typeof obj === 'object' && !Array.isArray(obj) && obj !== null
-// return (typeof str === 'string' || str instanceof String);
-// return Array.isArray(arr);
-// const isClass = Function.prototype.call.bind(Object.prototype.toString); // [object Function] or [object FormData] or [object Array] or dll
 const array_unique = (arr) => arr.filter((value, index, a) => a.indexOf(value) === index);
 
 /**

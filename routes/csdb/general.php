@@ -28,6 +28,7 @@ Route::post("/api/uploadICN", [CsdbController::class, 'uploadICN'])->middleware(
 Route::get("/api/allobjects",[CsdbController::class, 'get_allobjects_list'])->middleware('auth')->name('api.get_allobjects_list'); // ini nanti bisa juga di cacce pakai meddleware ETagGeneralContent, tapi jika diinstal di LAN tidak perlu karena available bandwith yang besar
 Route::get("/api/model/{filename}",[CsdbController::class, 'get_object_model'])->middleware('auth')->name('api.get_object_model');
 Route::get("/api/csdbs",[CsdbController::class, 'get_object_csdbs'])->middleware('auth')->name('api.get_object_csdbs');
+Route::get("/api/csdb/{CSDBModel:filename}",[CsdbController::class, 'get_csdb_model'])->middleware('auth')->name('api.get_csdb_model');
 Route::get("/api/byfolder-allobjects",[CsdbController::class, 'forfolder_get_allobjects_list'])->middleware('auth')->name('api.requestbyfolder.get_allobject_list');
 
 Route::get('/api/object/raw/{CSDBModel:filename}', [CsdbController::class, 'get_object_raw'])->middleware('auth')->name('api.get_object_raw');
