@@ -13,7 +13,6 @@ export default {
       data: {},
       html: '',
       techpubStore: useTechpubStore(),
-      showLoadingProgress: false,
 
       contextMenuId: 'cmListTreeVue',
       CB: {},
@@ -140,6 +139,6 @@ export default {
       </div>
     </ContextMenu>
 
-    <ContinuousLoadingCircle :show="showLoadingProgress"/>
+    <ContinuousLoadingCircle/>
   </div>
 </template>

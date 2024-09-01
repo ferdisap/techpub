@@ -16,6 +16,18 @@ const formDataToObject = (v) => {
   return obj;
 }
 
+const objectToFormData = (v) => {
+  const fd = new FormData;
+  Object.keys(v).forEach(k => {
+      if(Array.isArray(v[k])){
+          fd.set(k+'[]', v[k]);
+      } else {
+          fd.set(k, v[k]);
+      }
+  });
+  return fd;
+}
+
 /**
  * output = [A,...A] dimana A adalah [':bar', index: 18, input: 'asassas:fooa sasa :bar', groups: undefined]
  * @param {*} pattern 
@@ -160,7 +172,7 @@ function copy(event, text) {
 
 export {
   // general
-  array_unique, formDataToObject, findText, getObjectValueFromString, isObject, isNumber, isEmpty, isString, isArray, isClassIntance, isFunction,
+  array_unique, formDataToObject, objectToFormData, findText, getObjectValueFromString, isObject, isNumber, isEmpty, isString, isArray, isClassIntance, isFunction,
   // DOM
   findAncestor, matchSel, indexFromParent,
   // event

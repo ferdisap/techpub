@@ -85,7 +85,7 @@ class XMLEditor{
           data: this.route.params
         })
         .then(response => {
-          if((response.status.toString()[0] === '2') && !this.stop) this.changeText(response.data);
+          if((response.statusText === 'OK' || ((response.status >= 200) && (response.status < 300))) && !this.stop) this.changeText(response.data);
           r(true);
         })
         .catch(e => j(false));

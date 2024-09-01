@@ -15,17 +15,15 @@ export default {
   components:{ Pagination, ContinuousLoadingCircle },
   methods: {
     async fetchHistories(filename) {
-      this.showLoadingProgress = true;
       let response = await axios({
         route: {
           name: 'api.get_csdb_history',
           data: { filename: filename }
         }, useComponentLoadingProgress: this.componentId,
       })
-      if (response.statusText === 'OK') {
+      if (response.statusText === 'OK' || ((response.status >= 200) && (response.status < 300))) {
         this.storingResponse(response);
       }
-      this.showLoadingProgress = false;
     },
     storingResponse(response){
       this.histories = response.data.csdb.histories.data;

@@ -1,6 +1,7 @@
 import { contentType } from 'es-mime-types';
 import RoutesWeb from '../../RoutesWeb';
 import axios from 'axios';
+import { useTechpubStore } from '../../../techpub/techpubStore';
 
 function refresh(data) {
   if(data){
@@ -24,16 +25,16 @@ function renderFromBlob(src, mime){
 async function blobRequestTransformed(routename, data, mime) {
   data = Object.assign(data, this.$route.query);
   delete (data.update_at);
-  let responseType = !mime.includes('text') ? 'arraybuffer' : 'json';
+  const responseType = !mime.includes('text') ? 'arraybuffer' : 'json';
   // masukkan cache If-None-Match jika perlu, di server sudah siap
-  let response = await axios({
+  const response = await axios({
     route: {
       name: routename,
       data: data,
     }, useComponentLoadingProgress: this.componentId,
     responseType: responseType,
   });
-  if (response.statusText === 'OK') {
+  if (response.statusText === 'OK' || ((response.status >= 200) && (response.status < 300))) {
     let blob = new Blob([response.data], { type: mime });
     let url = URL.createObjectURL(blob);
     return url;
@@ -87,12 +88,9 @@ async function render(filename, viewType){
   // ini untuk embed
   if(!this.inIframe) this.src = route.url.toString();
   // ini untuk iframe HTML dan PDF
-  else {
-    this.showLoadingProgress = true;
-    this.src = await this.blobRequestTransformed(routename, { filename: filename }, this.mime)
-    this.showLoadingProgress = false;
-  };
-  
+  else this.src = await this.blobRequestTransformed(routename, { filename: filename }, this.mime)
+
+  useTechpubStore().componentLoadingProgress[this.componentId] = false;  
   return Promise.resolve(true);
 }
 

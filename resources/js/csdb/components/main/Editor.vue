@@ -30,14 +30,16 @@ export default {
       this.editorComponent = 'EditorXML';
     },
     getEditorName(type) {
-      switch (this.type) {
+      switch (type) {
         case 'ICN': return 'EditorICN';
         case 'DML': return 'EditorDML';
         default: return 'EditorXML';
       }
     },
     refresh() {
-      this.emitter.emit(this.getEditorName(this.type) + '-refresh');
+      const editorName = this.getEditorName(this.type);
+      if(this.editorComponent === editorName) this.emitter.emit(editorName + '-refresh');
+      else this.editorComponent = editorName;
     }
   },
   mounted() {
@@ -49,7 +51,9 @@ export default {
 </script>
 <template>
   <div class="editor">
-    <component :is="editorComponent" v-if="editorComponent" />
+    <keep-alive>
+      <component :is="editorComponent"/>
+    </keep-alive>
 
     <ContextMenu :id="contextMenuId">
       <div v-if="editorComponent !== 'EditorDML'" @click="editorComponent = 'EditorDML'"

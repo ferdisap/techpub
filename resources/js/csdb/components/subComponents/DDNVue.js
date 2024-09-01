@@ -23,18 +23,20 @@ function DDN(json){
 }
 
 async function showDDNContent(filename){
-  const response = await fetchJsonFile({ filename: filename }, 'api.read_ddnjson');
-  if(response.statusText === 'OK'){
-    // handle and arrange json file
-    this.DDNObject = DDN(response.data.json);
-    // window.json = response.data.json;
-
-    // createEntriesString
-    // do create string here
-
-    // set currentObjectModel
-    // this.techpubStore.currentObjectModel = response.data.model;
-  }
+  fetchJsonFile({ filename: filename }, 'api.read_ddnjson')
+  .then(response => {
+    if(response.statusText === 'OK' || ((response.status >= 200) && (response.status < 300))){
+      // handle and arrange json file
+      this.DDNObject = DDN(response.data.json);
+      // window.json = response.data.json;
+  
+      // createEntriesString
+      // do create string here
+  
+      // set currentObjectModel
+      // this.techpubStore.currentObjectModel = response.data.model;
+    }
+  })
 }
 
 function explorerConfig(filename){
@@ -62,7 +64,8 @@ function importObject(){
           filename: this.$route.params.filename,
           filenames: filenames,
           overwrite: overwrite,
-        }
+        }, 
+        useComponentLoadingProgress: this.componentId,
       },
     })
     .then(async (response) => {
@@ -86,9 +89,7 @@ function importObject(){
       }
     })
   };
-  post();
-
-  
+  post();  
   return;
 }
 

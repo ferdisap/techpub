@@ -2,6 +2,7 @@ import { isProxy, toRaw } from 'vue';
 import { isArray } from '../../helper';
 import RoutesWeb from '../../RoutesWeb';
 import axios from 'axios';
+import { useTechpubStore } from '../../../techpub/techpubStore';
 /**
   * require array_move and sorter from helper.js
   * @param {string} type 'dml','csl', 'brex', 'brdp'
@@ -19,7 +20,7 @@ async function get_list(type, params = {}) {
         this.data[`${type}_list`] = e.data[0];
         this.data[`${type}_list_level`] = e.data[1];
         worker.terminate();
-        this.showLoadingProgress = false;
+        useTechpubStore().componentLoadingProgress[this.componentId] = false;
         return resolve(true);
       };
     });
@@ -29,24 +30,27 @@ async function get_list(type, params = {}) {
         route: route,
       },
     });
-    this.showLoadingProgress = true;
+    useTechpubStore().componentLoadingProgress[this.componentId] = true;
     return prom;
   } 
-  // else {
-  //   let response = await axios({
-  //     route: {
-  //       name: `api.get_${type}_list`,
-  //       data: params
-  //     }
-  //   })
-  //   if (response.statusText === 'OK') {
-  //     let data = setListTreeData(response.data.csdbs);
-  //     this.data[`${type}_list`] = data[0];
-  //     this.data[`${type}_list_level`] = data[1];
-  //     return Promise.resolve(true);
-  //   }
-  //   return Promise.resolve(false);
-  // }
+  else {
+    return axios({
+      route: {
+        name: `api.get_${type}_list`,
+        data: params
+      }, useComponentLoadingProgress: this.componentId,
+    })
+    .then(response => {
+      if (response.statusText === 'OK' || ((response.status >= 200) && (response.status < 300))) {
+        const data = setListTreeData(response.data.csdbs);
+        this.data[`${type}_list`] = data[0];
+        this.data[`${type}_list_level`] = data[1];
+        return Promise.resolve(true);
+      }
+      return Promise.reject(false);
+    })
+    .catch(e => Promise.reject(false));
+  }
 }
 
 async function goto(type, page = undefined) {
@@ -183,7 +187,7 @@ async function deleteObject() {
       data: {filename: filenames}
     }
   });
-  if (!(response.statusText === 'OK')) throw new Error(`Failed to delete ${join(", ", filenames)}`);
+  if (!(response.statusText === 'OK' || ((response.status >= 200) && (response.status < 300)))) throw new Error(`Failed to delete ${join(", ", filenames)}`);
   this.CB.cancel();
 
   // hapus list di folder, tidak seperti listtree yang ada level dan list model, dan emit csdbDelete

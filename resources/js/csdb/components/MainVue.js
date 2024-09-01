@@ -16,28 +16,15 @@ async function deleteCSDBs(data){
   if (!(await this.$root.alert({ name: 'beforeDeleteCsdbObject', filename: filenames }))) {
     return;
   }
-  let response = await axios({
+  axios({
     route: {
       name: 'api.delete_objects',
       data: {filenames: filenames},
-    }
+    },
+  })
+  then(response => {
+    if(response.statusText === 'OK' || ((response.status >= 200) && (response.status < 300))) this.emitter.emit('DeleteMultipleCSDBObject', response.data.models)
   });
-  this.emitter.emit('DeleteMultipleCSDBObject', response.data.models);
-}
-
-async function commitCSDBs(data){
-  if(!data) return;
-  let filenames = this.joinFilename(data);
-  if (!(await this.$root.alert({ name: 'beforeCommitCsdbObject', filename: filenames }))) {
-    return;
-  }
-  let response = await axios({
-    route: {
-      name: 'api.commit_objects',
-      data: {filenames: filenames},
-    }
-  });
-  this.emitter.emit('CommitMultipleCSDBObject', response.data.models);
 }
 
 /**
@@ -54,13 +41,11 @@ function getCSDBObjectModel(data){
           name: 'api.get_object_model',
           data: {filename: data.filename}        
         },
-      }).then((rsp)=>{
-        if(rsp.statusText === 'OK'){
-          useTechpubStore().currentObjectModel = rsp.data.model;
-        }
+      }).then((response)=>{
+        if(response.statusText === 'OK' || ((response.status >= 200) && (response.status < 300))) useTechpubStore().currentObjectModel = response.data.model;
       })
-    },1000);
+    },0);
   }
 }
 
-export {joinFilename, deleteCSDBs, commitCSDBs, getCSDBObjectModel};
+export {joinFilename, deleteCSDBs, getCSDBObjectModel};

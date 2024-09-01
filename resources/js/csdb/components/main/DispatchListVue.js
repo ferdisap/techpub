@@ -1,5 +1,5 @@
 function storingResponse(axiosResponse){
-  if(axiosResponse.statusText === 'OK'){
+  if(axiosResponse.statusText === 'OK' || ((axiosResponse.status >= 200) && (axiosResponse.status < 300))){
     this.data.list = axiosResponse.data.data;
     delete axiosResponse.data.data;
     this.data.paginationInfo = axiosResponse.data;

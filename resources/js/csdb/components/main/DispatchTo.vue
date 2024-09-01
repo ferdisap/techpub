@@ -39,20 +39,20 @@ export default {
         fd.append('deliveryListItemsFilename[]', this.objects[i]);
       }
       
-      let response = await axios({
+      axios({
         route: {
           name: 'api.create_ddn',
           data: fd,
         },
-      });
-
-      if (response.statusText === 'OK') {
-        // do something here
-        // this.model = response.data.model;
-        this.emitter.emit('createDDNFromDispatchTo', response.data.csdb);
-
-      }
-      // this.showLoadingProgress = false;
+        useComponentLoadingProgress: this.componentId,
+      })
+      .then(response => {
+        if (response.statusText === 'OK' || ((response.status >= 200) && (response.status < 300))) {
+          // do something here
+          // this.model = response.data.model;
+          this.emitter.emit('createDDNFromDispatchTo', response.data.csdb);
+        }
+      })
     },
     clickFilename(event){
       if(this.CB.selectionMode){

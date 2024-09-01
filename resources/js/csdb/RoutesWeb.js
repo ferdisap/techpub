@@ -1,4 +1,4 @@
-import { formDataToObject, isObject } from './helper';
+import { formDataToObject, objectToFormData, isObject } from './helper';
 import routes from '../../others/routes.json';
 
 class RoutesWeb {
@@ -6,10 +6,14 @@ class RoutesWeb {
 
   static get(name, data = {}){
     const route = Object.assign({}, routes[name]);
+    let isFormData = false;
 
     // set route params
     if(data){      
-      if(data.constructor.name === 'FormData') data = formDataToObject(data);
+      if(data.constructor.name === 'FormData') {
+        data = formDataToObject(data);
+        isFormData = true;
+      };
       Object.keys(data).forEach(k => {
         if(route.path.includes(`:${k}`)){
           route.path = route.path.replace(new RegExp(`:${k}\\??`), data[k]);
@@ -29,6 +33,7 @@ class RoutesWeb {
       route.data = Object.assign({}, route.data); // supaya tidak ada Proxy
     }
     else if(route.method.includes('POST')){
+      if(isFormData) data = objectToFormData(data);
       route.data = data;
       route.url = new URL(window.location.origin + route.path).toString();
     }

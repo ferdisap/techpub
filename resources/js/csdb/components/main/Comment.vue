@@ -36,7 +36,6 @@ export default {
   },
   mounted() {
     this.comments.CB = new CommentVueCb(this.comments.cbHomeId);
-    // this.ContextMenu.register(this.comments.cmId);
   }
 }
 </script>

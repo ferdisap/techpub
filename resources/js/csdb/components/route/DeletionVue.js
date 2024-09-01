@@ -9,7 +9,7 @@ async function getObjs(data = {}) {
       data: data,
     }, useComponentLoadingProgress: this.componentId,
   });
-  if (response.statusText === 'OK') {
+  if (response.statusText === 'OK' || ((response.status >= 200) && (response.status < 300))) {
     this.storingResponse(response);
   }
 }
@@ -27,7 +27,7 @@ async function goto(url, page) {
   }
   if (url) {
     let response = await axios.get(url);
-    if (response.statusText === 'OK') {
+    if (response.statusText === 'OK' || ((response.status >= 200) && (response.status < 300))) {
       this.storingResponse(response);
     }
   }
@@ -49,7 +49,7 @@ async function restore() {
       data: { filename: filenames },
     }, useComponentLoadingProgress: this.componentId,
   });
-  if (response.statusText != 'OK') return;
+  if (!(response.statusText === 'OK' || ((response.status >= 200) && (response.status < 300)))) return;
   
   // hapus list di folder, tidak seperti listtree yang ada level dan list model, dan emit csdbDelete
   const csdbRestored = [];

@@ -93,9 +93,11 @@ function fetch(csdbFilename, force = true) {
       data: { filename: csdbFilename },
     }
   }).then(response => {
-    const com = arrangeComments(response.data.comments);
-    this.comments.template = htmlString(com);
-    this.comments.csdbFilename = csdbFilename;
+    if (response.statusText === 'OK' || ((response.status >= 200) && (response.status < 300))) {
+      const com = arrangeComments(response.data.comments);
+      this.comments.template = htmlString(com);
+      this.comments.csdbFilename = csdbFilename;
+    }
   });
 }
 
@@ -112,13 +114,14 @@ async function submit(event) {
     route: {
       name: 'api.create_comment',
       data: data,
-    }
+    },
+    useComponentLoadingProgress: this.componentId,
   })
-  .then(rsp => {
-    if(rsp.statusText === 'OK'){
+  .then(response => {
+    if(response.statusText === 'OK' || ((response.status >= 200) && (response.status < 300))){
       // do something
       this.fetch(this.$props.csdbFilename);
-      this.emitter.emit('CreateCOMFromPreviewComment', rsp.data.csdb);
+      this.emitter.emit('CreateCOMFromPreviewComment', response.data.csdb);
       this.comments.CB.cancel();
     } else {
       this.emitter.emit('Modal-show', {modalId: this.comments.modalId});

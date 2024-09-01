@@ -14,9 +14,9 @@ async function setUpdate(filename) {
             data: {filename: filename}
           },
         })
-        .then(rsp => {
-          if(rsp.statusText === 'OK') this.inputPath.value = rsp.data.csdb.path;
-          this.techpubStore.currentObjectModel.csdb = rsp.data.csdb;
+        .then(response => {
+          if(response.statusText === 'OK' || ((response.status >= 200) && (response.status < 300))) this.inputPath.value = response.data.csdb.path;
+          this.techpubStore.currentObjectModel.csdb = response.data.csdb;
         })
       }
     }
@@ -88,7 +88,7 @@ async function submitUploadFile(event) {
     }, useComponentLoadingProgress: this.componentId,
   })
   .then(response => {
-    if (response.statusText === 'OK') this.emitter.emit('uploadICNFromEditor', response.data.csdb);
+    if (response.statusText === 'OK' || ((response.status >= 200) && (response.status < 300))) this.emitter.emit('uploadICNFromEditor', response.data.csdb);
   });
 }
 
@@ -102,7 +102,7 @@ async function submitCreateXml(event) {
     }, useComponentLoadingProgress: this.componentId,
   })
   .then(response => {
-    if (response.statusText === 'OK') this.emitter.emit('createObjectFromEditor', response.data.csdb);
+    if (response.statusText === 'OK' || ((response.status >= 200) && (response.status < 300))) this.emitter.emit('createObjectFromEditor', response.data.csdb);
   });
 }
 
@@ -117,7 +117,7 @@ async function submitUpdateXml(event) {
     }, useComponentLoadingProgress: this.componentId,
   })
   .then(response => {
-    if (response.statusText === 'OK') {
+    if (response.statusText === 'OK' || ((response.status >= 200) && (response.status < 300))) {
       this.emitter.emit('updateObjectFromEditor', response.data.csdb);
       this.techpubStore.currentObjectModel.csdb = response.data.csdb;
     }

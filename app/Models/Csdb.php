@@ -12,6 +12,7 @@ use App\Models\Csdb\History;
 use App\Models\Csdb\Pmc;
 use Carbon\Carbon;
 use DOMDocument;
+use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -357,6 +358,7 @@ class Csdb extends Model
   public static function getObject(string $filename, array $historyCode = [])
   {
     $eloquentClassModel = self::getClassObjectByFilename($filename);
+    if(!$eloquentClassModel) return self::getCsdb($filename, $historyCode);
     $OBJECTModel = new $eloquentClassModel();
     $OBJECTModel = $OBJECTModel->with(['csdb'])->whereHas('csdb', function (Builder $query) use ($historyCode, $filename) {
       $query->where('filename', $filename);
@@ -383,6 +385,7 @@ class Csdb extends Model
   public static function getObjects(string $eloquentClassModel, array $historyCode = [])
   {
     $eloquentClassModel = new $eloquentClassModel;
+    if(!$eloquentClassModel) return self::getCsdbs($historyCode);
     $OBJECTModels = new $eloquentClassModel();
     $OBJECTModels = $OBJECTModels->with(['csdb'])->whereHas('csdb', function (Builder $query) use ($historyCode) {
       // $query->where('storage_id', self::$storage_user_id ?? request()->user()->id);
@@ -694,20 +697,16 @@ class Csdb extends Model
     $class = "\App\Models\Csdb\\";
     switch ($type) {
       case 'DMC':
-        $class .= 'Dmc';
-        break;
+        $class .= 'Dmc'; break;
       case 'PMC':
-        $class .= 'Pmc';
-        break;
+        $class .= 'Pmc'; break;
       case 'DML':
-        $class .= 'Dml';
-        break;
+        $class .= 'Dml'; break;
       case 'DDN':
-        $class .= 'Ddn';
-        break;
+        $class .= 'Ddn'; break;
       case 'COM':
-        $class .= 'Comment';
-        break;
+        $class .= 'Comment'; break;
+      default: return '';
     }
     return $class;
   }

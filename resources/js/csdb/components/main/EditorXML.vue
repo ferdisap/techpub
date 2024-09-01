@@ -6,11 +6,11 @@ import { setUpdate, setCreate, switchEditor, readEntity, submit, submitUploadFil
 import { copy } from '../../helper';
 import ContextMenu from '../subComponents/ContextMenu.vue';
 import { ref } from 'vue';
-import Randomstring from 'randomstring';
+import path from 'path';
 export default {
   inject:['getTextReadFromReadFile'],
   setup(){
-    const inputPath = ref('aaa');
+    const inputPath = ref(null);
     return {inputPath}
   },
   data() {
@@ -39,6 +39,7 @@ export default {
       this.isUpdate = !this.isUpdate;
     },
     refresh() {
+      if(path.extname(this.$route.params.filename) !== '.xml') return;
       if(this.$route.params.filename) this.setUpdate(this.$route.params.filename);
       else if(this.getTextReadFromReadFile()) this.XMLEditor.changeText(this.getTextReadFromReadFile());
 
@@ -47,8 +48,8 @@ export default {
     },
   },
   mounted() {
-    this.XMLEditor.attachEditor()
-    this.refresh()
+    this.XMLEditor.attachEditor();
+    this.refresh();
     
     this.emitter.on('EditorXML-refresh', this.refresh);
   },

@@ -2,7 +2,7 @@
 // import {useTechpubStore} from '../../techpub/techpubStore';
 // import ManagementData from './route/ManagementData.vue';
 import Explorer from './route/Explorer.vue';
-import {joinFilename, deleteCSDBs, commitCSDBs, getCSDBObjectModel} from './MainVue';
+import {joinFilename, deleteCSDBs, getCSDBObjectModel} from './MainVue';
 
 export default {
   data() {
@@ -16,7 +16,6 @@ export default {
   methods:{
     joinFilename: joinFilename,
     deleteCSDBs: deleteCSDBs,
-    commitCSDBs: commitCSDBs,
     getCSDBObjectModel: getCSDBObjectModel,
   },
   mounted() {
@@ -24,9 +23,6 @@ export default {
     
     this.emitter.on('DeleteCSDBObjectFromEveryWhere', (data) => {
       this.deleteCSDBs(data)
-    })
-    this.emitter.on('CommitCSDBObjectFromEveryWhere', (data) => {
-      this.commitCSDBs(data)
     })
 
     this.emitter.on('RequireCSDBObjectModel', (data) => this.getCSDBObjectModel(data));

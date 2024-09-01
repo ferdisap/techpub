@@ -128,35 +128,38 @@ function fetchDataFromRenderedEntries() {
 }
 
 async function showDMLContent(filename) {
-  this.showLoadingProgress = true;
-  const response = await fetchJsonFile({ filename: filename });
-  if (response.statusText === 'OK' && response.data.json) {
-    // handle or arrange json file
-    this.DMLObject = DML(response.data.json);
-    this.DMLType = response.data.model.dmlType;
-
-    // create entries string
-    const dmlEntryData = createEntryData(this.DMLObject);
-    this.dmlEntryVueTemplate = createEntryVueTemplate(dmlEntryData);
-
-    useTechpubStore().currentObjectModel = response.data.model;
-  }
-  this.showLoadingProgress = false;
+  useTechpubStore().componentLoadingProgress[this.componentId] = true;
+  fetchJsonFile({ filename: filename })
+  .then(response => {
+    if ((response.statusText === 'OK' || ((response.status >= 200) && (response.status < 300))) && response.data.json) {
+      // handle or arrange json file
+      this.DMLObject = DML(response.data.json);
+      this.DMLType = response.data.model.dmlType;
+  
+      // create entries string
+      const dmlEntryData = createEntryData(this.DMLObject);
+      this.dmlEntryVueTemplate = createEntryVueTemplate(dmlEntryData);
+  
+      useTechpubStore().currentObjectModel = response.data.model;
+      useTechpubStore().componentLoadingProgress[this.componentId] = false;
+    }
+  }).catch(e => useTechpubStore().componentLoadingProgress[this.componentId] = false);
 }
 
 async function showCSLContent(filename) {
-  this.showLoadingProgress = true;
-  const response = await fetchJsonFile({ filename: filename }, 'api.get_csl');
-  if (response.statusText === 'OK' && response.data.csdb.object) {
-    // handle or arrange json file
-    this.DMLObject = DML(response.data.csdb.object.json);
-    this.DMLType = response.data.csdb.object.dmlType;
-
-    // create entries string
-    const dmlEntryData = createEntryData(this.DMLObject);
-    this.dmlEntryVueTemplate = createEntryVueTemplate(dmlEntryData);
-  }
-  this.showLoadingProgress = false;
+  useTechpubStore().componentLoadingProgress[this.componentId] = true;
+  fetchJsonFile({ filename: filename }, 'api.get_csl')
+  .then(response => {
+    if ((response.statusText === 'OK' || ((response.status >= 200) && (response.status < 300))) && response.data.csdb.object) {
+      // handle or arrange json file
+      this.DMLObject = DML(response.data.csdb.object.json);
+      this.DMLType = response.data.csdb.object.dmlType;
+  
+      // create entries string
+      const dmlEntryData = createEntryData(this.DMLObject);
+      this.dmlEntryVueTemplate = createEntryVueTemplate(dmlEntryData);
+    }
+  }).catch(e => useTechpubStore().componentLoadingProgress[this.componentId] = false);
 }
 
 
@@ -271,7 +274,6 @@ function removeEntry() {
 }
 
 async function submitUpdate() {
-  this.showLoadingProgress = true;
   const values = this.getAllValues();
   values.filename = this.$route.params.filename;
   await axios({
@@ -279,12 +281,11 @@ async function submitUpdate() {
       name: 'api.dmlupdate',
       data: values,
     },
+    useComponentLoadingProgress: this.componentId,
   });
-  this.showLoadingProgress = false;
 }
 
 async function submitMerge() {
-  this.showLoadingProgress = true;
 
   const data = {};
   data.filename = this.$route.params.filename;
@@ -296,9 +297,9 @@ async function submitMerge() {
       name: 'api.dml_merge',
       data: data,
     },
+    useComponentLoadingProgress: this.componentId,
   });
   if (response.statusText === 'OK') this.emitter.emit('createDMLFromEditorDML', response.data.csdb);
-  this.showLoadingProgress = false;
 }
 
 function getAllValues() {

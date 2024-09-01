@@ -2,7 +2,7 @@
 import { useTechpubStore } from '../../../techpub/techpubStore';
 import Remarks from '../subComponents/Remarks.vue';
 import ContinuousLoadingCircle from '../../loadingProgress/continuousLoadingCircle.vue';
-import { submit, update, showDMLContent, searchBrex } from './EditorDMLVue.js';
+import { submit, searchBrex } from './EditorDMLVue.js';
 import DropdownInputSearch from '../../DropdownInputSearch';
 import DML from '../subComponents/DML.vue';
 import ContextMenu from '../subComponents/ContextMenu.vue';
@@ -11,13 +11,7 @@ export default {
   data(){
     return{
       techpubStore: useTechpubStore(),
-      // DropdownBrexSearch: new DropdownInputSearch('filename'),
-      
-      // transformed: '',
-      // json: '',
-
       isUpdate: '',
-
       contextMenuId:'cmEditorDMLVue',
     }
   },
@@ -25,14 +19,11 @@ export default {
   computed:{},
   methods:{
     submit: submit,
-    update: update,
-    showDMLContent: showDMLContent,
     searchBrex: searchBrex,
   },
   mounted(){
     if(this.$route.params.filename && (this.$route.params.filename.substring(0,3) === 'DML')) {
       this.isUpdate = true;
-      // this.showDMLContent();
     }
     
     // if(this.ContextMenu.register(this.contextMenuId)) this.ContextMenu.toggle(false, this.contextMenuId);

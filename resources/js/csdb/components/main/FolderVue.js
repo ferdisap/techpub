@@ -46,7 +46,7 @@ async function goto(url, page) {
   }
   if (url) {
     let response = await axios.get(url);
-    if (response.statusText === 'OK') {
+    if (response.statusText === 'OK' || ((response.status >= 200) && (response.status < 300))) {
       this.storingResponse(response);
     }
   }
@@ -179,7 +179,7 @@ async function changePath(event) {
       data: fd
     }, useComponentLoadingProgress: this.componentId,
   });
-  if (!(response.statusText === 'OK')) throw new Error(`Failed to change path ${join(", ", filenames)}`);
+  if (!(response.statusText === 'OK' || ((response.status >= 200) && (response.status < 300)))) throw new Error(`Failed to change path ${join(", ", filenames)}`);
   this.CB.cancel();
 
   // handle changed csdb object
@@ -214,7 +214,7 @@ async function deleteObject() {
       data: {filename: filenames}
     }, useComponentLoadingProgress: this.componentId,
   });
-  if (!(response.statusText === 'OK')) throw new Error(`Failed to delete ${join(", ", filenames)}`);
+  if (!(response.statusText === 'OK' || ((response.status >= 200) && (response.status < 300)))) throw new Error(`Failed to delete ${join(", ", filenames)}`);
   this.CB.cancel();
 
   // hapus list di folder, tidak seperti listtree yang ada level dan list model, dan emit csdbDelete
@@ -270,7 +270,7 @@ async function download() {
     }, useComponentLoadingProgress: this.componentId,
     responseType: 'blob',
   });
-  if (response.statusText === 'OK') {
+  if (response.statusText === 'OK' || ((response.status >= 200) && (response.status < 300))) {
     const contentDisposition = response.headers.get('content-disposition');
     if(contentDisposition.substr(0,10) === 'attachment'){
       let i;

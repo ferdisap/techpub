@@ -7,6 +7,7 @@ import DMLVueCb from './DMLVueCb.js';
 import ContextMenu from './ContextMenu.vue';
 import Remarks from './Remarks.vue';
 import Modal from './Modal.vue';
+import path from 'path';
 
 export default {
   data() {
@@ -48,7 +49,9 @@ export default {
     },
     submitMerge: submitMerge,
     refresh(){
-      this.DMLType === 's' ? this.showCSLContent($route.params.filename) : this.showDMLContent(this.$props.filename);
+      if((path.extname(this.$route.params.filename) === '.xml') && (this.$route.params.filename.substring(0,3) === 'DML')){
+        this.DMLType === 's' ? this.showCSLContent($route.params.filename) : this.showDMLContent(this.$props.filename);
+      }
     }
   },
   computed: {

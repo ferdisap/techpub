@@ -22,6 +22,8 @@ class ETagForPDF
    */
   public function handle(Request $request, Closure $next): Response
   {
+    // sleep(30);
+
     // handle request
     $method = $request->getMethod();
 
