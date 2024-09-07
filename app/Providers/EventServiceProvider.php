@@ -9,6 +9,8 @@ use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvi
 use Illuminate\Support\Facades\Event;
 use App\Listeners\Csdb\SendDdnNotification;
 use App\Events\Csdb\DdnCreated;
+use App\Events\Csdb\ValidatedByBrex;
+use App\Listeners\Csdb\SendBrexValidationResultNotification;
 use App\Listeners\Csdb\SendCommentNotification;
 
 class EventServiceProvider extends ServiceProvider
@@ -27,6 +29,9 @@ class EventServiceProvider extends ServiceProvider
     ],
     CommentCreated::class => [
       SendCommentNotification::class,
+    ],
+    ValidatedByBrex::class => [
+      SendBrexValidationResultNotification::class,
     ]
   ];
 

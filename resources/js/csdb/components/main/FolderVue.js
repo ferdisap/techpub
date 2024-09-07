@@ -4,6 +4,7 @@ import $ from 'jquery';
 import fileDownload from 'js-file-download';
 import { isArray } from '../../helper';
 import axios from 'axios';
+import RoutesWeb from '../../RoutesWeb';
 
 function getObjs(data = {}) {
   if (!data.sc) data.sc = '';
@@ -246,7 +247,7 @@ function refresh(data) {
     });
   } else{
     // if (data.path === this.data.current_path) this.getObjs({ path: this.data.current_path })
-    if(data.path) this.getObjs({ path: data.path })
+    if(data && data.path) this.getObjs({ path: data.path })
   }
 }
 function remove(data) {
@@ -292,7 +293,23 @@ async function download() {
   }
 }
 
+async function validate(type){
+  let route;
+  switch (type) {
+    case 'brex':
+      route = RoutesWeb.get('api.validate_by_brex', {
+        filename: await this.CB.value(),
+      });
+      break;  
+    default:
+      break;
+  }
+  axios({
+    route: route
+  });
+}
+
 export {
-  getObjs, storingResponse, goto, back, clickFolder, clickFilename, download,
+  getObjs, storingResponse, goto, back, clickFolder, clickFilename, download, validate,
   sortTable, search, removeList, remove, pushFolder, dispatch, changePath, deleteObject, refresh
 };

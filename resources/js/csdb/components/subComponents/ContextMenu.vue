@@ -1,12 +1,24 @@
 <script>
 import { copy } from "../../helper";
 export default {
-  props: ['id'],
+  props: {
+    id: String,
+    level: {
+      type: Number,
+      default: 0
+    },
+    trigger:Array
+  },
   methods: {
     copy: copy
   },
   mounted(){
-    if (this.ContextMenu.register(this.$props.id)) this.ContextMenu.toggle(false, this.$props.id);
+    if(this.$props.trigger){
+      this.ContextMenu.register(this.$props.id, this.$props.level, this.$props.trigger);
+    }
+    else{
+      if (this.ContextMenu.register(this.$props.id, this.$props.level)) this.ContextMenu.toggle(false, [this.$props.id]);
+    }
   }
 }
 </script>

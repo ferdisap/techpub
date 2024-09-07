@@ -7,6 +7,9 @@ use App\Models\Csdb\Dmc;
 use BREXValidator;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
+use Ptdi\Mpub\Validation\CSDBValidatee;
+use Ptdi\Mpub\Validation\CSDBValidator;
+use Ptdi\Mpub\Validation\Validator\Brex;
 
 class BrexValidation extends FormRequest
 {
@@ -15,7 +18,7 @@ class BrexValidation extends FormRequest
    */
   public function authorize(): bool
   {
-    return false;
+    return true;
   }
 
   /**
@@ -26,15 +29,15 @@ class BrexValidation extends FormRequest
   public function rules(): array
   {
     return [
-      'BREXModel' => [function($a, $v, Closure $fail){
-        if(!$v) return $fail('brexDmRef is required.');
+      'BREXModels.*' => [function($a, $v, Closure $fail){
+        if(!$v) return $fail('brexDmRef is required or it cannot be recognized as CSDB object.');
         if(!($v instanceof Dmc)) return $fail('brexDmRef must be a type of DMC.');
         if($v->infoCode != '022') return $fail ('infoCode of brexDmRef is not correctly.');
         $v->csdb->loadCSDBObject();
         if(!($v->csdb->CSDBObject) || !($v->csdb->CSDBObject->document)) return $fail('cannot resolve brexDmRef.');
       }],
-      'OBJECTModel' => [function($a, $v, Closure $fail){
-        if(!$v) return $fail('csdb filename is required.');
+      'OBJECTModels.*' => [function($a, $v, Closure $fail){
+        if(!$v) return $fail('csdb filename is required or it cannot be recognized as CSDB object.');
         $v->csdb->loadCSDBObject();
         if(!($v->csdb->CSDBObject) || !($v->csdb->CSDBObject->document)) return $fail("cannot resolve {$v->csdb->filename}");
       }]
@@ -43,23 +46,39 @@ class BrexValidation extends FormRequest
 
   protected function prepareForValidation(): void
   {
-    $OBJECTModel = Csdb::getObject($this->route('filename') ?? $this->get('filename'), ['exception' => ['CSDB-DELL', 'CSDB-PDEL']])->first();
-    $BREXModel = Csdb::getObject($OBJECTModel->brexDmRef, ['exception' => ['CSDB-DELL', 'CSDB-PDEL']])->first();
+    $filenames = $this->route('filename') ?? $this->get('filename');
+    if(!is_array($filenames)) $filenames = [$filenames];
+
+    $brexFilenames = [];
+    $l = count($filenames);
+    for ($i=0; $i < $l; $i++) { 
+      $filenames[$i] = Csdb::getObject($filenames[$i], ['exception' => ['CSDB-DELL', 'CSDB-PDEL']])->first();
+      $brexFilenames[] = $filenames[$i]->brexDmRef;
+    }
+
+    $brexFilenames = array_unique($brexFilenames);
+    $l = count($brexFilenames);
+
+    for ($i=0; $i < $l; $i++) { 
+      $brexFilenames[$i] = Csdb::getObject($brexFilenames[$i], ['exception' => ['CSDB-DELL', 'CSDB-PDEL']])->first();
+    }
+
+    // dd('aa', count(array_filter($brexFilenames, fn($v) => $v)));
+    // dd($brexFilenames[0] instanceof Dmc); // true
     $this->merge([
-      'BREXModel' => $BREXModel,
-      'OBJECTModel' => $$OBJECTModel
+      'BREXModels' => $brexFilenames,
+      'OBJECTModels' => $filenames
     ]);
   }
 
   protected function passedValidation()
   {
-    $BREXValidator = new BREXValidator(
-      $this->validated('OBJECTModel')->csdb->CSDBObject,
-      $this->validated('BREXModel')->csdb->CSDBObject,
-    );
-
-    $BREXValidator->validate();
-
-    dd($BREXValidator);
+    $validateeObject = $this->validated('OBJECTModels');
+    array_walk($validateeObject, fn(&$v) => $v = $v->csdb->CSDBObject);
+    $validatorObject = $this->validated('BREXModels');
+    array_walk($validatorObject, fn(&$v) => $v = $v->csdb->CSDBObject);
+    $validatee = new CSDBValidatee($validateeObject);
+    $validator = new CSDBValidator($validatorObject);
+    $this->brexValidation = new Brex($validator, $validatee);
   }
 }

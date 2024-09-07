@@ -16,8 +16,19 @@ class BrController extends Controller
     return $this->ret2(400, ['json' => $BRObjectModel->json]);
   }
 
-  public function validate_brex(BrexValidation $request)
+  public function validate(BrexValidation $request)
   {
-    dd($request);
+    $message = '';
+    $request->brexValidation->validate();
+    // event();
+    $l = count($request->brexValidation->result());
+
+    // $l_s = count($request->brexValidation->result()['contextRules']['structureObjectRuleGroup']);
+    // $l_n = count($request->brexValidation->result()['contextRules']['notationRuleList']);
+    // $message .= ($l_s || $l_n) ? ($l_s + $l_n + " item(s) match invalidated at for the structure object rule. ") : ('There is no invalidated object towards its brex file. ');
+    $message .= ($l) ? ($l + " item(s) match invalidated at for the structure object rule. ") : ('There is no invalidated object towards its brex file. ');
+    $message .= 'Check your email for detail of results.';
+    // return $this->ret2(200,['infotype' => ($l_s || $l_n ? 'caution' : 'info'),'message' => $message]);
+    return $this->ret2(200,['infotype' => ($l ? 'caution' : 'info'),'message' => $message]);
   }
 }

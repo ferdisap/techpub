@@ -4,7 +4,7 @@ import { useTechpubStore } from "../../../techpub/techpubStore";
 import Sort from "../../../techpub/components/Sort.vue";
 import ContinuousLoadingCircle from "../../loadingProgress/ContinuousLoadingCircle.vue";
 import {
-  getObjs, storingResponse, goto, back, clickFolder, clickFilename, download,
+  getObjs, storingResponse, goto, back, clickFolder, clickFilename, download, validate,
   sortTable, search, removeList, remove, pushFolder, dispatch, changePath, deleteObject, refresh
 } from './FolderVue'
 import FolderVueCb from "./FolderVueCb";
@@ -76,6 +76,7 @@ export default {
     deleteObject: deleteObject,
     pushFolder: pushFolder,
     download: download,
+    validate: validate,
 
     // emit
     refresh: refresh,
@@ -96,7 +97,6 @@ export default {
       let indexEmitter = emitters.indexOf(emitters.find((v) => v.name === 'bound remove')) // 'bound addObjects' adalah fungsi, lihat scrit dibawah ini. Jika fungsi anonymous, maka output = ''
       if (emitters.length < 1 && indexEmitter < 0) this.emitter.on('Folder-remove', this.remove);
     } else this.emitter.on('Folder-remove', this.remove);
-
 
 
     if (this.$route.params.filename && this.techpubStore.currentObjectModel.csdb) {
@@ -235,8 +235,20 @@ export default {
         <div class="text-sm">Download</div>
       </div>
       <hr class="border border-gray-300 block mt-1 my-1 border-solid" />
-      <div @click.prevent="CB.cancel()" class="list">
+      <div id="cmValidateTrigger" class="list">
+        <div class="text-sm inline w-full">Validate</div>
+        <div id="cmValidateTriggerOnClick" class="material-symbols-outlined float-end inline">arrow_right</div>
+      </div>
+      <div @click.prevent="CB.cancel()" class="list" id="cmTesTrigger">
         <div class="text-sm">Cancel</div>
+      </div>
+    </ContextMenu>
+    <ContextMenu id="cmValidate" :level="1" :trigger="[{on:'pointerover',id:'cmValidateTrigger'},{on:'click', id:'cmValidateTriggerOnClick'}]">
+      <div @click.prevent="validate('brex')" class="list">
+        <div class="text-sm">by Brex</div>
+      </div>
+      <div @click.prevent="validate('schema')" class="list">
+        <div class="text-sm">by Schema</div>
       </div>
     </ContextMenu>
   </div>

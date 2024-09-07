@@ -6,6 +6,8 @@ import { env } from 'node:process';
 import * as dotenv from 'dotenv';
 import dotenvExpand from 'dotenv-expand';
 import mkcert from 'vite-plugin-mkcert';
+// import dns from 'node:dns';
+// dns.setDefaultResultOrder('verbatim')
 // import RubyPlugin from 'vite-plugin-ruby';
 // import inject from "@rollup/plugin-inject";
 
@@ -20,6 +22,7 @@ export default defineConfig({
     // port: process.env.VITE_PUSHER_PORT,
     port: 446,
     host: process.env.VITE_PUSHER_HOST,
+    // host: "192.168.11.224",
     https: true
   },
   plugins: [
