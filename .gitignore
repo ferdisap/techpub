@@ -1,12 +1,14 @@
-tes.php
+
 /Docker/*
 /.phpunit.cache
 /node_modules
+/public/tes.php
 /public/build
 /public/hot
 /public/storage
 /public/aspnet_client
 /storage/*.key
+/storage/test/*
 /storage/csdb/*
 /storage/csdb_tes/*
 /storage/csdb_tes2/*
@@ -17,6 +19,7 @@ tes.php
 /resources_dev/*
 /vendor
 .env
+.env.testing
 .env.backup
 .env.production
 .phpunit.result.cache

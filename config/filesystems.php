@@ -41,11 +41,12 @@ return [
             'root' => storage_path('csdb'),
             'throw' => false,
         ],
-        'csdb_deleted' => [
-            'driver' => 'local',
-            'root' => storage_path('csdb_deleted'),
-            'throw' => false,
-        ],
+
+        // 'csdb_deleted' => [
+        //     'driver' => 'local',
+        //     'root' => storage_path('csdb_deleted'),
+        //     'throw' => false,
+        // ],
 
         'public' => [
             'driver' => 'local',

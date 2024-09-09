@@ -15,9 +15,10 @@
           Validatee: <span>{{ $o['validatee'] }}</span>
         </div>
         {{-- eg: $kr adalah 'contextRules' dan $vr adalah array value resultnya --}}
-        @foreach ($o['result'] as $kr => $vr)
-          @if($vr['structureObjectRuleGroup'])
+        @foreach ($o['results'] as $kr => $vr)
           <h1>{{ $kr }}</h1>
+          @if(isset($vr['structureObjectRuleGroup']) && $vr['structureObjectRuleGroup'])
+          <h2>Structure Object Rule</h2>
           <table>
             <thead>
               <tr>
@@ -32,36 +33,21 @@
               {{-- eg: $vrr adalah array value result <structureObjectRule>  --}}
               @foreach ($vr['structureObjectRuleGroup'] as $vrr)
               <tr>
-                <td>{{ $vrr['brDecisionRef'] ? (join(array_map(fn($v) => $v['brDecisionIdentNumber'], $vrr['brDecisionRef']),", ")) : '' }}</td>
+                <td>{{ isset($vrr['brDecisionRef']) && $vrr['brDecisionRef'] ? (join(", ", array_values(array_filter($vrr['brDecisionRef'], fn($v,$k) => $k === 'brDecisionIdentNumber' ? $v : false ,ARRAY_FILTER_USE_BOTH)))) : '' }}</td>
                 <td>{{ $vrr['brSeverityLevel'] ?? ''  }}</td>
                 <td>
-                  <table>
-                    <thead>
-                      <tr>
-                        <td>no</td>
-                        <td>xpath</td>
-                        <td>allowedObjectPath</td>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      @foreach ($vrr['objectPath'] as $i => $objectPath)
-                      <tr>
-                        <td>{{ $i+1 }}</td>
-                        <td>{{ $objectPath['0'] }}</td>
-                        <td>{{ $objectPath['at_allowedObjectFlag'] }}</td>
-                      </tr>
-                      @endforeach
-                    </tbody>
-                  </table>
+                  <div>xpath: <span class="xpath">{{ $vrr['objectPath']['0'] }}</span></div>
+                  <div>allwoedObjectPath: <span class="allowedObjectPath">{{ $vrr['objectPath']['at_allowedObjectFlag'] }}</span></div>
                 </td>
                 <td>{{ $vrr['use'] ?? '' }}</td>
-                <td>{{ join($vrr['lines'],", ") }}</td>
+                <td>{{ join(", ", $vrr['lines']) }}</td>
               </tr>                    
               @endforeach
             </tbody>
           </table>
-          @elseif($vr['notationRuleList'])
-          <h1>{{ $kr }}</h1>
+          @endif
+          @if(isset($vr['notationRuleList']) && $vr['notationRuleList'])
+          <h2>Notation Rule</h2>
           <table>
             <thead>
               <tr>
@@ -74,14 +60,16 @@
               </tr>
             </thead>
             <tbody>
+              @foreach ($vr['notationRuleList'] as $vrr)
               <tr>
-                <td>{{ $vrr['brDecisionRef'] ? (join(array_map(fn($v) => $v['brDecisionIdentNumber'], $vrr['brDecisionRef']),", ")) : '' }}</td>
-                <td>{{ $vrr['brSeverityLevel'] ?? ''  }}</td>
-                <td>{{ $vrr['notationName'] ?? ''  }}</td>
-                <td>{{ $vrr['allowedNotationFlag'] ?? ''  }}</td>
-                <td>{{ $vrr['entityName'] ?? ''  }}</td>
-                <td>{{ $vrr['entitySystemId'] ?? ''  }}</td>
+                <td>{{ isset($vrr['brDecisionRef']) && $vrr['brDecisionRef'] ? (join(array_map(fn($v) => $v['brDecisionIdentNumber'], $vrr['brDecisionRef']),", ")) : '' }}</td>
+                <td>{{ isset($vrr['brSeverityLevel']) ? ($vrr['brSeverityLevel']) : ''  }}</td>
+                <td>{{ isset($vrr['notationName']) ? ($vrr['notationName']) : ''  }}</td>
+                <td>{{ isset($vrr['allowedNotationFlag']) ? ($vrr['allowedNotationFlag']) : ''  }}</td>
+                <td>{{ isset($vrr['entityName']) && count($vrr['entityName']) ? (join(", ", $vrr['entityName'])) : ''  }}</td>
+                <td>{{ isset($vrr['entitySystemId']) && count($vrr['entitySystemId']) ? (join(", ", $vrr['entitySystemId'])) : ''  }}</td>
               </tr>
+              @endforeach
             </tbody>
           </table>
           @endif

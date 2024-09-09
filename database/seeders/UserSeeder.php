@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Schema;
@@ -50,37 +51,41 @@ class UserSeeder extends Seeder
     //   $table->timestamps();
     // });
     
-    \App\Models\User::factory()->create([
-      'first_name' => 'Luffy',
-      'middle_name' => 'Baka',
-      'last_name' => 'Sencho',
-      'job_title' => 'Captain',
-      'work_enterprise_id' => 1,
-      'email' => 'luffy@example.com',
-      'password' => '$2y$10$BkzZhuRUrW2UWnGzQmGWLOIMj4P17o9lRH1HoSx7qHubAyYH8T/7q', // 'password'
-      'storage' => Str::random(5),
-      'address' => [
-        "city" => 'Foosha',
-        "country" => "East Blue"
-      ],
-      'remember_token' => Str::random(10)
-    ]);
+    if(!(User::where('first_name', 'Luffy')->where('last_name', 'Sencho')->first())){
+      User::factory()->create([
+        'first_name' => 'Luffy',
+        'middle_name' => 'Baka',
+        'last_name' => 'Sencho',
+        'job_title' => 'Captain',
+        'work_enterprise_id' => 1,
+        'email' => 'luffy@example.com',
+        'password' => '$2y$10$BkzZhuRUrW2UWnGzQmGWLOIMj4P17o9lRH1HoSx7qHubAyYH8T/7q', // 'password'
+        'storage' => Str::random(5),
+        'address' => [
+          "city" => 'Foosha',
+          "country" => "East Blue"
+        ],
+        'remember_token' => Str::random(10)
+      ]);
+    }
 
-    \App\Models\User::factory()->create([
-      'first_name' => 'Nami',
-      'middle_name' => 'Orange',
-      'last_name' => 'Neko',
-      'job_title' => 'Navigator',
-      'work_enterprise_id' => 2,
-      'email' => 'nami@example.com',
-      'password' => '$2y$10$BkzZhuRUrW2UWnGzQmGWLOIMj4P17o9lRH1HoSx7qHubAyYH8T/7q', // 'password'
-      'storage' => Str::random(5),
-      'address' => [
-        "city" => 'Kokoyashi',
-        "country" => "East Blue"
-      ],
-      'remember_token' => Str::random(10)
-    ]);
+    if(!(User::where('first_name', 'Nami')->where('last_name', 'Neko')->first())){
+      User::factory()->create([
+        'first_name' => 'Nami',
+        'middle_name' => 'Orange',
+        'last_name' => 'Neko',
+        'job_title' => 'Navigator',
+        'work_enterprise_id' => 2,
+        'email' => 'nami@example.com',
+        'password' => '$2y$10$BkzZhuRUrW2UWnGzQmGWLOIMj4P17o9lRH1HoSx7qHubAyYH8T/7q', // 'password'
+        'storage' => Str::random(5),
+        'address' => [
+          "city" => 'Kokoyashi',
+          "country" => "East Blue"
+        ],
+        'remember_token' => Str::random(10)
+      ]);
+    }
 
     \App\Models\User::factory()->count(3)->create();
   }

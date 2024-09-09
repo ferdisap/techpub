@@ -1,3 +1,7 @@
+<!-- 
+  NOTE:
+  1. 9Sep2024, saat user create data module (bbi=Folder), folder tidak me-refresh
+ -->
 <script>
 import { copy } from "../../helper";
 import { useTechpubStore } from "../../../techpub/techpubStore";

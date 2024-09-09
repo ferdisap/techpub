@@ -14,18 +14,23 @@ class ExampleTest extends TestCase
   /**
    * A basic test example.
    */
-  // public function test_the_application_returns_a_successful_response(): void
-  // {
-  //   $response = $this->get('/');
-
-  //   $response->assertStatus(200);
-  // }
-
-  public function test_send_ddn_notification(): void
+  public function test_the_application_returns_a_successful_response(): void
   {
+    $response = $this->get('/login');
+
+    $response->assertStatus(200);
+  }
+
+  // public function test_send_ddn_notification(): void
+  // {
     // Event::fake();
 
-    DdnCreated::dispatch(Csdb::find(1));
+    // $response = $this->get('/');
+
+    // $response->assertStatus(200);
+    // return;
+
+    // DdnCreated::dispatch(Csdb::find(1));
 
 
 
@@ -39,5 +44,5 @@ class ExampleTest extends TestCase
 
     // // Assert that no events were dispatched...
     // Event::assertNothingDispatched();
-  }
+  // }
 }

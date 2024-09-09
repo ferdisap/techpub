@@ -20,10 +20,12 @@ class SendBrexValidationResultNotification
   }
 
   /**
+   * since Brex cannot serialized by Illuminate\Queue\Queue:160 @createObjectPayload jadi diganti pakai Array
    * Handle the event.
    */
   public function handle(ValidatedByBrex $event): void
   {
-    Mail::queue(new BrexValidationResult($event->initiator, $event->validator));
+    // Mail::queue(new BrexValidationResult($event->initiator, $event->validator));
+    Mail::queue(new BrexValidationResult($event->initiator, $event->validator->result()));
   }
 }

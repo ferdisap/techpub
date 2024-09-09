@@ -13,7 +13,19 @@ class DatabaseSeeder extends Seeder
   /**
    * Seed the application's database.
    */
-  public function run(): void
+  public function run():void
+  {
+    // execute php artisan db:seed in cli tor run php artisan migrate --path="database/migrations" &&  php artisan migrate --path="database/migrations/csdb"
+    exec('php artisan migrate --path="database/migrations" --force');
+    exec('php artisan migrate --path="database/migrations/csdb" --force');
+
+    (new UserSeeder())->run();
+    (new CodeSeeder())->run();
+    (new EnterpriseSeeder())->run();
+  }
+
+
+  public function run_xx(): void
   {
 
     (new UserSeeder())->run();

@@ -16,9 +16,11 @@ class BrexValidationResult extends Mailable
   use Queueable, SerializesModels;
 
   /**
+   * since Brex cannot serialized by Illuminate\Queue\Queue:160 @createObjectPayload jadi diganti pakai Array
    * Create a new message instance.
    */
-  public function __construct(public User $initiator,  public Brex $validation)
+  // public function __construct(public User $initiator,  public Brex $validation)
+  public function __construct(public User $initiator,  public Array $validationResult)
   {
     //
   }
@@ -39,10 +41,12 @@ class BrexValidationResult extends Mailable
    */
   public function content(): Content
   {
+    $result = $this->validationResult;
     return new Content(
-      view: 'view.brexValidationResult',
+      view: 'mail.brexValidationResult',
       with: [
-        'results' => $this->validation->result
+        // 'results' => $this->validation->result()
+        'results' => $result
       ]
     );
   }
