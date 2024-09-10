@@ -1,0 +1,35 @@
+{
+  "tilte": "Fully Developed Description: Create CSDB Object",
+  "content": {
+    "use_case_name": "Membuat CSDB Object",
+    "scenario": "Membuat CSDB Object berdasarkan file/text xml",
+    "triggering_event": [
+      "1. application receive http request by route named api.create_csdb_object"
+    ],
+    "brief_description": "the application will create the xml file, stored to storage and database, and will return the filename and (virtual) path",
+    "actors": "http request",
+    "related_use_case": "authenticating",
+    "stakeholders": "null",
+    "preconditions": "text xml",
+    "postconditions": "application/json berupa filename and (virtual) path",
+    "flow_of_activities": {
+      "actor": [
+        "1. http request with params xml string"
+      ],
+      "system":[
+        "1. ", 
+        "2. application established and middleware passed.",
+        "3. validating request",
+        "4. instance csdb model and fill the properties",
+        "5. instance related history model",
+        "6. save csdb model and history",
+        "7. run worker to instance and save object model",
+        "8. return response with application/json contains message, csdb, infotype?, status?"
+      ]
+    },
+    "exception": [
+      "3.1. if validating request fails, return to step 8 with status=fail, infotype=warning, errors={$validationError}",
+      "6.1. if saving csdb model or history failed, return to step 8 with status=fail, infotype=warning"     
+    ]
+  }
+}
