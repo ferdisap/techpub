@@ -22,7 +22,9 @@ use Ptdi\Mpub\Main\CSDBError;
 use Ptdi\Mpub\Main\CSDBObject;
 use Ptdi\Mpub\Main\CSDBStatic;
 use Ptdi\Mpub\Main\Helper;
+use Ptdi\Mpub\Transformer\Transformator;
 use ZipStream\ZipStream;
+use Ptdi\Mpub\Transformer\Pdf;
 
 class CsdbController extends Controller
 {
@@ -80,30 +82,23 @@ class CsdbController extends Controller
 
   public function read_pdf_object(Request $request, Csdb $CSDBModel)
   {
-    // $modelIdentCode = Helper::get_attribute_from_filename($CSDBModel->filename, 'modelIdentCode');  
     $modelIdentCode = 'CN235';
     $config = new \DOMDocument();
-    $config->validateOnParse = true;
-    $config->load(CSDB_VIEW_PATH . "/xsl/Config.xml");
+    $config->load(Transformator::config_uri());
     $xpath = new \DOMXPath($config);
-    $fo = CSDB_VIEW_PATH . "/xsl" . "/" . $xpath->evaluate("string(//method[@type='pdf']/pathCache)") . "/" . $CSDBModel->filename . ".fo";
+    $xslFo = $xpath->evaluate("string(//config/output/method[@type='pdf']/path[@product-name='$modelIdentCode'])");
+    if(!$xslFo) $xslFo = $xpath->evaluate("string(//config/output/method[@type='pdf']/path[@product-name='*'])");
+
+    $output = CSDB_VIEW_PATH . '/transformed'. '/'. str_replace('.xml','.fo',$CSDBModel->filename);
+    $CSDBModel->loadCSDBObject();
+    $fo = $CSDBModel->CSDBObject->transform_to_fo($xslFo, $output);
+    if(!$fo) return $this->ret2(500);
+    $pdf = $CSDBModel->CSDBObject->transform_to_pdf($fo, str_replace('.fo','.pdf',$fo));
+    if(!$pdf) return $this->ret2(500);
+
     $response = Response::make();
-    $pathxsl = CSDB_VIEW_PATH . "/xsl" . "/" . $xpath->evaluate("string(//config/output/method[@type='pdf']/path[@product-name='{$modelIdentCode}' or @product-name='*'])");
-
-    $storage = $CSDBModel->initiator->storage;
-    $CSDBModel->CSDBObject->load(CSDB_STORAGE_PATH . "/" . $storage . "/" . $CSDBModel->filename);
-    $CSDBModel->CSDBObject->setConfigXML(CSDB_VIEW_PATH . DIRECTORY_SEPARATOR . "xsl" . DIRECTORY_SEPARATOR . "Config.xml"); // nanti diubah mungkin berbeda antara pdf dan html meskupun harusnya SAMA. Nanti ConfigXML mungkin tidak diperlukan jika fitur BREX sudah siap sepenuhnya.
-
-    CSDBStatic::$footnotePositionStore[$CSDBModel->filename] = [];
-    $transformed = $CSDBModel->CSDBObject->transform_to_xml($pathxsl, [
-      "filename" => $CSDBModel->filename,
-      "alertPathBackground" => "file:///" . str_replace("\\", "/", CSDB_VIEW_PATH . "/xsl/pdf/assets"),
-    ]);
-    if (file_put_contents($fo, $transformed) and ($pdf = Fop::FO_to_PDF($fo))) {
-      $response->header('Content-Type', 'application/pdf');
-      return $response->setContent($pdf);
-    }
-    abort(400);
+    $response->header('Content-Type', 'application/pdf');
+    return $response->setContent(file_get_contents($pdf));
   }
   
   public function read_html_object(Request $request, Csdb $CSDBModel)

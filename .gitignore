@@ -16,6 +16,7 @@
 /storage/csdb_deleted/*
 /resources/notes/info/README.md
 /resources/views/csdb/xsl/pdf/transformed/*
+/resources/views/csdb/transformed/*
 /resources_dev/*
 /vendor
 .env
