@@ -60,7 +60,7 @@ class RegisteredUserController extends Controller
     ]);
 
 
-    if ($enterprise = Enterprise::where('name', $request->enterprise_name)->first()) {
+    if (!($enterprise = Enterprise::where('name', $request->enterprise_name)->first())) {
       if ($code = CodeSeeder::seed('')) {
         if (!($enterprise = EnterpriseSeeder::seed($request->enterprise_name, $code->id))) {
           $code->delete();
