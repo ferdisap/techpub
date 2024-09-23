@@ -1,0 +1,83 @@
+openapi: 3.0.0
+info:
+  title: CSDB Management System
+  description: Managing CSDB Object for aircraft manual development.
+  version: 0.1.9
+servers:
+  - url: https://techpub.test
+    description: development server
+paths:
+  /csdb:
+    get: 
+      description: "display view of csdb management system app"
+      responses: 
+        '200': 
+          description: success to load view
+      security:
+        - auth: []
+        - csrf: []
+  /api/csdbcreate:
+    post:
+      summary: creating CSDB object.
+      description: create CSDB Object from xml string.
+      requestBody: 
+        $ref: '#/components/requestBodies/csdbcreate'
+      responses:
+        '200':
+          $ref: '#/components/responses/csdbmodel'
+      security: 
+        - auth: []
+        - csrf: []
+components:
+  schemas:
+    csdbmodel:
+      type: object
+      properties:
+        message: 
+          type: string
+          example: " "
+        infotype: 
+          type: string
+          enum:
+            - 'warning'
+            - 'caution'
+            - 'note'
+        model: 
+          type: object
+          properties: 
+            filename:
+              type: string
+              example: "DMC-S1000D-G-04-10-0301-00A-022A-D_001-00_EN-US.xml"
+            path: 
+              type: string
+              example: "CSDB/N219/AMM"
+    csdbcreate:
+      type: object
+      properties:
+        path:
+          type: string
+          example: "CSDB/N219/MALE"
+        xmleditor:
+          type: string
+          example: "<dmodule></dmodule>"
+  requestBodies: 
+    csdbcreate:
+      content: 
+        application/json:
+          schema:
+            $ref: '#/components/schemas/csdbcreate'
+  responses:
+    csdbmodel:
+      description: 'csdb object model'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/csdbmodel'
+  securitySchemes:
+    auth:
+      type: http
+      scheme: bearer
+    csrf:
+      type: apiKey
+      name: "X-CSRF-TOKEN"
+      in: header
