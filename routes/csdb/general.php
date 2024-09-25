@@ -21,7 +21,7 @@ use Ptdi\Mpub\Main\Helper;
 // ### Route utama ###
 Route::get("/csdb/{view?}",[CsdbController::class, 'app'])->where('view','(.*)')->middleware('auth');
 
-Route::post("/api/csdbcreate",[CsdbController::class, 'create'])->middleware('auth')->name('api.create_object');
+Route::post("/api/csdbcreate",[CsdbController::class, 'create'])->middleware('auth:sanctum')->name('api.create_object');
 Route::post("/api/updateobject/{filename}", [CsdbController::class, 'update'])->middleware('auth')->name('api.update_object');
 Route::post("/api/uploadICN", [CsdbController::class, 'uploadICN'])->middleware('auth')->name('api.upload_ICN');
 

@@ -26,7 +26,9 @@ use Spipu\Html2Pdf\Html2Pdf;
 
 Route::get('/', [Controller::class, 'index'])->name('welcome');
 
+require __DIR__.'/api.php';
 require __DIR__.'/auth.php';
+require __DIR__.'/auth-sanctum.php';
 require __Dir__."/enterprise/general.php";
 require __Dir__."/csdb/general.php";
 require __Dir__."/csdb/comment.php";

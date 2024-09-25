@@ -30,9 +30,9 @@ class AuthenticatedSessionController extends Controller
 
     $request->session()->regenerate();
 
-    if($request->ajax()){
-      return $this->ret2(200, ["Login success"],['redirect' => '']);
-    }
+    // if($request->ajax()){
+    //   return $this->ret2(200, ["Login success"],['redirect' => '']);
+    // }
 
     // return back()->withInput(); // kalau ini balik lagi ke view auth.login, sementara auth.login itu untuk yang belum login, sehingga nanti akan error karena recursive
     // return redirect()->intended('defaultpage');
@@ -58,9 +58,9 @@ class AuthenticatedSessionController extends Controller
     $request->session()->regenerateToken();
    
     // jika request ajax
-    if($request->ajax()){
-      return $this->ret2(200, ["Logout success"], ["redirect" => '']);
-    }
+    // if($request->ajax()){
+    //   return $this->ret2(200, ["Logout success"], ["redirect" => '']);
+    // }
     
     // jika previous route harus autentikasi dulu (eg: route('login)) maka ke HOME (dashboard)
     // jika previous route tidak harus auntentikasi (guest misalnya) maka back() saja
