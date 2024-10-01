@@ -6,13 +6,31 @@ info:
 servers:
   - url: https://techpub.test
     description: development server
+  - url: http://127.0.0.1:8000
+    description: local development server
 tags:
   - name: auth
   - name: csdb
 paths:
-  /applogin:
+  /sanctum/csrf-cookie:
+    get:
+      summary: set csrf to cookie with key XSRF-TOKEN
+      responses:
+        "200":
+          description: OK
+  /get/csrf:
+    get:
+      summary: to get csrf value
+      responses:
+        "200":
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+  /api/login:
     post:
-      summary: login path for each user 
+      summary: login path for each user       
       tags:
         - auth
       parameters:
@@ -23,6 +41,7 @@ paths:
           schema:
             type: string
         - $ref: '#/components/parameters/xmlhttprequest'
+        - $ref: '#/components/parameters/xsrf'
       responses:
         "200":
           description: OK
@@ -72,7 +91,20 @@ paths:
                 password :
                   type: string
                   example: password
-  /applogout:
+  /api/auth-check:
+    post:
+      summary: 'to check wheter the user is still authenticate or not'
+      tags:
+        - auth
+      parameters:
+        - $ref: '#/components/parameters/bearerAuthorization'
+      responses:
+        "200":
+          description: "the user is authenticated"
+        "401":
+          description: "the user is not authenticated"
+          $ref: '#/components/responses/Unauthorized'
+  /api/logout:
     post:
       summary: logout user for each token obtained at login
       tags:

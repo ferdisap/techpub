@@ -1,0 +1,3 @@
+apis:
+  docs/csdb-api.yml:
+    alias: csdb-management-system

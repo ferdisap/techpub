@@ -180,9 +180,22 @@ class CsdbController extends Controller
     ]);
   }
 
+  public function getCsdbs(Request $request)
+  {
+    $active = $request->active ?? true;
+    if($active){
+      $csdbs = Csdb::getCsdbs(['exception' => ['CSDB-DELL', 'CSDB-PDEL']]);
+    } else {
+      $csdbs = Csdb::getCsdbs();
+    }
+    $csdbs = $csdbs->get(['filename','path'])->toArray();
+    return $this->ret2(200, ["csdbs" => $csdbs]);
+  }
+
   ###### semua fungsi lama taruh dibawah ######
 
   /**
+   * @deprecated, diganti @getCsdbs
    * always return code 200
    * biasa dipakai listtree
    */
@@ -212,6 +225,9 @@ class CsdbController extends Controller
     return $model ? $this->ret2(200, ["model" => $model->toArray()]) : $this->ret2(400, ["no such {$filename} available."]);
   }
 
+  /**
+   * @deprecated diganti dengan @get_object_model
+   */
   public function get_csdb_model(Request $request, Csdb $CSDBModel)
   {
     return $this->ret2(200, ['csdb' => $CSDBModel]);

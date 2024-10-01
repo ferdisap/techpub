@@ -18,11 +18,11 @@ use Illuminate\Support\Facades\Route;
 
 */
 
-Route::get("/get/csrf", function () {
-  return response(csrf_token(),200,[
-    "content-type" => 'text/plain'
-  ]);
-});
+// Route::get("/get/csrf", function () {
+//   return response(csrf_token(),200,[
+//     "content-type" => 'text/plain'
+//   ]);
+// });
 
 Route::middleware('auth:sanctum')->post('/user', function (Request $request) {
   return $request->user();

@@ -45,7 +45,7 @@ class Authenticate extends Controller
   public function store(LoginRequest $request)
   {
     // ensure request is not rate limited
-    $request->ensureIsNotRateLimited();
+    // $request->ensureIsNotRateLimited();
 
     // search user
     $user = User::where('email', $request->validated('email'))->first();
@@ -53,7 +53,9 @@ class Authenticate extends Controller
       // javscript response.data = {message:?string, errors:{email: ?Array[?string]}}
       throw new HttpResponseException(response([
         'message' => "login failed",
-        'email' => ['The provided credentials are incorrect.'],
+        'errors' => [
+          'email' => ['The provided credentials are incorrect.'],
+        ],
       ],422));
     }
 
@@ -69,7 +71,7 @@ class Authenticate extends Controller
     $token = $user->createToken($tokenName, $abilities)->plainTextToken;
 
     // clear the rate limiter for this request
-    RateLimiter::clear($request->throttleKey());
+    // RateLimiter::clear($request->throttleKey());
 
     // return response
     return response()->json([
