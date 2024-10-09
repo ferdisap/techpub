@@ -81,8 +81,8 @@ class CodeSeeder extends Seeder
   {
     return Code::create([
       'name' => $name ? $name : Str::random(5),
-      'description' => $type,
-      'type' => $description,
+      'description' => $description,
+      'type' => $type,
     ]);
   }
 }

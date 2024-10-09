@@ -13,8 +13,8 @@ class BrexValidationTest extends TestCase
    */
   public function test_example(): void
   {
-    $this->assertTrue(true);
-    return;
+    // $this->assertTrue(true);
+    // return;
 
     $response = $this->post("/api/br/validate",[
       'filenames' => ['DMC-MALE-A-15-00-01-00A-018A-A_000-01_EN-EN.xml'],

@@ -1,0 +1,6 @@
+PUT http://127.0.0.1:8000/api/s1000d/csdb/create HTTP/1.1
+content-type: application/json
+
+{
+  "xmleditor": "<dmoduel>foo<dmodule/>"
+}

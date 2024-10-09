@@ -1,0 +1,23 @@
+POST http://127.0.0.1:8000/register HTTP/1.1
+content-type: application/json
+
+{
+  "first_name_register": "firstname",
+  "middle_name_register": "midname",
+  "last_name_register": "lastname",
+  "job_title_register": "aircraft manual",
+  "enterprise_name": "PTDI",
+  "email_register": "testd@example.com",
+  "password_register": "password",
+  "password_register_confirmation": "password"
+}
+
+###
+
+POST http://127.0.0.1:8000/api/login HTTP/1.1
+Content-Type: application/json
+
+{
+  "email": "luffy@example.com",
+  "password": "password"
+}

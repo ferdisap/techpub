@@ -138,7 +138,7 @@ class Controller extends BaseController
    * jika ingin mengirim response berupa $model->paginate(), maka parameter adalah $this->model->toArray();
    */
   public function ret2($code, $messages = [])
-  {
+  {    
     $data = ["message" => ''];
     $args = func_get_args();
 

@@ -27,3 +27,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->post('/user', function (Request $request) {
   return $request->user();
 });
+
+// Route::get("/s1000d/csdb/all",function(){
+//   return 'foo';
+// })->middleware('auth:sanctum')->name('api.get_csdbs'); // api.get_allobjects_list

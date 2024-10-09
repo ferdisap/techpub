@@ -6,6 +6,7 @@ use App\Http\Controllers\Csdb\CommentController;
 use App\Http\Controllers\Csdb\DdnController;
 use App\Http\Controllers\Csdb\DmlController;
 use App\Http\Controllers\Csdb\HistoryController;
+use App\Http\Controllers\CsdbApi\MainController;
 use App\Http\Controllers\EnterpriseController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
@@ -23,9 +24,15 @@ use Illuminate\Support\Facades\Route;
 | Istilah response data "model" diganti menjadi "object"
 */
 
+
+// Route::middleware('auth:sanctum')->group(function () {
+//   Route::get("/s1000d/csdb/all",function(){
+//     return 'foobar';
+//   })->name('api.get_csdbs'); // api.get_allobjects_list
+// });
 Route::middleware('auth:sanctum')->group(function () {
   // create or update
-  Route::put("/s1000d/csdb/create",[CsdbController::class, 'create'])->name('api.create_object');
+  Route::put("/s1000d/csdb/create",[MainController::class, 'create'])->name('api.create_object');
   Route::post("/s1000d/csdb/update/{filename}", [CsdbController::class, 'update'])->name('api.update_object');
   Route::post("/s1000d/icn/upload", [CsdbController::class, 'uploadICN'])->name('api.upload_ICN');
   Route::post('/s1000d/csdb/update/path', [CsdbController::class, 'change_object_path'])->name('api.change_object_path');
@@ -37,9 +44,12 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::put("/s1000d/dml/{filename}/merge", [DmlController::class, 'merge'])->name('api.dml_merge');
 
   // read
+  Route::get("/s1000d/csdbs/all",[CsdbController::class, 'getCsdbs'])->name('api.get_csdbs'); // api.get_allobjects_list
+  
   // ini nanti bisa juga di cacce pakai meddleware ETagGeneralContent, tapi jika diinstal di LAN tidak perlu karena available bandwith yang besar
   Route::get("/s1000d/csdb/{CSDBModel:filename}",[CsdbController::class, 'get_csdb_model'])->name('api.get_csdb'); // api.get_csdb_model
-  Route::get("/s1000d/csdb/all",[CsdbController::class, 'getCsdbs'])->name('api.get_csdbs'); // api.get_allobjects_list
+  
+
   Route::get("/s1000d/object/{filename}",[CsdbController::class, 'get_object_model'])->name('api.get_object'); // api.get_object_model
   Route::get('/s1000d/object/{CSDBModel:filename}/raw', [CsdbController::class, 'get_object_raw'])->name('api.get_object_raw');
   Route::get("/s1000d/icn/{CSDBModel:filename}/raw", [CsdbController::class, 'get_icn_raw'])->name('api.get_icn_raw');

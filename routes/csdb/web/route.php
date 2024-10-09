@@ -19,3 +19,5 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth')->group(function () {
   Route::get("/csdb/{view?}",[CsdbController::class, 'app'])->where('view','(.*)');
 });
+
+// Route::get("/s1000d/csdb/all",[CsdbController::class, 'getCsdbs'])->name('api.get_csdbs'); // api.get_allobjects_list

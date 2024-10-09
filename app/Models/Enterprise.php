@@ -21,7 +21,7 @@ class Enterprise extends Model
    */
   protected $fillable = [
     'name',
-    'code',
+    'code_id',
     'address',
     'remarks',
   ];

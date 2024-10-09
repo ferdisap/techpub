@@ -12,6 +12,7 @@ use App\Mail\Csdb\DataDispatchNote;
 use App\Models\Csdb;
 use App\Models\Csdb\Ddn;
 use App\Models\Enterprise;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Route;

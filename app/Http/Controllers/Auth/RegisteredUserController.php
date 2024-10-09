@@ -32,8 +32,9 @@ class RegisteredUserController extends Controller
    *
    * @throws \Illuminate\Validation\ValidationException
    */
-  public function store(Request $request): RedirectResponse
-  {
+  // public function store(Request $request): RedirectResponse
+  public function store(Request $request)
+  { 
     $request->validate([
       'first_name_register' => ['required', 'string', 'max:255'],
       'middle_name_register' => ['string', 'max:255'],
@@ -70,7 +71,7 @@ class RegisteredUserController extends Controller
         return abort(400);
       };
     }
-
+    
     $user->work_in()->associate($enterprise);
 
     event(new Registered($user));
