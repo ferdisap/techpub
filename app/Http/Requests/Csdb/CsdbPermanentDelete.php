@@ -5,6 +5,7 @@ namespace App\Http\Requests\Csdb;
 use App\Models\Csdb;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class CsdbPermanentDelete extends FormRequest
 {
@@ -53,7 +54,8 @@ class CsdbPermanentDelete extends FormRequest
   protected function prepareForValidation(): void
   {
     $CSDBModelArray = [];
-    $filename = $this->get('filename');
+    $filename = $this->filename;
+    if(!$filename) throw new HttpResponseException(response(['message' => "filename is required."],412,['content-type' => 'application/json']));
     if(is_array($filename) || ($filename = explode(",",$filename))){
       foreach($filename as $i => $f){
         // $m = Csdb::with(['object'])->where('filename',$f)->where('initiator_id',$this->user()->id)->first();

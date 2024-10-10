@@ -306,7 +306,7 @@ class Csdb extends Model
     // filter by storage
     // $CSDBModel = $CSDBModel->whereRaw('(storage_id = ? )',[request()->user()->id]);
     if (self::$storage_user_id === 0) ($CSDBModel = $CSDBModel->whereRaw('(storage_id = ? )', [request()->user()->id]));
-    // elseif (self::$storage_user_id) ($CSDBModel = $CSDBModel->whereRaw('(storage_id = ? )', [self::$storage_user_id]));
+    elseif (self::$storage_user_id) ($CSDBModel = $CSDBModel->whereRaw('(storage_id = ? )', [self::$storage_user_id]));
 
     // filter by last history
     if (!empty($historyCode)) {

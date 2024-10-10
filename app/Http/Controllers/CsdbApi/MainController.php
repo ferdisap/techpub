@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\CsdbApi;
 
 use App\Http\Requests\Csdb\CsdbCreateByXMLEditor;
+use App\Http\Requests\Csdb\CsdbDelete;
+use App\Http\Requests\Csdb\CsdbPermanentDelete;
+use App\Http\Requests\Csdb\CsdbRestore;
 use App\Http\Requests\Csdb\CsdbUpdateByXMLEditor;
 use App\Models\Csdb;
 use App\Models\Csdb\History;
@@ -14,6 +17,10 @@ use PrettyXml\Formatter;
 
 class MainController extends BaseController
 {
+  /**
+   * response code 422 if fail
+   * src: https://stackoverflow.com/questions/47269601/what-http-response-code-to-use-for-failed-post-request
+   */
   public function create(CsdbCreateByXMLEditor $request)
   {
     $CSDBModel = new Csdb();
@@ -40,7 +47,7 @@ class MainController extends BaseController
       'message' => "{$CSDBModel->filename} failed to create.",
       'errors' => $CSDBModel->CSDBObject->errors->get(),
       'csdb' => $CSDBModel
-    ],400,['content-type' => 'application/json']);
+    ],422,['content-type' => 'application/json']);
   }
 
   public function read(Request $request, Csdb $CSDBModel)
@@ -57,6 +64,10 @@ class MainController extends BaseController
     return abort(204);
   }
 
+  /**
+   * response code 422 if fail
+   * src: https://stackoverflow.com/questions/47269601/what-http-response-code-to-use-for-failed-post-request
+   */
   public function update(CsdbUpdateByXMLEditor $request, Csdb $CSDBModel)
   {
     $CSDBModel = $request->validated('oldCSDBModel')[0];
@@ -77,6 +88,114 @@ class MainController extends BaseController
       'message' => "{$CSDBModel->filename} failed to update.",
       'errors' => $CSDBModel->CSDBObject->errors->get(),
       'csdb' => $CSDBModel
-    ],400,['content-type' => 'application/json']);
+    ],422,['content-type' => 'application/json']);
+  }
+
+  public function delete(CsdbDelete $request)
+  {
+    $result = [
+      'success' => [],
+      'fail' => [],
+    ];
+    $validatedData = $request->validated();
+    $CSDBModels = $validatedData['CSDBModelArray'];
+    unset($validatedData['CSDBModelArray']);
+    $qtyCSDBs = count($CSDBModels);
+    for ($i=0; $i < $qtyCSDBs; $i++) { 
+      $CSDB_HISTORYModel = History::MAKE_CSDB_DELL_History($CSDBModels[$i]);
+      $USER_HISTORYModel = History::MAKE_USER_DELL_History($request->user(),'', $CSDBModels[$i]->filename);
+      if(History::saveModel([$CSDB_HISTORYModel, $USER_HISTORYModel])){
+        $result['success'][] = $CSDBModels[$i]->filename;
+      } else {
+        $result['fail'][] = $CSDBModels[$i]->filename;
+      }
+    }
+    $totalFail = count($result['fail']);
+    $totalSuccess = count($result['success']);
+    $infotype = $totalSuccess < 1 ? "warning" : ($totalFail > 0 ? 'caution' : 'info');
+    $m = ($totalSuccess > 0 ? ("success: " . $totalSuccess . "/" .($totalSuccess + $totalFail) . ", failure: " . $totalFail . "/" .($totalSuccess + $totalFail)) : "fail: " . ($totalSuccess + $totalFail) . "/". ($totalSuccess + $totalFail));
+    $code = $totalSuccess < 1 ? 400 : 200;
+    return Response::make([
+      'infotype' => $infotype,
+      'message' => $m,
+      'errors' => [
+        'failure' => $result['fail'],
+        'success' => $result['success'],
+      ]
+    ],$code);
+  }
+
+  /**
+   * sama dengan @delete() tapi beda history saja
+   */
+  public function permanentDelete(CsdbPermanentDelete $request)
+  {
+    $result = [
+      'success' => [],
+      'fail' => [],
+    ];
+    $validatedData = $request->validated();
+    $CSDBModels = $validatedData['CSDBModelArray'];
+    unset($validatedData['CSDBModelArray']);
+    $qtyCSDBs = count($CSDBModels);
+    for ($i=0; $i < $qtyCSDBs; $i++) { 
+      $CSDB_HISTORYModel = History::MAKE_CSDB_PDEL_History($CSDBModels[$i]);
+      $USER_HISTORYModel = History::MAKE_USER_PDEL_History($request->user(),'', $CSDBModels[$i]->filename);
+      if(History::saveModel([$CSDB_HISTORYModel,$USER_HISTORYModel])){
+        $result['success'][] = $CSDBModels[$i]->filename;
+      } else {
+        $result['fail'][] = $CSDBModels[$i]->filename;
+      }
+    }    
+    $totalFail = count($result['fail']);
+    $totalSuccess = count($result['success']);
+    $infotype = $totalSuccess < 1 ? "warning" : ($totalFail > 0 ? 'caution' : 'info');
+    $m = ($totalSuccess > 0 ? ("success: " . $totalSuccess . "/" .($totalSuccess + $totalFail) . ", failure: " . $totalFail . "/" .($totalSuccess + $totalFail)) : "fail: " . ($totalSuccess + $totalFail) . "/". ($totalSuccess + $totalFail));
+    $code = $totalSuccess < 1 ? 400 : 200;
+    return Response::make([
+      'infotype' => $infotype,
+      'message' => $m,
+      'errors' => [
+        'failure' => $result['fail'],
+        'success' => $result['success'],
+      ]
+    ],$code);
+  }
+
+  /**
+   * sama dengan @delete() tapi beda history saja
+   */
+  public function restore(CsdbRestore $request)
+  {
+    $result = [
+      'success' => [],
+      'fail' => [],
+    ];
+    $validatedData = $request->validated();
+    $CSDBModels = $validatedData['CSDBModelArray'];
+    unset($validatedData['CSDBModelArray']);
+    $qtyCSDBs = count($CSDBModels);
+    for ($i=0; $i < $qtyCSDBs; $i++) { 
+      $CSDB_HISTORYModel = History::MAKE_CSDB_RSTR_History($CSDBModels[$i]);
+      $USER_HISTORYModel = History::MAKE_USER_RSTR_History($request->user(),'', $CSDBModels[$i]->filename);
+      if(History::saveModel([$CSDB_HISTORYModel,$USER_HISTORYModel])){
+        $result['success'][] = $CSDBModels[$i]->filename;
+      } else {
+        $result['fail'][] = $CSDBModels[$i]->filename;
+      }
+    }
+    $totalFail = count($result['fail']);
+    $totalSuccess = count($result['success']);
+    $infotype = $totalSuccess < 1 ? "warning" : ($totalFail > 0 ? 'caution' : 'info');
+    $m = ($totalSuccess > 0 ? ("success: " . $totalSuccess . "/" .($totalSuccess + $totalFail) . ", failure: " . $totalFail . "/" .($totalSuccess + $totalFail)) : "fail: " . ($totalSuccess + $totalFail) . "/". ($totalSuccess + $totalFail));
+    $code = $totalSuccess < 1 ? 400 : 200;
+    return Response::make([
+      'infotype' => $infotype,
+      'message' => $m,
+      'errors' => [
+        'failure' => $result['fail'],
+        'success' => $result['success'],
+      ]
+    ],$code);
   }
 }

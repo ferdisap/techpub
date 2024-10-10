@@ -19,7 +19,7 @@ class CrudTest extends TestCase
   public static string $filename;
   public static string $xmlstring;
 
-  public function test_create(): void
+  public function create($assert = true)
   {
     self::$user = User::find(1) ?? User::factory()->create();
     Sanctum::actingAs(self::$user, ["*"]);
@@ -31,10 +31,16 @@ class CrudTest extends TestCase
       'xmleditor' => $file[1],
     ]);
 
-    self::$filename = $response->json("csdb.filename");
-    $response->assertStatus(200);
-    $this->assertEquals($file[0],self::$filename);
+    if($assert){
+      $response->assertStatus(200);
+      self::$filename = $response->json("csdb.filename");
+      $this->assertEquals($file[0],self::$filename);
+    }
+  }
 
+  public function test_create(): void
+  {
+    $this->create();
   }
 
   public function test_read():void
@@ -62,13 +68,54 @@ class CrudTest extends TestCase
     $content = $doc->getElementsByTagName('content')[0];
     $content->remove();
 
-    var_dump(self::$filename);
+    // var_dump(self::$filename);
 
     $response = $this->post("/api/s1000d/csdb/update/" . self::$filename, [
       'xmleditor' => $doc->saveXML(),
     ]);
 
     $response->assertStatus(200);
+  }
+
+  public function test_delete() :void
+  {
+    Sanctum::actingAs(self::$user, ["*"]);
+
+    $response = $this->delete("/api/s1000d/csdb/delete", [
+      'filename' => self::$filename,
+    ]);
+    $response->assertStatus(200);
+    
+    $response = $this->delete("/api/s1000d/csdb/delete", []);
+    $response->assertStatus(412);    
+  }
+
+  public function test_restore() :void
+  {
+    Sanctum::actingAs(self::$user, ["*"]);
+
+    $response = $this->post("/api/s1000d/csdb/restore", [
+      'filename' => self::$filename,
+    ]);
+    $response->assertStatus(200);
+    
+    $response = $this->post("/api/s1000d/csdb/restore", []);
+    $response->assertStatus(412);    
+  }
+
+  public function test_permanent_delete() :void
+  {
+    $this->create(false);
+
+    Sanctum::actingAs(self::$user, ["*"]);
+
+    $response = $this->delete("/api/s1000d/csdb/permanentdelete", [
+      'filename' => self::$filename,
+    ]);
+    $response->assertStatus(200);
+    
+    $response = $this->delete("/api/s1000d/csdb/permanentdelete", []);
+    $response->assertStatus(412);    
   }
 
   public static function dmodule($usedtd = true)

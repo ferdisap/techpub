@@ -5,6 +5,7 @@ namespace App\Http\Requests\Csdb;
 use App\Models\Csdb;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class CsdbDelete extends FormRequest
 {
@@ -24,7 +25,7 @@ class CsdbDelete extends FormRequest
   public function rules(): array
   {
     return [
-      'filename' => ['required', 'array' ,function(string $attribute, mixed $filename, Closure $fail){
+      'filename' => function(string $attribute, mixed $filename, Closure $fail){
         if(is_array($filename)){
           $l = count($filename);
           for ($k=0; $k < $l; $k++) { 
@@ -35,7 +36,7 @@ class CsdbDelete extends FormRequest
         } else {
           if(!($this->CSDBModelArray[0])) $fail('There is no such $filename[$k] or you are not authorize to delete.');
         }
-      }],
+      },
       'CSDBModelArray' => function(string $attribute, mixed $CSDBModelArray, Closure $fail){
         $l = count($CSDBModelArray);
         $f = [];
@@ -53,7 +54,8 @@ class CsdbDelete extends FormRequest
   protected function prepareForValidation(): void
   {
     $CSDBModelArray = [];
-    $filename = $this->get('filename');
+    $filename = $this->filename;
+    if(!$filename) throw new HttpResponseException(response(['message' => "filename is required."],412,['content-type' => 'application/json']));
     if(is_array($filename) || ($filename = explode(",",$filename))){
       foreach($filename as $i => $f){
         // $m = Csdb::with(['object'])->where('filename',$f)->where('initiator_id',$this->user()->id)->first();

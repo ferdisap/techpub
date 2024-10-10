@@ -45,6 +45,13 @@ Route::middleware('auth:sanctum')->group(function () {
   ->missing(fn() => throw new HttpResponseException(response(["message" => "There is no such csdb."],404)))
   ->name('api.update_object');
 
+  // delete
+  Route::delete("/s1000d/csdb/delete", [MainController::class, 'delete'])->name('api.delete_csdbs');
+  Route::delete("/s1000d/csdb/permanentdelete", [MainController::class, 'permanentDelete'])->name('api.permanentdelete_csdbs'); // api.permanentdelete_object
+
+  // restore
+  Route::post("/s1000d/csdb/restore", [MainController::class, 'restore'])->name('api.restore_csdb'); // api.restore_object
+
   // #### below belum di test
 
 
@@ -85,12 +92,10 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::get("/s1000d/enterprise/search", [EnterpriseController::class, 'get_enterprises'])->middleware('auth:sanctum')->name('api.get_enterprises');
 
   // delete
-  Route::delete("/s1000d/csdb/delete", [CsdbController::class, 'delete'])->name('api.delete_csdbs');
   Route::get("/s1000d/deleted/all",[CsdbController::class, 'get_deletion_list'])->name('api.get_deleted'); // api.get_deletion_list
-  Route::post("/s1000d/csdb/permanentdelete", [CsdbController::class, 'permanentDelete'])->name('api.permanentdelete_csdbs'); // api.permanentdelete_object
   
   // restore
-  Route::post("/s1000d/csdb/restore", [CsdbController::class, 'restore'])->name('api.restore_csdb'); // api.restore_object
+  
 
   // validate
   Route::post("/s1000d/br/validate",[BrController::class, 'validate'])->name('api.validate_by_brex');

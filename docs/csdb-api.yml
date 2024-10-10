@@ -30,18 +30,18 @@ paths:
                 type: string
   /api/login:
     post:
-      summary: login path for each user       
+      summary: login path for each user
       tags:
         - auth
       parameters:
         - in: header
-          name: 'X-DEVICE-NAME'
-          example: 'WebBrowser'
-          description: 'to define the access token name'
+          name: "X-DEVICE-NAME"
+          example: "WebBrowser"
+          description: "to define the access token name"
           schema:
             type: string
-        - $ref: '#/components/parameters/xmlhttprequest'
-        - $ref: '#/components/parameters/xsrf'
+        - $ref: "#/components/parameters/xmlhttprequest"
+        - $ref: "#/components/parameters/xsrf"
       responses:
         "200":
           description: OK
@@ -52,13 +52,13 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: 'login success'
-                  token_type: 
+                    example: "login success"
+                  token_type:
                     type: string
-                    example: 'Bearer'
+                    example: "Bearer"
                   access_token:
                     type: string
-                    example: '1|s8QEnMRDQkRHSO1KqCZm32bvVB1Gi87kxSMvKII14a322e4b'
+                    example: "1|s8QEnMRDQkRHSO1KqCZm32bvVB1Gi87kxSMvKII14a322e4b"
         "422":
           description: Uncompressable Content
           content:
@@ -68,14 +68,14 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: 'login failed'
+                    example: "login failed"
                   email:
                     type: array
-                    items: 
+                    items:
                       type: string
                     example: [The provided credentials are incorrect.]
         "419":
-          $ref: '#/components/responses/Expired'
+          $ref: "#/components/responses/Expired"
       requestBody:
         content:
           application/json:
@@ -85,89 +85,115 @@ paths:
                 - email
                 - password
               properties:
-                email :
+                email:
                   type: string
-                  example: 'luffy@example.com'
-                password :
+                  example: "luffy@example.com"
+                password:
                   type: string
                   example: password
   /api/auth-check:
     post:
-      summary: 'to check wheter the user is still authenticate or not'
+      summary: "to check wheter the user is still authenticate or not"
       tags:
         - auth
       parameters:
-        - $ref: '#/components/parameters/bearerAuthorization'
+        - $ref: "#/components/parameters/bearerAuthorization"
       responses:
         "200":
           description: "the user is authenticated"
         "401":
           description: "the user is not authenticated"
-          $ref: '#/components/responses/Unauthorized'
+          $ref: "#/components/responses/Unauthorized"
   /api/logout:
     post:
       summary: logout user for each token obtained at login
       tags:
         - auth
       parameters:
-        - $ref: '#/components/parameters/bearerAuthorization'
+        - $ref: "#/components/parameters/bearerAuthorization"
       responses:
         "200":
-          description: 'OK'
+          description: "OK"
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  message: 
+                  message:
                     type: string
                     example: "logout success"
         "419":
-          $ref: '#/components/responses/Expired'
+          $ref: "#/components/responses/Expired"
         "401":
-          $ref: '#/components/responses/Unauthorized'
+          $ref: "#/components/responses/Unauthorized"
       security:
-        - auth: []    
+        - auth: []
   /csdb:
-    get: 
-      summary: "view csdb application" 
+    get:
+      summary: "view csdb application"
       description: "display view of csdb management system app"
       tags:
         - csdb
-      responses: 
-        '200': 
+      responses:
+        "200":
           description: success to load view
           content:
             text/html:
-              schema: 
+              schema:
                 type: string
-              examples: 
+              examples:
                 csdb_view_path:
-                  $ref: '#/components/examples/csdb_view_page'
+                  $ref: "#/components/examples/csdb_view_page"
         "419":
-          $ref: '#/components/responses/Expired'
+          $ref: "#/components/responses/Expired"
         "401":
-          $ref: '#/components/responses/Unauthorized'
+          $ref: "#/components/responses/Unauthorized"
       security:
         - auth: []
   /api/csdb/create:
-    post:
+    put:
       summary: creating CSDB object.
-      description: create CSDB Object from xml string.
+      description: The request should provide the xml string of csdb object, but it is intended for dmodule, and pm only (icn metafile is coming soon).
       tags:
         - csdb
       parameters:
-        - $ref: '#/components/parameters/bearerAuthorization'
-      requestBody: 
-        $ref: '#/components/requestBodies/csdbcreate'
+        - $ref: "#/components/parameters/bearerAuthorization"
+      requestBody:
+        $ref: "#/components/requestBodies/csdbcreate"
       responses:
-        '200':
-          $ref: '#/components/responses/csdbmodel'
-        "419":
-          $ref: '#/components/responses/Expired'
+        "200":
+          description: Success creating csdb file
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  infotype:
+                    $ref: "#/components/schemas/infotype"
+                  message:
+                    type: string
+                    example: DMC-S1000D-G-04-10-0301-00A-022A-D_001-00_EN-US.xml has been created.
+                  csdb:
+                    $ref: "#/components/schemas/csdb"
         "401":
-          $ref: '#/components/responses/Unauthorized'
-      security: 
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          description: Failed to created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  infotype:
+                    $ref: "#/components/schemas/infotype"
+                  message:
+                    type: string
+                    example: "DMC-S1000D-G-04-10-0301-00A-022A-D_001-00_EN-US.xml is failed to create."
+                  csdb:
+                    $ref: "#/components/schemas/csdb"
+                  errors:
+                    $ref: "#/components/schemas/errors"
+      security:
         - auth: []
   /api/csdb/read/{filename}:
     get:
@@ -183,39 +209,206 @@ paths:
           required: true
           description: "filename csdb file in xml"
       responses:
-        '200':
+        "200":
           description: "success to load file xml"
           content:
             text/xml:
               schema:
                 type: string
-        '204':
-          description: "success but no content. File is no longer exist or cannot be loaded as valid xml."
-        '404':
+        "204":
+          $ref: "#/components/responses/routeModelBindingNoContent"
+        "404":
           description: "Filename is not found in database."
+      security:
+        - auth: []
+  /api/csdb/update/{filename}:
+    post:
+      summary: update the xml file of CSDB object
+      description: The request should provide the xml string of csdb object, but it is intended for dmodule, and pm only (icn metafile is coming soon).
+      tags:
+        - csdb
+      parameters:
+        - $ref: "#/components/parameters/filename"
+      responses:
+        "200":
+          description: Success updating csdb file.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  infotype:
+                    $ref: "#/components/schemas/infotype"
+                  message:
+                    type: string
+                    example: DMC-S1000D-G-04-10-0301-00A-022A-D_001-00_EN-US.xml has been updated.
+                  csdb:
+                    $ref: "#/components/schemas/csdb"
+        "204":
+          $ref: "#/components/responses/routeModelBindingNoContent"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          description: Failed to update.;
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  infotype:
+                    $ref: "#/components/schemas/infotype"
+                  message:
+                    type: string
+                    example: "DMC-S1000D-G-04-10-0301-00A-022A-D_001-00_EN-US.xml is failed to update."
+                  csdb:
+                    $ref: "#/components/schemas/csdb"
+                  errors:
+                    $ref: "#/components/schemas/errors"
+      security:
+        - auth: []
+  /api/csdb/delete:
+    delete:
+      summary: soft delete csdb file.
+      description: the csdb file in storage is still exist and csdb file can be restored.
+      tags:
+        - csdb
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filename:
+                  type: string
+                  description: "multiple filename is supported by separate using delimitter comma."
+                  example:
+                    $ref: "#/components/examples/data/value/csdb/filename"
+      responses:
+        "200":
+          $ref: "#/components/responses/csdb_delete"
+        "400":
+          $ref: "#/components/responses/csdb_delete"
+        "412":
+          description: the request body parameters is not provided.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "filename is required"
+      security:
+        - auth: []
+  /api/csdb/permanentdelete:
+    delete:
+      summary: permanent delete csdb file.
+      description: the csdb file in storage may still exist but csdb file can not be restored.
+      tags:
+        - csdb
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filename:
+                  type: string
+                  description: "multiple filename is supported by separate using delimitter comma."
+                  example:
+                    $ref: "#/components/examples/data/value/csdb/filename"
+      responses:
+        "200":
+          $ref: "#/components/responses/csdb_delete"
+        "400":
+          $ref: "#/components/responses/csdb_delete"
+        "412":
+          description: the request body parameters is not provided.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "filename is required"
+      security:
+        - auth: []
+  /api/csdb/restore:
+    post:
+      summary: restore the previous deleted csdb file.
+      description: the csdb file is restored from the status of deletion.
+      tags:
+        - csdb
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filename:
+                  type: string
+                  description: "multiple filename is supported by separate using delimitter comma."
+                  example:
+                    $ref: "#/components/examples/data/value/csdb/filename"
+      responses:
+        "200":
+          $ref: "#/components/responses/csdb_delete"
+        "400":
+          $ref: "#/components/responses/csdb_delete"
+        "412":
+          description: the request body parameters is not provided.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "filename is required"
       security:
         - auth: []
 components:
   schemas:
+    infotype:
+      type: string
+      enum:
+        - note
+        - caution
+        - warning
+    csdb:
+      type: object
+      properties:
+        filename:
+          example: DMC-S1000D-G-04-10-0301-00A-022A-D_001-00_EN-US.xml
+        path:
+          example: "csdb/amm/n219"
+    errors:
+      type: object
+      example:
+        email:
+          - email form is required.
+        password:
+          - password must contains at least 8 characters.
     csdbmodel:
       type: object
       properties:
-        message: 
+        message:
           type: string
           example: " "
-        infotype: 
+        infotype:
           type: string
-          enum:
-            - 'warning'
-            - 'caution'
-            - 'note'
-        model: 
+          $ref: "#/components/schemas/infotype"
+        model:
           type: object
-          properties: 
+          properties:
             filename:
               type: string
               example: "DMC-S1000D-G-04-10-0301-00A-022A-D_001-00_EN-US.xml"
-            path: 
+            path:
               type: string
               example: "CSDB/N219/AMM"
     csdbcreate:
@@ -227,13 +420,13 @@ components:
         xmleditor:
           type: string
           example: "<dmodule></dmodule>"
-  requestBodies: 
+  requestBodies:
     csdbcreate:
-      content: 
+      content:
         application/json:
           schema:
-            $ref: '#/components/schemas/csdbcreate'
-  responses:  
+            $ref: "#/components/schemas/csdbcreate"
+  responses:
     Expired:
       description: indicate that the header value of X-XSRF-TOKEN has been destroyed at before or expired.
       content:
@@ -242,76 +435,113 @@ components:
             properties:
               message:
                 type: string
-                example: 'CSRF token mistmatch'
+                example: "CSRF token mistmatch"
         text/html:
           schema:
             type: string
     Unauthorized:
-      description: indicate that user has not loggin or the authorization abilities is limited.            
+      description: indicate that user has not loggin or the authorization abilities is limited.
       content:
         application/json:
           schema:
             properties:
               message:
                 type: string
-                example: 'Unauthenticated.'
+                example: "Unauthenticated."
         text/html:
           schema:
             type: string
             title: Redirect Page to Login View
     csdbmodel:
-      description: 'csdb object model'
+      description: "csdb object model"
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/csdbmodel'
+            $ref: "#/components/schemas/csdbmodel"
+    routeModelBindingNoContent:
+      description: "success but no content. File is no longer exist or cannot be loaded as valid xml."
+    csdb_delete:
+      description: response for csdb delete.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              infotype:
+                $ref: "#/components/schemas/infotype"
+              message:
+                type: string
+                example: "success: 3/10, failure: 7/10."
+              errors:
+                type: object
+                example:
+                  failure:
+                    - DMC-S1000D-G-04-10-0301-00A-022A-D_001-00_EN-US.xml
+                    - DMC-S1000D-G-05-10-0302-00A-022A-D_001-00_EN-US.xml
+                  success:
+                    - DMC-S1000D-G-06-10-0301-00A-022A-D_001-00_EN-US.xml
+                    - DMC-S1000D-G-07-10-0302-00A-022A-D_001-00_EN-US.xml
   securitySchemes:
     auth:
       type: http
       scheme: bearer
   parameters:
     xmlhttprequest:
-      name: 'X-Requested-With'
+      name: "X-Requested-With"
       description: header for request by using XML HTTP Request
       in: header
       required: true
       schema:
         type: string
-        example: 'XMLHttpRequest'
+        example: "XMLHttpRequest"
     bearerAuthorization:
-      name: 'Authorization'
-      description: 'required to each request secured by authentication'
+      name: "Authorization"
+      description: "required to each request secured by authentication"
       in: header
       required: true
-      schema: 
+      schema:
         type: string
-        example: '1|s8QEnMRDQkRHSO1KqCZm32bvVB1Gi87kxSMvKII14a322e4b'
+        example: "1|s8QEnMRDQkRHSO1KqCZm32bvVB1Gi87kxSMvKII14a322e4b"
     xsrf:
-      name: 'X-XSRF-TOKEN'
+      name: "X-XSRF-TOKEN"
       description: to prevent user from cors. The token must be clear from encodedURI (must be decoded URI)
       in: header
       required: true
       schema:
         type: string
-        example: 'eyJpdiI6Ilg1U3IrRnFqVXZhM3RNYmFxNU0xZEE9PSIsInZhbHVlIjoiMHZHZ1FRT210cDRPbmNmclpBdUhEbFRRcmlLaDM4YndxRll0Vk5zdyt5RG1qK0NTdzhRNTBxYWJucWxMUkI2K3VtZ0RYbCtUZ2dhRzQ2UkludHNScDRnTUdCNncrNjNWM1IyRnlDZnFMWGpLbmVjNDJlWnlaR1poK0NwUzhDaG8iLCJtYWMiOiJkZTE5MGI5MDNlN2U5MDljMTNmZGZhNjc2ZGNhNTUxOWNjYzVhZTM5Nzg2Nzg2YWM2Y2RjNzVhZjJlMGJlZGVjIiwidGFnIjoiIn0='
+        example: "eyJpdiI6Ilg1U3IrRnFqVXZhM3RNYmFxNU0xZEE9PSIsInZhbHVlIjoiMHZHZ1FRT210cDRPbmNmclpBdUhEbFRRcmlLaDM4YndxRll0Vk5zdyt5RG1qK0NTdzhRNTBxYWJucWxMUkI2K3VtZ0RYbCtUZ2dhRzQ2UkludHNScDRnTUdCNncrNjNWM1IyRnlDZnFMWGpLbmVjNDJlWnlaR1poK0NwUzhDaG8iLCJtYWMiOiJkZTE5MGI5MDNlN2U5MDljMTNmZGZhNjc2ZGNhNTUxOWNjYzVhZTM5Nzg2Nzg2YWM2Y2RjNzVhZjJlMGJlZGVjIiwidGFnIjoiIn0="
+    filename:
+      name: "filename"
+      description: csdb/icn file name
+      in: path
+      required: true
+      schema:
+        type: string
+        example: DMC-S1000D-G-04-10-0301-00A-022A-D_001-00_EN-US.xml
   examples:
+    data:
+      description: example of csdb object
+      value:
+        csdb:
+          filename: "DMC-S1000D-G-04-10-0301-00A-022A-D_001-00_EN-US.xml"
+          path: "csdb"
     csdb_view_page:
       description: html view page csdb application
       value: <!DOCTYPE html>
-             <html lang="en">
-             <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <meta http-equiv="X-UA-Compatible" content="ie=edge">
-                <meta name="csrf-token" content="...">
-                <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-                <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />                
-                <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-                <script defer src="https://use.fontawesome.com/releases/v5.0.7/js/all.js"></script>
-                <script type="module" src="/public/js/...js"></script>
-                <link rel="stylesheet" href="/public/css/...css"/>                
-                <title>CSDB</title>
-             </head>
-             <body id="body">
-             </body>
-             </html>
+        <html lang="en">
+        <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <meta name="csrf-token" content="...">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+        <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script defer src="https://use.fontawesome.com/releases/v5.0.7/js/all.js"></script>
+        <script type="module" src="/public/js/...js"></script>
+        <link rel="stylesheet" href="/public/css/...css"/>
+        <title>CSDB</title>
+        </head>
+        <body id="body">
+        </body>
+        </html>
