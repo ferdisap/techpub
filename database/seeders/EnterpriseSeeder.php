@@ -69,6 +69,9 @@ class EnterpriseSeeder extends Seeder
     \App\Models\Enterprise::factory()->count(3)->create();
   }
 
+  /**
+   * function seed dipakai untuk production juga
+   */
   public static function seed(
     string $name, int $code_id, array $address = []
   )

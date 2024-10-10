@@ -77,6 +77,9 @@ class CodeSeeder extends Seeder
     return $arr;
   }
 
+  /**
+   * function seed dipakai untuk production juga
+   */
   public static function seed(string $name, string $type = 'auto-generated', string $description = 'auto-generated')
   {
     return Code::create([

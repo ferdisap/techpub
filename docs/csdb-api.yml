@@ -150,7 +150,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
       security:
         - auth: []
-  /api/csdbcreate:
+  /api/csdb/create:
     post:
       summary: creating CSDB object.
       description: create CSDB Object from xml string.
@@ -168,6 +168,32 @@ paths:
         "401":
           $ref: '#/components/responses/Unauthorized'
       security: 
+        - auth: []
+  /api/csdb/read/{filename}:
+    get:
+      summary: "get the csdb xml file"
+      description: "file will be sent as xml string"
+      tags:
+        - csdb
+      parameters:
+        - in: path
+          name: filename
+          schema:
+            type: string
+          required: true
+          description: "filename csdb file in xml"
+      responses:
+        '200':
+          description: "success to load file xml"
+          content:
+            text/xml:
+              schema:
+                type: string
+        '204':
+          description: "success but no content. File is no longer exist or cannot be loaded as valid xml."
+        '404':
+          description: "Filename is not found in database."
+      security:
         - auth: []
 components:
   schemas:

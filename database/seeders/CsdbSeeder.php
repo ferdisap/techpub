@@ -4,6 +4,9 @@ namespace Database\Seeders;
 
 use App\Http\Controllers\Controller;
 use App\Models\Csdb;
+use App\Models\User;
+use Database\Factories\CsdbFactory;
+use Database\Factories\UserFactory;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Seeder;
@@ -104,11 +107,46 @@ class CsdbSeeder extends Seeder
     //   $table->timestampsTz(7);
     // });
 
-    Csdb::create([
-      'filename' => "DMC-MALE-A-00-00-00-00A-001A-A_000-02_EN-US.xml",
-      'path' => 'csdb',
-      'initiator_id' => 1,
-      // 'deleter_id' => 1,
-    ]);
+    // Csdb::create([
+    //   'filename' => "DMC-MALE-A-00-00-00-00A-001A-A_000-02_EN-US.xml",
+    //   'path' => 'csdb',
+    //   'initiator_id' => 1,
+    //   // 'deleter_id' => 1,
+    // ]);
+
+    self::seed();
+  }
+
+  /**
+   * function seed mungkin dipakai untuk production juga
+   */
+  public static function seed()
+  {
+    $user = User::find(1) ?? \App\Models\User::factory()->create();
+    
+    $csdbFactory = new CsdbFactory();
+    $file = $csdbFactory->generateFile();
+    $predefine = $csdbFactory->predefine(
+      filename: $file[0],
+      path: 'csdb',
+      storage_id: $user->id,
+      initiator_id: $user->id,
+    );
+
+    $CSDBModel = Csdb::create($predefine);
+    $CSDBModel->CSDBObject->loadByString($file[1]);
+    if ($CSDBModel->saveDOMandModel($user->storage,
+        [ 
+          ['MAKE_CSDB_CRBT_History',[Csdb::class]], 
+          ['MAKE_USER_CRBT_History', [$user, '', $CSDBModel->filename]]
+        ],
+        []
+    )) {
+      // if success
+      return $CSDBModel;
+    }
+    // if fail
+    return null;
+
   }
 }

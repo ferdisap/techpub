@@ -12,6 +12,10 @@ use Illuminate\Support\Facades\Storage;
 use Ptdi\Mpub\Main\CSDBError;
 use Ptdi\Mpub\Main\CSDBObject;
 use Ptdi\Mpub\Main\XSIValidator;
+use Ptdi\Mpub\Validation\CSDBValidatee;
+use Ptdi\Mpub\Validation\CSDBValidator;
+use Ptdi\Mpub\Validation\Validator\Brex;
+use Ptdi\Mpub\Validation\Validator\Xsi;
 
 class CsdbUpdateByXMLEditor extends FormRequest
 {
@@ -47,17 +51,29 @@ class CsdbUpdateByXMLEditor extends FormRequest
           && $this->path == $oldModel->path
         ) $fail('There is no changes');
 
-        if(!in_array($value[0]->document->doctype->nodeName,['dmodule', 'pm', 'icnMetadataFile'])) return $fail('Document type must be dmodule, pm, or icnMetadataFile.'); // harus return agar script dibawah tidak di eksekusi
+        if(!in_array($value[0]->initial,['dm', 'pm', 'imf'])) return $fail('Document type must be dmodule, pm, or icnMetadataFile.'); // harus return agar script dibawah tidak di eksekusi
+        
+        // xsi validation
         if($this->xsi_validate) {
-          $CSDBValidator = new XSIValidator($value[0]);
-          if(!$CSDBValidator->validate()) $fail("Fail to validate by XSI. ".join(", ",CSDBError::getErrors(true, 'validateBySchema')));
+          $xsi = new Xsi($value[0]->document);
+          $xsi->validate();
+          if(!$xsi->result()) $fail("Fail to validate by XSI. ".join(", ", $xsi->errors->get('xsi_validation')));
         }
+
         if(!($this->oldCSDBModel[0])) return $fail("Failed to construct CSDB object");
         $new_filename = $value[0]->filename;
         if(!($new_filename === $this->oldCSDBModel[0]->filename)) $fail("You didn't allow to change element document ident.");
+        
+        // brex validation
         if($this->brex_validate) {
-          $CSDBValidator = new BREXValidator($value[0], $value[0]->getBrexDm());
-          if(!$CSDBValidator->validate()) $fail("Fail to validate by BREX. ".join(", ",CSDBError::getErrors(true, 'validateByBrex')));
+          $brex = new Brex(
+            new CSDBValidator($value[0]->getBrexDm()),
+            new CSDBValidatee($value[0])
+          );
+          $brex->validate();
+          if(empty($brex->result())) {
+            $fail("Fail to validate by BREX.");
+          }
         }
       }],
     ];
@@ -65,18 +81,19 @@ class CsdbUpdateByXMLEditor extends FormRequest
 
   /**
    * Prepare the data for validation.
+   * sengaja route di binding agar di route file nya sudah di definisikan jika missing 
    */
   protected function prepareForValidation(): void
   {
     $CSDBObject = new CSDBObject("5.0");
     $CSDBObject->loadByString($this->xmleditor);
+
     $this->merge([
       'path' => $this->path ?? 'CSDB',
       'xmleditor' => [$CSDBObject], // harus array atau scalar
       'xsi_validate' => $this->xsi_validate,
       'brex_validate' => $this->brex_validate,
-      // 'oldCSDBModel' => [Csdb::where('filename', Route::current()->parameter('filename'))->first()],
-      'oldCSDBModel' => [Csdb::getCsdb(Route::current()->parameter('filename'),["exception" => ['CSDB-DELL','CSDB-PDEL']])->first()],
+      'oldCSDBModel' => [Csdb::getCsdb($this->route('CSDBModel')->filename,["exception" => ['CSDB-DELL','CSDB-PDEL']])->first()],
     ]);
   }
 }

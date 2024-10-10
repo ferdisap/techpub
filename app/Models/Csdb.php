@@ -306,7 +306,7 @@ class Csdb extends Model
     // filter by storage
     // $CSDBModel = $CSDBModel->whereRaw('(storage_id = ? )',[request()->user()->id]);
     if (self::$storage_user_id === 0) ($CSDBModel = $CSDBModel->whereRaw('(storage_id = ? )', [request()->user()->id]));
-    elseif (self::$storage_user_id) ($CSDBModel = $CSDBModel->whereRaw('(storage_id = ? )', [self::$storage_user_id]));
+    // elseif (self::$storage_user_id) ($CSDBModel = $CSDBModel->whereRaw('(storage_id = ? )', [self::$storage_user_id]));
 
     // filter by last history
     if (!empty($historyCode)) {
@@ -628,11 +628,12 @@ class Csdb extends Model
         }
         
         // fill object dilakukan oleh worker. @dispatchSync return 404 Not Found
-        $fillObjectTableConfig = ['connection' => 'sync', 'mailNotification' => true];
+        // $fillObjectTableConfig = ['connection' => 'sync', 'mailNotification' => true];
+        $fillObjectTableConfig = [];
         foreach ($config as $key => $value) {
           $fillObjectTableConfig[$key] = $value;
         }
-        if($fillObjectTableConfig['connection']){
+        if(isset($fillObjectTableConfig['connection'])){
           // dd($fillObjectTableConfig['connection']);
           if(get_class($this) === Csdb::class) FillObjectTable::dispatch(request()->user(), $this, $fillObjectTableConfig['mailNotification'] ?? false)->onConnection($fillObjectTableConfig['connection']); // using queue
           else FillObjectTable::dispatch(request()->user(), $this->csdb, $fillObjectTableConfig['mailNotification'] ?? false)->onConnection($fillObjectTableConfig['connection']);

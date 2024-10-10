@@ -9,6 +9,7 @@ use App\Http\Controllers\Csdb\HistoryController;
 use App\Http\Controllers\CsdbApi\MainController;
 use App\Http\Controllers\EnterpriseController;
 use App\Http\Controllers\UserController;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
@@ -31,9 +32,22 @@ use Illuminate\Support\Facades\Route;
 //   })->name('api.get_csdbs'); // api.get_allobjects_list
 // });
 Route::middleware('auth:sanctum')->group(function () {
-  // create or update
+  // create
   Route::put("/s1000d/csdb/create",[MainController::class, 'create'])->name('api.create_object');
-  Route::post("/s1000d/csdb/update/{filename}", [CsdbController::class, 'update'])->name('api.update_object');
+
+  // read
+  Route::get('/s1000d/csdb/read/{CSDBModel:filename}', [MainController::class, 'read'])
+  ->missing(fn() => throw new HttpResponseException(response(["message" => "There is no such csdb."],404)))
+  ->name('api.get_object_raw');
+
+  // update
+  Route::post("/s1000d/csdb/update/{CSDBModel:filename}", [MainController::class, 'update'])
+  ->missing(fn() => throw new HttpResponseException(response(["message" => "There is no such csdb."],404)))
+  ->name('api.update_object');
+
+  // #### below belum di test
+
+
   Route::post("/s1000d/icn/upload", [CsdbController::class, 'uploadICN'])->name('api.upload_ICN');
   Route::post('/s1000d/csdb/update/path', [CsdbController::class, 'change_object_path'])->name('api.change_object_path');
   Route::post("/s1000d/dml/create",[DmlController::class, 'create'])->name('api.create_dml');

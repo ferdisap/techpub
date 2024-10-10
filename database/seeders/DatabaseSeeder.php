@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Str;
 
+/**
+ * untuk PRODUCTION running ini dulu!
+ */
 class DatabaseSeeder extends Seeder
 {
   /**

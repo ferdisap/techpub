@@ -2,7 +2,10 @@
 
 namespace Tests\Feature\Csdb;
 
+use App\Models\Csdb;
 use App\Models\User;
+use Database\Factories\CsdbFactory;
+use DOMDocument;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Laravel\Sanctum\Sanctum;
@@ -10,37 +13,72 @@ use Tests\TestCase;
 
 
 
-class CreateTest extends TestCase
+class CrudTest extends TestCase
 {
-  public function test_spa_login()
-  {
-    // "message": "login success",
-    // "token_type": "Bearer",
-    // "access_token": "1|6w0GugncG9yIrT5Mzgtx9mbCtxC4iDJmoez9zOao3330ce76";
-    $user = \App\Models\User::factory()->create();    
-    $response = $this->post('/api/login', [
-      'email' => $user->email,
-      'password' => 'password',
-    ]);    
-    $response->assertStatus(200);
-  }
+  public static User $user;
+  public static string $filename;
+  public static string $xmlstring;
 
   public function test_create(): void
   {
-    $user = User::find(1) ?? User::factory()->create();
-    Sanctum::actingAs($user, ["*"]);
+    self::$user = User::find(1) ?? User::factory()->create();
+    Sanctum::actingAs(self::$user, ["*"]);
+    
+    $csdbFactory = new CsdbFactory();
+    $file = $csdbFactory->generateFile();
+
     $response = $this->put("/api/s1000d/csdb/create", [
-      'xmleditor' => self::xml(),
+      'xmleditor' => $file[1],
     ]);
+
+    self::$filename = $response->json("csdb.filename");
+    $response->assertStatus(200);
+    $this->assertEquals($file[0],self::$filename);
+
+  }
+
+  public function test_read():void
+  {
+    Sanctum::actingAs(self::$user, ["*"]);
+
+    $response = $this->get("/api/s1000d/csdb/read/" . self::$filename);
+    $response->assertStatus(200);
+
+    // $message = $response; //
+    // $message = $response->content; //
+    // $message = $response->assertSee('content');
+    // $message = $response->baseResponse->content();
+    // var_dump($message);
+    
+    self::$xmlstring = $response->baseResponse->content();
+  }
+
+  public function test_update():void
+  {
+    Sanctum::actingAs(self::$user, ["*"]);
+
+    $doc = new DOMDocument();
+    $doc->loadXML(self::$xmlstring, LIBXML_PARSEHUGE);
+    $content = $doc->getElementsByTagName('content')[0];
+    $content->remove();
+
+    var_dump(self::$filename);
+
+    $response = $this->post("/api/s1000d/csdb/update/" . self::$filename, [
+      'xmleditor' => $doc->saveXML(),
+    ]);
+
     $response->assertStatus(200);
   }
 
-  public static function xml()
+  public static function dmodule($usedtd = true)
   {
-    return <<<EOD
-      <?xml version="1.0" encoding="utf-8"?>
-      <!DOCTYPE dmodule [
-      ]>
+    $dtd = $usedtd ? '<!DOCTYPE dmodule []>' : '';
+    $declaration = '<?xml version="1.0" encoding="utf-8"?>';
+    $dmodule = '';
+    $dmodule .= $declaration;
+    $dmodule .= $dtd;
+    $dmodule .=  <<<EOD
       <dmodule xsi:noNamespaceSchemaLocation="http://www.s1000d.org/S1000D_5-0/xml_schema_flat/brex.xsd" xmlns:dc="http://www.purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <identAndStatusSection>
           <dmAddress>
@@ -187,7 +225,16 @@ class CreateTest extends TestCase
             </reasonForUpdate>
           </dmStatus>
         </identAndStatusSection>
-        <content>
+    EOD;
+    $dmodule .= self::content();
+    $dmodule .= "</dmodule>";
+    return $dmodule;
+  }
+
+  public static function content()
+  {
+    return <<<EOD
+    <content>
           <brex>
             <commonInfo>
               <para>This default BREX data module is provided with Issue 5.0 of S1000D. It contains in total 265 rules consisting of: <randomList>
@@ -3484,7 +3531,6 @@ class CreateTest extends TestCase
             </nonContextRules>
           </brex>
         </content>
-      </dmodule>
     EOD;
   }
 }

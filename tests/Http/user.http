@@ -16,8 +16,23 @@ content-type: application/json
 
 POST http://127.0.0.1:8000/api/login HTTP/1.1
 Content-Type: application/json
+X-DEVICE-NAME: http_client
 
 {
   "email": "luffy@example.com",
   "password": "password"
 }
+
+###
+
+GET http://127.0.0.1:8000/api/s1000d/csdb/read/foo.xml HTTP/1.1
+Content-Type: application/json
+X-Requested-With: XMLHttpRequest
+Authorization: Bearer 14|kH7JgRkBgCnJXbHSZKV35I7wuyLm9bN8l9ypooDAed841be3
+
+###
+
+POST http://127.0.0.1:8000/api/s1000d/csdb/update/foo.xml HTTP/1.1
+Content-Type: application/json
+X-Requested-With: XMLHttpRequest
+Authorization: Bearer 14|kH7JgRkBgCnJXbHSZKV35I7wuyLm9bN8l9ypooDAed841be3

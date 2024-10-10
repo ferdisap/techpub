@@ -47,4 +47,18 @@ class AuthenticationTest extends TestCase
 
         $this->assertGuest();
     }
+
+    public function test_spa_login()
+    {
+      // "message": "login success",
+      // "token_type": "Bearer",
+      // "access_token": "1|6w0GugncG9yIrT5Mzgtx9mbCtxC4iDJmoez9zOao3330ce76";
+      $user = \App\Models\User::factory()->create();    
+      $response = $this->post('/api/login', [
+        'email' => $user->email,
+        'password' => 'password',
+      ]);    
+      $this->assertAuthenticated();
+      $response->assertStatus(200);
+    }
 }
