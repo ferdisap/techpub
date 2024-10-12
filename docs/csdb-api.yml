@@ -69,11 +69,8 @@ paths:
                   message:
                     type: string
                     example: "login failed"
-                  email:
-                    type: array
-                    items:
-                      type: string
-                    example: [The provided credentials are incorrect.]
+                  errors:
+                    $ref: "#/components/schemas/errors"                  
         "419":
           $ref: "#/components/responses/Expired"
       requestBody:
@@ -150,7 +147,7 @@ paths:
           $ref: "#/components/responses/Unauthorized"
       security:
         - auth: []
-  /api/csdb/create:
+  /api/s1000d/csdb/create:
     put:
       summary: creating CSDB object.
       description: The request should provide the xml string of csdb object, but it is intended for dmodule, and pm only (icn metafile is coming soon).
@@ -195,7 +192,7 @@ paths:
                     $ref: "#/components/schemas/errors"
       security:
         - auth: []
-  /api/csdb/read/{filename}:
+  /api/s1000d/csdb/read/{filename}:
     get:
       summary: "get the csdb xml file"
       description: "file will be sent as xml string"
@@ -221,7 +218,7 @@ paths:
           description: "Filename is not found in database."
       security:
         - auth: []
-  /api/csdb/update/{filename}:
+  /api/s1000d/csdb/update/{filename}:
     post:
       summary: update the xml file of CSDB object
       description: The request should provide the xml string of csdb object, but it is intended for dmodule, and pm only (icn metafile is coming soon).
@@ -266,7 +263,7 @@ paths:
                     $ref: "#/components/schemas/errors"
       security:
         - auth: []
-  /api/csdb/delete:
+  /api/s1000d/csdb/delete:
     delete:
       summary: soft delete csdb file.
       description: the csdb file in storage is still exist and csdb file can be restored.
@@ -301,7 +298,7 @@ paths:
                     example: "filename is required"
       security:
         - auth: []
-  /api/csdb/permanentdelete:
+  /api/s1000d/csdb/permanentdelete:
     delete:
       summary: permanent delete csdb file.
       description: the csdb file in storage may still exist but csdb file can not be restored.
@@ -336,7 +333,7 @@ paths:
                     example: "filename is required"
       security:
         - auth: []
-  /api/csdb/restore:
+  /api/s1000d/csdb/restore:
     post:
       summary: restore the previous deleted csdb file.
       description: the csdb file is restored from the status of deletion.
@@ -371,6 +368,35 @@ paths:
                     example: "filename is required"
       security:
         - auth: []
+  /api/s1000d/all:
+    get:
+      summary: get all csdb and icn object
+      description: get all csdb and icn Object
+      tags:
+        - csdb
+      parameters:
+        - in: query
+          name: active
+          description: query untuk object yang aktif atau yang sudah di delete.
+          schema: 
+            type: integer
+            enum:
+              - 1
+              - 0
+          example: 1
+      responses:
+        "200":
+          description: "Success on queried."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  csdbs:
+                    type: array
+                    items:
+                      type: object
+                      $ref: "#/components/schemas/csdb"
 components:
   schemas:
     infotype:

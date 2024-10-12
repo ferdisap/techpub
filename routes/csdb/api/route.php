@@ -40,6 +40,9 @@ Route::middleware('auth:sanctum')->group(function () {
   ->missing(fn() => throw new HttpResponseException(response(["message" => "There is no such csdb."],404)))
   ->name('api.get_object_raw');
 
+  // index
+  Route::get("/s1000d/all",[MainController::class, 'getCsdbs'])->name('api.get_csdbs'); // api.get_allobjects_list
+
   // update
   Route::post("/s1000d/csdb/update/{CSDBModel:filename}", [MainController::class, 'update'])
   ->missing(fn() => throw new HttpResponseException(response(["message" => "There is no such csdb."],404)))
@@ -65,7 +68,7 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::put("/s1000d/dml/{filename}/merge", [DmlController::class, 'merge'])->name('api.dml_merge');
 
   // read
-  Route::get("/s1000d/csdbs/all",[CsdbController::class, 'getCsdbs'])->name('api.get_csdbs'); // api.get_allobjects_list
+  
   
   // ini nanti bisa juga di cacce pakai meddleware ETagGeneralContent, tapi jika diinstal di LAN tidak perlu karena available bandwith yang besar
   Route::get("/s1000d/csdb/{CSDBModel:filename}",[CsdbController::class, 'get_csdb_model'])->name('api.get_csdb'); // api.get_csdb_model

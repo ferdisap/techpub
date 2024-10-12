@@ -198,4 +198,18 @@ class MainController extends BaseController
       ]
     ],$code);
   }
+
+  public function getCsdbs(Request $request)
+  {
+    $active = $request->active ?? true;
+    if($active){
+      $csdbs = Csdb::getCsdbs(['exception' => ['CSDB-DELL', 'CSDB-PDEL']]);
+    } else {
+      $csdbs = Csdb::getCsdbs();
+    }
+    $csdbs = $csdbs->get(['filename','path'])->toArray();
+    return Response::make([
+      "csdbs" => $csdbs,
+    ],200,["content-type" => 'application/json']);
+  }
 }
