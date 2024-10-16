@@ -42,6 +42,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
   // index
   Route::get("/s1000d/all",[MainController::class, 'getCsdbs'])->name('api.get_csdbs'); // api.get_allobjects_list
+  // Route::get("/s1000d/folder/index",[MainController::class, 'forfolder_get_allobjects_list'])->name('api.index_folder'); // api.requestbyfolder.get_allobject_list
+  // Route::get("/s1000d/folder/index",[CsdbController::class, 'forfolder_get_allobjects_list'])->name('api.index_folder'); // api.requestbyfolder.get_allobject_list
+  Route::get("/s1000d/path/{path?}",[MainController::class, 'getCsdbsByPath'])->where('path', '.*')->name('api.index_path'); // api.requestbyfolder.get_allobject_list
 
   // update
   Route::post("/s1000d/csdb/update/{CSDBModel:filename}", [MainController::class, 'update'])
@@ -91,7 +94,6 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::get("/s1000d/csl/{filename}", [DmlController::class, 'getCsl'])->name('api.get_csl');
   // search
   Route::get("/s1000d/csdb/search",[CsdbController::class, 'get_object_csdbs'])->name('api.search_csdb'); // api.get_object_csdbs
-  Route::get("/s1000d/folder/index",[CsdbController::class, 'forfolder_get_allobjects_list'])->name('api.index_folder'); // api.requestbyfolder.get_allobject_list
   Route::get("/s1000d/enterprise/search", [EnterpriseController::class, 'get_enterprises'])->middleware('auth:sanctum')->name('api.get_enterprises');
 
   // delete

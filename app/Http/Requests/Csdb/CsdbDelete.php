@@ -29,8 +29,8 @@ class CsdbDelete extends FormRequest
         if(is_array($filename)){
           $l = count($filename);
           for ($k=0; $k < $l; $k++) { 
-            if(!($this->CSDBModelArray[$k]) && ($this->CSDBModelArray[$k]->filename != $filename[$k])){ // jika null, maka $fail. Tidak mungkin !isset karena sudah di set di prepare
-              $fail('There is no such $filename[$k] or you are not authorize to delete.');
+            if(!($this->CSDBModelArray[$k]) || ($this->CSDBModelArray[$k]->filename != $filename[$k])){ // jika null, maka $fail. Tidak mungkin !isset karena sudah di set di prepare
+              $fail("There is no such $filename[$k] or you are not authorize to delete.");
             }
           }
         } else {
@@ -41,7 +41,7 @@ class CsdbDelete extends FormRequest
         $l = count($CSDBModelArray);
         $f = [];
         for ($i=0; $i < $l; $i++) { 
-          if(!$CSDBModelArray[$i]) $f[] = $CSDBModelArray[$i]->filename;
+          if(!$CSDBModelArray[$i] && $CSDBModelArray[$i] !== null ) $f[] = $CSDBModelArray[$i]->filename;
         }
         if(count($f) > 0) $fail("You are not authorize to delete " . join(", ", $f) . ".");
       }
@@ -65,12 +65,13 @@ class CsdbDelete extends FormRequest
     } else {
       // $m = Csdb::where('filename',$filename)->where('initiator_id',$this->user()->id)->first();
       $m = Csdb::getCsdb($filename,['exception' => ['CSDB-DELL', 'CSDB-PDEL']])->first();
+      // $m = Csdb::getCsdb($filename)->first();
       array_push($CSDBModelArray, $m);
       $filename = [$filename];
     }
 
     $this->merge([
-      'CSDBModelArray' => $CSDBModelArray,
+      'CSDBModelArray' => $CSDBModelArray, // null jika tidak ada filename
       'filename' => $filename,
     ]);
   }

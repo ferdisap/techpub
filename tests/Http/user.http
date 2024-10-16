@@ -41,3 +41,23 @@ POST http://127.0.0.1:8000/api/s1000d/csdb/update/foo.xml HTTP/1.1
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 Authorization: Bearer 2|f9eTaMj4prk1BkhXiUshHssoLJeOhcL42fBYfbbT870fc934
+
+###
+# GET http://127.0.0.1:8000/api/s1000d/folder/index?sc=path::csdb HTTP/1.1
+# GET http://127.0.0.1:8000/api/s1000d/path/{path} , setiap slash "/" pada path harus direplace dengan underscores
+# GET http://127.0.0.1:8000/api/s1000d/path/csdb%2F HTTP/1.1
+
+GET http://127.0.0.1:8000/api/s1000d/path/csdb/amm?sc=DMC-axxxa HTTP/1.1
+Content-Type: application/json
+
+###
+
+POST http://127.0.0.1:8000/api/s1000d/csdb/create HTTP/1.1
+Content-Type: application/json
+X-Requested-With: XMLHttpRequest
+Authorization: Bearer 2|f9eTaMj4prk1BkhXiUshHssoLJeOhcL42fBYfbbT870fc934
+
+{
+  "tes" : "tesas",
+  "xmleditor" : "axaasss"
+}

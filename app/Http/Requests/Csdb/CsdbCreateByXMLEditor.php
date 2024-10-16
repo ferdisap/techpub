@@ -117,7 +117,7 @@ class CsdbCreateByXMLEditor extends FormRequest
   protected function prepareForValidation(): void
   {
     $CSDBObject = new CSDBObject("5.0");
-    $CSDBObject->loadByString($this->xmleditor);
+    if($this->xmleditor) $CSDBObject->loadByString($this->xmleditor); // biar ga error ditambah if
     $this->merge([
       'path' => $this->path ?? 'CSDB',
       'xmleditor' => [$CSDBObject], // harus array atau scalar

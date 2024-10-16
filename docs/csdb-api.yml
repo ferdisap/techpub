@@ -266,7 +266,7 @@ paths:
   /api/s1000d/csdb/delete:
     delete:
       summary: soft delete csdb file.
-      description: the csdb file in storage is still exist and csdb file can be restored.
+      description: the csdb file in storage is still exist and csdb file can be restored. Jika ada yang fail dan ada yang success, maka 299, jika totally fail 400, jika totally success 200.
       tags:
         - csdb
       requestBody:
@@ -283,9 +283,23 @@ paths:
                     $ref: "#/components/examples/data/value/csdb/filename"
       responses:
         "200":
-          $ref: "#/components/responses/csdb_delete"
+          description: if all's are deleted.
+          content: 
+            application/json:
+              schema:
+                $ref: "#/components/schemas/csdbdelete"
+        "299":
+          description: if any failure and any scucess.
+          content: 
+            application/json:
+              schema:
+                $ref: "#/components/schemas/cesdbdelete_fail"
         "400":
-          $ref: "#/components/responses/csdb_delete"
+          description: if all's are failed to delete.
+          content: 
+            application/json:
+              schema:
+                $ref: "#/components/schemas/cesdbdelete_fail"
         "412":
           description: the request body parameters is not provided.
           content:
@@ -446,6 +460,44 @@ components:
         xmleditor:
           type: string
           example: "<dmodule></dmodule>"
+    csdbdelete:
+      type: object
+      required:
+        - infotype
+        - message
+        - data
+      properties:
+        infotype:
+          $ref: "#/components/schemas/infotype"
+        message:
+          type: string
+          example: "success: 3/10, failure: 7/10."
+        data: 
+          type: object
+          example:
+            success:
+              - DMC-S1000D-G-06-10-0301-00A-022A-D_001-00_EN-US.xml
+              - DMC-S1000D-G-07-10-0302-00A-022A-D_001-00_EN-US.xml
+    cesdbdelete_fail:
+      type: object
+      properties: 
+        infotype:
+          $ref: "#/components/schemas/infotype"
+        message:
+          type: string
+          example: "success: 3/10, failure: 7/10."
+        data: 
+          type: object
+          example:
+            success:
+              - DMC-S1000D-G-06-10-0301-00A-022A-D_001-00_EN-US.xml
+              - DMC-S1000D-G-07-10-0302-00A-022A-D_001-00_EN-US.xml
+        errors:
+          type: object
+          example:
+            failure:
+              - DMC-S1000D-G-04-10-0301-00A-022A-D_001-00_EN-US.xml
+              - DMC-S1000D-G-05-10-0302-00A-022A-D_001-00_EN-US.xml
   requestBodies:
     csdbcreate:
       content:
@@ -491,22 +543,7 @@ components:
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              infotype:
-                $ref: "#/components/schemas/infotype"
-              message:
-                type: string
-                example: "success: 3/10, failure: 7/10."
-              errors:
-                type: object
-                example:
-                  failure:
-                    - DMC-S1000D-G-04-10-0301-00A-022A-D_001-00_EN-US.xml
-                    - DMC-S1000D-G-05-10-0302-00A-022A-D_001-00_EN-US.xml
-                  success:
-                    - DMC-S1000D-G-06-10-0301-00A-022A-D_001-00_EN-US.xml
-                    - DMC-S1000D-G-07-10-0302-00A-022A-D_001-00_EN-US.xml
+            $ref: "#/components/schemas/csdbdelete"            
   securitySchemes:
     auth:
       type: http
