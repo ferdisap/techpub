@@ -390,14 +390,20 @@ paths:
         - csdb
       parameters:
         - in: query
-          name: active
+          name: stt
           description: query untuk object yang aktif atau yang sudah di delete.
           schema: 
-            type: integer
+            type: string
             enum:
-              - 1
-              - 0
+              - dct
+              - act
           example: 1
+        - in: query
+          name: sc
+          description: query untuk property model/csdb.
+          schema: 
+            type: string
+          example: filename::DMC-... (defaultnya filename)
       responses:
         "200":
           description: "Success on queried."
@@ -411,6 +417,61 @@ paths:
                     items:
                       type: object
                       $ref: "#/components/schemas/csdb"
+  /api/s1000d/path/{path}:
+    get:
+      summary: get all csdb and icn object with its own folder path
+      description: get all csdb and icn object with its own folder path
+      tags:
+        - csdb
+      parameters:
+        - in: path
+          name: path
+          description: path yang akan dicari
+          required: true
+          schema: 
+            type: string
+          example: csdb/amm (defaultnya csdb)
+        - in: query
+          name: stt
+          description: query untuk object yang aktif atau yang sudah di delete.
+          schema: 
+            type: string
+            enum:
+              - dct
+              - act
+          example: 1
+        - in: query
+          name: sc
+          description: query untuk property model/csdb.
+          schema: 
+            type: string
+          example: filename::DMC-... (defaultnya filename)
+      responses:
+        "200":
+          description: "Success on queried."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  infotpe: 
+                    $ref: "#/components/schemas/infotype"
+                  message:
+                    type: string
+                    example: ""
+                  path: 
+                    type: string
+                    description: "current path"
+                    example: "csdb/amm"
+                  paths: 
+                    type: array
+                    items: 
+                      type: string
+                    example: 
+                      - csdb/amm/n219
+                      - csdb/amm/male
+                  pagination:
+                    type: object
 components:
   schemas:
     infotype:

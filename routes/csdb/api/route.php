@@ -6,6 +6,7 @@ use App\Http\Controllers\Csdb\CommentController;
 use App\Http\Controllers\Csdb\DdnController;
 use App\Http\Controllers\Csdb\DmlController;
 use App\Http\Controllers\Csdb\HistoryController;
+use App\Http\Controllers\CsdbApi\DmlController as CsdbApiDmlController;
 use App\Http\Controllers\CsdbApi\MainController;
 use App\Http\Controllers\EnterpriseController;
 use App\Http\Controllers\UserController;
@@ -34,11 +35,17 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->group(function () {
   // create
   Route::put("/s1000d/csdb/create",[MainController::class, 'create'])->name('api.create_object');
+  Route::put("/s1000d/dml/create",[CsdbApiDmlController::class, 'create'])->name('api.create_dml');
 
   // read
   Route::get('/s1000d/csdb/read/{CSDBModel:filename}', [MainController::class, 'read'])
   ->missing(fn() => throw new HttpResponseException(response(["message" => "There is no such csdb."],404)))
   ->name('api.get_object_raw');
+  // Route::get("/s1000d/csdb/read/{CSDBModel:filename}/json",[MainController::class, 'read_json'])
+  // ->missing(fn() => throw new HttpResponseException(response(["message" => "There is no such csdb."],404)))
+  // ->middleware(['auth:sanctum', 'ViaDDN','ETagCsdbPDF'])
+  // ->name('api.read_json');
+
 
   // index
   Route::get("/s1000d/all",[MainController::class, 'getCsdbs'])->name('api.get_csdbs'); // api.get_allobjects_list
@@ -63,7 +70,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
   Route::post("/s1000d/icn/upload", [CsdbController::class, 'uploadICN'])->name('api.upload_ICN');
   Route::post('/s1000d/csdb/update/path', [CsdbController::class, 'change_object_path'])->name('api.change_object_path');
-  Route::post("/s1000d/dml/create",[DmlController::class, 'create'])->name('api.create_dml');
   Route::post("/s1000d/dml/update/{filename}",[DmlController::class, 'update'])->name('api.dmlupdate');
   Route::post("/s1000d/comment/create",[CommentController::class, 'create'])->name('api.create_comment');
   Route::post("/s1000d/ddn/create",[DdnCOntroller::class, 'create'])->name('api.create_ddn');

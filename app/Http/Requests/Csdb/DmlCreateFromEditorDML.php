@@ -98,7 +98,7 @@ class DmlCreateFromEditorDML extends FormRequest
    */
   protected function passedValidation()
   {
-    $otherOptions = [];
+    // $otherOptions = [];
     $DMLModel = new Dml();
     $DMLModel->create_xml($this->user()->storage, $this->validated());
 

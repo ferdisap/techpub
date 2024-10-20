@@ -40,7 +40,7 @@ class DdnCreate extends FormRequest
       
       'seqNumber' => [new SeqNumber(true, 'ddn')],
       'modelIdentCode' => ['required'],
-      'senderIdent' => 'required',
+      'senderIdent' => 'required', // nani pakai class EnterpriseCode untuk validasi, chek di DMLController
       'receiverIdent' => 'required',
       
       'securityClassification' => ['required',new SecurityClassification], // nanti harus divalidasi valuenya harus dua digit dan nanti keynya harus dibedakan antara DDN dan COM jika dibuat dalam satu request yang sama

@@ -15,6 +15,7 @@ use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Response;
 use PrettyXml\Formatter;
 use Ptdi\Mpub\Main\CSDBObject;
+use Ptdi\Mpub\Main\CSDBStatic;
 use Ptdi\Mpub\Main\Helper;
 
 class MainController extends BaseController
@@ -53,19 +54,51 @@ class MainController extends BaseController
     ], 422, ['content-type' => 'application/json']);
   }
 
+  /**
+   * querykey? = 'form?xml/json (default xml)
+   */
   public function read(Request $request, Csdb $CSDBModel)
   {
     $CSDBModel->CSDBObject->load(CSDB_STORAGE_PATH . "/" . $request->user()->storage . "/" . $CSDBModel->filename);
     if ($CSDBModel->CSDBObject->document) {
-      $formatter = new Formatter();
-      return Response::make(
-        $formatter->format($CSDBModel->CSDBObject->document->saveXML()),
-        200,
-        ['Content-Type' => 'text/xml']
-      );
+      switch ($request->form) {
+        case 'json':
+          $CSDBModel->makeHidden(['id']);
+          $CSDBModel->object->makeHidden(['content', 'json']);
+          return Response::make(
+            [
+              'csdb' => $CSDBModel,
+              'json' => json_decode(CSDBStatic::xml_to_json($CSDBModel->CSDBObject->document)),
+            ],
+            200,
+            ['Content-Type' => 'application/json']
+          );
+          break;
+        default:
+          $formatter = new Formatter();
+          return Response::make(
+            $formatter->format($CSDBModel->CSDBObject->document->saveXML()),
+            200,
+            ['Content-Type' => 'text/xml']
+          );
+          break;
+      }
     }
     return abort(204);
   }
+
+  // public function read_json(Request $request, Csdb $CSDBModel)
+  // {
+  //   $CSDBModel->CSDBObject->load(CSDB_STORAGE_PATH . "/" . $request->user()->storage . "/" . $CSDBModel->filename);
+  //   if ($CSDBModel->CSDBObject->document) {
+  //     return Response::make([
+  //       'model' => $CSDBModel->makeHidden(['id']),
+  //       'json' => json_decode(CSDBStatic::xml_to_json($CSDBModel->CSDBObject->document)),
+  //     ],200,['Content-Type' => 'application/json']
+  //     );
+  //   }
+  //   return abort(204);
+  // }
 
   /**
    * response code 422 if fail
@@ -126,7 +159,7 @@ class MainController extends BaseController
         'success' => $result['success'],
       ]
     ];
-    if($code != 200) $responseContent['errors'] = [
+    if ($code != 200) $responseContent['errors'] = [
       'failure' => $result['fail'],
     ];
     return Response::make($responseContent, $code);
@@ -158,15 +191,18 @@ class MainController extends BaseController
     $totalSuccess = count($result['success']);
     $infotype = $totalSuccess < 1 ? "warning" : ($totalFail > 0 ? 'caution' : 'note');
     $m = ($totalSuccess > 0 ? ("success: " . $totalSuccess . "/" . ($totalSuccess + $totalFail) . ", failure: " . $totalFail . "/" . ($totalSuccess + $totalFail)) : "fail: " . ($totalSuccess + $totalFail) . "/" . ($totalSuccess + $totalFail));
-    $code = $totalSuccess < 1 ? 400 : 200;
-    return Response::make([
+    $code = $totalSuccess && !$totalFail ? 200 : (!$totalSuccess ? 400 : 299);
+    $responseContent = [
       'infotype' => $infotype,
       'message' => $m,
-      'errors' => [
-        'failure' => $result['fail'],
+      'data' => [
         'success' => $result['success'],
       ]
-    ], $code);
+    ];
+    if ($code != 200) $responseContent['errors'] = [
+      'failure' => $result['fail'],
+    ];
+    return Response::make($responseContent, $code);
   }
 
   /**
@@ -195,28 +231,44 @@ class MainController extends BaseController
     $totalSuccess = count($result['success']);
     $infotype = $totalSuccess < 1 ? "warning" : ($totalFail > 0 ? 'caution' : 'note');
     $m = ($totalSuccess > 0 ? ("success: " . $totalSuccess . "/" . ($totalSuccess + $totalFail) . ", failure: " . $totalFail . "/" . ($totalSuccess + $totalFail)) : "fail: " . ($totalSuccess + $totalFail) . "/" . ($totalSuccess + $totalFail));
-    $code = $totalSuccess < 1 ? 400 : 200;
-    return Response::make([
+    $code = $totalSuccess && !$totalFail ? 200 : (!$totalSuccess ? 400 : 299);
+    $responseContent = [
       'infotype' => $infotype,
       'message' => $m,
-      'errors' => [
-        'failure' => $result['fail'],
+      'data' => [
         'success' => $result['success'],
       ]
-    ], $code);
+    ];
+    if ($code != 200) $responseContent['errors'] = [
+      'failure' => $result['fail'],
+    ];
+    return Response::make($responseContent, $code);
   }
 
+  /**
+   * querykey? = 'sc?', 'stt?act/dct', limit?integer
+   */
   public function getCsdbs(Request $request)
   {
-    $active = $request->active ?? true;
-    if ($active) {
-      $csdbs = Csdb::getCsdbs(['exception' => ['CSDB-DELL', 'CSDB-PDEL']]);
+    if ($request->stt === 'act') {
+      $CSDBModels = Csdb::getCsdbs(['exception' => ['CSDB-DELL', 'CSDB-PDEL']]);
+    } elseif ($request->stt === 'dct') {
+      $CSDBModels = Csdb::getCsdbs();
     } else {
-      $csdbs = Csdb::getCsdbs();
+      $CSDBModels = Csdb::where('storage_id', $request->user()->id);
     }
-    $csdbs = $csdbs->get(['filename', 'path'])->toArray();
+    if ($request->sc) {
+      $keywords = array_merge(Helper::explodeSearchKeyAndValue($request->get('sc'), 'filename'));
+      $query = Helper::generateWhereRawQueryString($keywords, $CSDBModels->getModel()->getTable(), ['path' => "#&value;"]);
+      $CSDBModels = $CSDBModels->whereRaw($query[0], $query[1]);
+    }
+
+    if ($request->limit) {
+      $CSDBModels = $CSDBModels->limit($request->limit);
+    }
+
     return Response::make([
-      "csdbs" => $csdbs,
+      "csdbs" => $CSDBModels->get(['filename', 'path'])->toArray(),
     ], 200, ["content-type" => 'application/json']);
   }
 
@@ -225,7 +277,7 @@ class MainController extends BaseController
    * disini, tdaik support multiple path agar proses lebih cepat
    * @belum di test di CrudTest::class
    * 
-   * querykey? = 'sc?'
+   * querykey? = 'sc?', 'stt?act/dct',
    */
   public function getCsdbsByPath(Request $request, string $path = 'csdb')
   {
@@ -233,23 +285,39 @@ class MainController extends BaseController
     $CSDBModels = Csdb::with(['initiator', 'lastHistory']);
     $keywords = array_merge(Helper::explodeSearchKeyAndValue($request->get('sc'), 'filename'), ["path" => [$path]]);
     $query = Helper::generateWhereRawQueryString($keywords, $CSDBModels->getModel()->getTable(), ['path' => "#&value;"]);
-    $queryExecption = History::generateWhereRawQueryString_historyException(['CSDB-DELL', 'CSDB-PDEL'], Csdb::class, $CSDBModels->getModel()->getTable());
+
+    // $hcode = $request->stt ? ($request->stt === 'all' ? [] : ($request->stt === 'act' ? ['CSDB-DELL', 'CSDB-PDEL'] : ($request->stt ===)))
+    // switch ($request->stt) {
+    //   case 'act': $hcode = ['exception' => ['CSDB-DELL', 'CSDB-PDEL']]; break;      
+    //   case 'dct': $hcode = ['code' => ['CSDB-DELL', 'CSDB-PDEL']]; break;      
+    //   default: $hcode = []; break;
+    // }
     if (!empty($query)) $CSDBModels = $CSDBModels->whereRaw($query[0], $query[1]);
-    $CSDBModels = $CSDBModels->whereRaw($queryExecption[0], $queryExecption[1])
-    ->where('storage_id', $request->user()->id)
-    ->orderBy('filename')->paginate(100);
+
+    if ($request->stt === 'act') {
+      $queryCode = History::generateWhereRawQueryString_historyException(['CSDB-DELL', 'CSDB-PDEL'], Csdb::class, $CSDBModels->getModel()->getTable());
+      $CSDBModels = $CSDBModels->whereRaw($queryCode[0], $queryCode[1]);
+    } else if ($request->stt === 'dct') {
+      $queryCode = History::generateWhereRawQueryString(['CSDB-DELL', 'CSDB-PDEL'], Csdb::class, $CSDBModels->getModel()->getTable());
+      $CSDBModels = $CSDBModels->whereRaw($queryCode[0], $queryCode[1]);
+    }
+
+    $CSDBModels = $CSDBModels->where('storage_id', $request->user()->id)
+      ->orderBy('filename')->paginate(100);
     $CSDBModels->setPath($request->getUri());
 
     // message
     $m = '';
 
     // menyiapkan folder
-    $folders = new Csdb();    
+    $folders = new Csdb();
     // make query and get
     $query = Helper::generateWhereRawQueryString(['path' => [$path . "/"]], $folders->getTable());
     $folders = $folders->where('storage_id', $request->user()->id)
-    ->whereRaw($query[0], $query[1])
-    ->whereRaw($queryExecption[0], $queryExecption[1]);
+      ->whereRaw($query[0], $query[1]);
+
+    if (isset($queryCode)) $folders = $folders->whereRaw($queryCode[0], $queryCode[1]);
+
     $folders = array_values(array_unique($folders->get(['path'])->toArray(), SORT_REGULAR));
     // menyiapkan path untuk replace, dimana subfolder akan dihilangkan disetiap hasil query
     $pathReplace = str_replace("/", "\/", $path);
@@ -262,7 +330,7 @@ class MainController extends BaseController
     }
     $folders = array_values(array_filter(array_unique($folders, SORT_STRING), fn ($v) => ($v != null) || ($v != ''))); // array_values agar tidak assoc atau supaya indexnya teratur
     sort($folders);
-    
+
     // return
     return Response::make([
       "infotype" => "note",
