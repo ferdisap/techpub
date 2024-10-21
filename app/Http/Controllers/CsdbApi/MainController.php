@@ -7,6 +7,7 @@ use App\Http\Requests\Csdb\CsdbDelete;
 use App\Http\Requests\Csdb\CsdbPermanentDelete;
 use App\Http\Requests\Csdb\CsdbRestore;
 use App\Http\Requests\Csdb\CsdbUpdateByXMLEditor;
+use App\Jobs\Csdb\FillObjectTable;
 use App\Models\Csdb;
 use App\Models\Csdb\History;
 use Illuminate\Routing\Controller as BaseController;
@@ -63,11 +64,19 @@ class MainController extends BaseController
     if ($CSDBModel->CSDBObject->document) {
       switch ($request->form) {
         case 'json':
-          $CSDBModel->makeHidden(['id']);
-          $CSDBModel->object->makeHidden(['content', 'json']);
+          $CSDBModel->object;
+          if(isset($CSDBModel->object)) $CSDBModel->object->makeHidden(['content', 'json']); // karena pakai supervisor untuk membuat object jadi belum tentu
+          else {
+            $CSDBModel->setRelations([]); // di set relationnya menjadi kosong karena sebelumnya ada $CSDBModel->object;. Relation 'object' akan gagal karena akan membaca slef::class sehingga akan mencari where 'csdb'.'csdb_id' = ... padahal bukan 'csdb_id' tapi 'id'
+            FillObjectTable::dispatchSync($request->user(), $CSDBModel, false);
+            // $fill = new FillObjectTable($request->user(), $CSDBModel, false); // ini bisa
+            // $fill->handle(); // ini bisa
+            $CSDBModel->object;
+            $CSDBModel->object->makeHidden(['content', 'json']);
+          }
           return Response::make(
             [
-              'csdb' => $CSDBModel,
+              'csdb' => $CSDBModel->makeHidden(['id']),
               'json' => json_decode(CSDBStatic::xml_to_json($CSDBModel->CSDBObject->document)),
             ],
             200,
@@ -86,19 +95,6 @@ class MainController extends BaseController
     }
     return abort(204);
   }
-
-  // public function read_json(Request $request, Csdb $CSDBModel)
-  // {
-  //   $CSDBModel->CSDBObject->load(CSDB_STORAGE_PATH . "/" . $request->user()->storage . "/" . $CSDBModel->filename);
-  //   if ($CSDBModel->CSDBObject->document) {
-  //     return Response::make([
-  //       'model' => $CSDBModel->makeHidden(['id']),
-  //       'json' => json_decode(CSDBStatic::xml_to_json($CSDBModel->CSDBObject->document)),
-  //     ],200,['Content-Type' => 'application/json']
-  //     );
-  //   }
-  //   return abort(204);
-  // }
 
   /**
    * response code 422 if fail

@@ -69,16 +69,18 @@ class DmlMerge extends FormRequest
     $MergedCSDBModel = new Csdb();
     $MergedCSDBModel->CSDBObject = $this->validated('CSDBModel')->CSDBObject;
     $ident_dmlCode = $MergedCSDBModel->CSDBObject->document->getElementsByTagName('dmlCode')[0];
-    $ident_dmlCode->setAttribute('dmlType', 's');
+    $ident_dmlCode->setAttribute('dmlType', 'c');
     $dmlContent = $MergedCSDBModel->CSDBObject->document->getElementsByTagName('dmlContent')[0];
     foreach($this->validated('sourceModels') as $sourceModel){
       $sourceDmlEntry = $sourceModel->CSDBObject->document->getElementsByTagName('dmlEntry');
       if(count($sourceDmlEntry) < 1) continue;
-      while($sourceDmlEntry->nextElementSibling){
+      $sourceDmlEntry = $sourceDmlEntry[0];
+      while(isset($sourceDmlEntry->nextElementSibling)){
         $newEntry = $sourceDmlEntry->nextElementSibling->cloneNode(true);
         $newEntry = $MergedCSDBModel->CSDBObject->document->importNode($newEntry, true);
         $dmlContent->appendChild($newEntry);
-      }      
+        $sourceDmlEntry = $sourceDmlEntry->nextElementSibling;
+      }
     }
     
     $this->merge([

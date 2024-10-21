@@ -36,15 +36,12 @@ Route::middleware('auth:sanctum')->group(function () {
   // create
   Route::put("/s1000d/csdb/create",[MainController::class, 'create'])->name('api.create_object');
   Route::put("/s1000d/dml/create",[CsdbApiDmlController::class, 'create'])->name('api.create_dml');
+  Route::put("/s1000d/dml/merge/{filename}", [CsdbApiDmlController::class, 'merge'])->name('api.dml_merge');
 
   // read
   Route::get('/s1000d/csdb/read/{CSDBModel:filename}', [MainController::class, 'read'])
   ->missing(fn() => throw new HttpResponseException(response(["message" => "There is no such csdb."],404)))
-  ->name('api.get_object_raw');
-  // Route::get("/s1000d/csdb/read/{CSDBModel:filename}/json",[MainController::class, 'read_json'])
-  // ->missing(fn() => throw new HttpResponseException(response(["message" => "There is no such csdb."],404)))
-  // ->middleware(['auth:sanctum', 'ViaDDN','ETagCsdbPDF'])
-  // ->name('api.read_json');
+  ->name('api.read_object');
 
 
   // index
@@ -77,7 +74,7 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post("/s1000d/comment/create",[CommentController::class, 'create'])->name('api.create_comment');
   Route::post("/s1000d/ddn/create",[DdnCOntroller::class, 'create'])->name('api.create_ddn');
   Route::put('/s1000d/ddn/import/{filename}', [DdnController::class, 'import'])->name('api.import_ddn_list');
-  Route::put("/s1000d/dml/{filename}/merge", [DmlController::class, 'merge'])->name('api.dml_merge');
+  // Route::put("/s1000d/dml/{filename}/merge", [DmlController::class, 'merge'])->name('api.dml_merge');
 
   // read
   

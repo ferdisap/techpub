@@ -629,14 +629,14 @@ class Csdb extends Model
         
         // fill object dilakukan oleh worker. @dispatchSync return 404 Not Found
         // $fillObjectTableConfig = ['connection' => 'sync', 'mailNotification' => true];
-        $fillObjectTableConfig = [];
-        foreach ($config as $key => $value) {
-          $fillObjectTableConfig[$key] = $value;
-        }
-        if(isset($fillObjectTableConfig['connection'])){
-          // dd($fillObjectTableConfig['connection']);
-          if(get_class($this) === Csdb::class) FillObjectTable::dispatch(request()->user(), $this, $fillObjectTableConfig['mailNotification'] ?? false)->onConnection($fillObjectTableConfig['connection']); // using queue
-          else FillObjectTable::dispatch(request()->user(), $this->csdb, $fillObjectTableConfig['mailNotification'] ?? false)->onConnection($fillObjectTableConfig['connection']);
+        // $fillObjectTableConfig = [];
+        // foreach ($config as $key => $value) {
+        //   $fillObjectTableConfig[$key] = $value;
+        // }
+        if(isset($config['connection'])){
+          // dd($config['connection']);
+          if(get_class($this) === Csdb::class) FillObjectTable::dispatch(request()->user(), $this, $fillObjectTableConfig['mailNotification'] ?? false)->onConnection($config['connection']); // using queue
+          else FillObjectTable::dispatch(request()->user(), $this->csdb, $fillObjectTableConfig['mailNotification'] ?? false)->onConnection($config['connection']);
         }
         
         return true;
