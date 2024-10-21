@@ -10,7 +10,9 @@ use App\Rules\Csdb\Path;
 use App\Rules\Csdb\SecurityClassification;
 use App\Rules\Csdb\SeqNumber;
 use Closure;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -135,9 +137,10 @@ class DdnCreate extends FormRequest
     
     $remarks = $this->get('remarks');
     if(!is_array($remarks) AND is_string($remarks)){
-      $rand = rand(0,99999);
-      $remarks = preg_replace("/[\r\n]+/", $remarks, $rand);
-      $remarks = explode($rand,$remarks);
+      // $rand = rand(0,99999);
+      // $remarks = preg_replace("/[\r\n]+/", $remarks, $rand);
+      // $remarks = explode($rand,$remarks);
+      $remarks = explode("\n",$remarks);
     }
 
     // $dispatchToEnterpriseAddress = $dispatchToEnterpriseModel->address ?? [];
@@ -216,5 +219,14 @@ class DdnCreate extends FormRequest
       // Expected a scalar, or an array as a 2nd argument to \"Symfony\\Component\\HttpFoundation\\InputBag::set()\", \"Ptdi\\Mpub\\Main\\CSDBObject\" given.
       'CSDBObject' => [$DDNModel->CSDBObject],
     ]);
+  }
+
+  protected function failedValidation(Validator $validator)
+  {
+    throw (new HttpResponseException(response([
+      'infotype' => 'caution',
+      'message' => $validator->errors()->first(),
+      'errors' => $validator->errors()->toArray(),
+    ],422)));
   }
 }

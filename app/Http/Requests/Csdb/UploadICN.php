@@ -5,7 +5,9 @@ namespace App\Http\Requests\Csdb;
 use App\Models\Csdb;
 use App\Rules\Csdb\Path;
 use Closure;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Ptdi\Mpub\Main\CSDBError;
 use Ptdi\Mpub\Main\CSDBValidator;
 
@@ -69,5 +71,14 @@ class UploadICN extends FormRequest
       'path' => $this->path ?? 'CSDB',
       'oldCSDBModel' => $oldCSDBModel
     ]);
+  }
+
+  protected function failedValidation(Validator $validator)
+  {
+    throw (new HttpResponseException(response([
+      'infotype' => 'caution',
+      'message' => $validator->errors()->first(),
+      'errors' => $validator->errors()->toArray(),
+    ],422)));
   }
 }

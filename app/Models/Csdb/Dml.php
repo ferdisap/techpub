@@ -132,7 +132,9 @@ class Dml extends Csdb
         }
         for ($i = 0; $i < $l; $i++) {
           $simplePara = $this->CSDBObject->document->createElement('simplePara');
-          $simplePara->nodeValue = $data['ident-remarks'][$i];
+          // $simplePara->nodeValue = $data['ident-remarks'][$i];
+          // $simplePara->nodeValue = 'foobarssas';
+          $simplePara->nodeValue = $data['ident-remarks'][$i] ?? 'aa';
           $old_remarks->appendChild($simplePara);
         }
       }

@@ -4,7 +4,9 @@ namespace App\Http\Requests\Csdb;
 
 use App\Models\Csdb;
 use Closure;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class DmlMerge extends FormRequest
 {
@@ -82,5 +84,14 @@ class DmlMerge extends FormRequest
     $this->merge([
       'MergedCSDBModel' => $MergedCSDBModel,
     ]);
+  }
+
+  protected function failedValidation(Validator $validator)
+  {
+    throw (new HttpResponseException(response([
+      'infotype' => 'caution',
+      'message' => $validator->errors()->first(),
+      'errors' => $validator->errors()->toArray(),
+    ],422)));
   }
 }

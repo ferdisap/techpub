@@ -106,7 +106,7 @@ class MainController extends BaseController
    */
   public function update(CsdbUpdateByXMLEditor $request, Csdb $CSDBModel)
   {
-    $CSDBModel = $request->validated('oldCSDBModel')[0];
+    // $CSDBModel = $request->validated('oldCSDBModel')[0];
     $CSDBModel->CSDBObject = $request->validated('xmleditor')[0];
     $CSDBModel->path = $request->validated('path');
     if ($CSDBModel->saveDOMandModel($request->user()->storage, [

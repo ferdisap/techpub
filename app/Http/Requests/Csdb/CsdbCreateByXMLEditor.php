@@ -6,7 +6,9 @@ use App\Models\Csdb;
 use App\Rules\Csdb\Path;
 use BREXValidator;
 use Closure;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\Storage;
 use Ptdi\Mpub\Main\CSDBError;
 use Ptdi\Mpub\Main\CSDBObject;
@@ -124,5 +126,14 @@ class CsdbCreateByXMLEditor extends FormRequest
       'xsi_validate' => $this->xsi_validate,
       'brex_validate' => $this->brex_validate,
     ]);
+  }
+
+  protected function failedValidation(Validator $validator)
+  {
+    throw (new HttpResponseException(response([
+      'infotype' => 'caution',
+      'message' => $validator->errors()->first(),
+      'errors' => $validator->errors()->toArray(),
+    ],422)));
   }
 }

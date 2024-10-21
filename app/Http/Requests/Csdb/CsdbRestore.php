@@ -4,6 +4,7 @@ namespace App\Http\Requests\Csdb;
 
 use App\Models\Csdb;
 use Closure;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
@@ -73,5 +74,14 @@ class CsdbRestore extends FormRequest
       'CSDBModelArray' => $CSDBModelArray,
       'filename' => $filename,
     ]);
+  }
+
+  protected function failedValidation(Validator $validator)
+  {
+    throw (new HttpResponseException(response([
+      'infotype' => 'caution',
+      'message' => $validator->errors()->first(),
+      'errors' => $validator->errors()->toArray(),
+    ],422)));
   }
 }

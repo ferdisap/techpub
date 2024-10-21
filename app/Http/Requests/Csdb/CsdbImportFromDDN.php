@@ -4,7 +4,9 @@ namespace App\Http\Requests\Csdb;
 
 use App\Models\Csdb;
 use Closure;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class CsdbImportFromDDN extends FormRequest
 {
@@ -62,5 +64,14 @@ class CsdbImportFromDDN extends FormRequest
       // Expected a scalar, or an array as a 2nd argument to \"Symfony\\Component\\HttpFoundation\\InputBag::set()\", \"Ptdi\\Mpub\\Main\\CSDBObject\" given.
       'CSDBImportModel' => $CSDBImportModel,
     ]);
+  }
+
+  protected function failedValidation(Validator $validator)
+  {
+    throw (new HttpResponseException(response([
+      'infotype' => 'caution',
+      'message' => $validator->errors()->first(),
+      'errors' => $validator->errors()->toArray(),
+    ],422)));
   }
 }

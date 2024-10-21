@@ -60,26 +60,29 @@ class DmlController extends Controller
     ], 422, ['content-type' => 'application/json']);
   }
 
-  public function update(DmlUpdateFromEditorDML $request, string $filename)
+  /**
+   * ingat, $CSDBModel->object->CSDBObject !== $CSDBModel->CSDBObject
+   */
+  public function update(DmlUpdateFromEditorDML $request, Csdb $CSDBModel)
   { 
-    $request->DMLModel->CSDBObject->load(CSDB_STORAGE_PATH . DIRECTORY_SEPARATOR . $request->user()->storage . DIRECTORY_SEPARATOR . $filename);
-    $request->DMLModel->fill_xml($request->validated());
+    $CSDBModel->object->CSDBObject->load(CSDB_STORAGE_PATH . DIRECTORY_SEPARATOR . $request->user()->storage . DIRECTORY_SEPARATOR . $CSDBModel->filename);
+    $CSDBModel->object->fill_xml($request->validated());
 
-    if ($request->DMLModel->saveDOMandModel($request->user()->storage, [
-      ['MAKE_CSDB_UPDT_History', [$request->DMLModel->csdb]],
-      ['MAKE_USER_UPDT_History', [$request->user(), '', $request->DMLModel->csdb->filename]]
+    if ($CSDBModel->object->saveDOMandModel($request->user()->storage, [
+      ['MAKE_CSDB_UPDT_History', [$CSDBModel]],
+      ['MAKE_USER_UPDT_History', [$request->user(), '', $CSDBModel->filename]]
     ])) {
       return Response::make([
         'infotype' => 'note',
-        'message' => "{$request->DMLModel->csdb->filename} has been update.",
-        "csdb" => $request->DMLModel->csdb,
+        'message' => "{$CSDBModel->filename} has been update.",
+        "csdb" => $CSDBModel,
       ], 200, ['content-type' => 'application/json']);
     }
     return Response::make([
       'infotype' => 'warning',
-      'message' => "{$request->DMLModel->csdb->filename} failed to update.",
-      'errors' => $request->DMLModel->CSDBObject->errors->get(),
-      'csdb' => $request->DMLModel->csdb
+      'message' => "{$CSDBModel->filename} failed to update.",
+      'errors' => $CSDBModel->CSDBObject->errors->get(),
+      'csdb' => $CSDBModel
     ], 422, ['content-type' => 'application/json']);
   }
 

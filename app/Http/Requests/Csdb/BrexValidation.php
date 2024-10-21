@@ -6,7 +6,9 @@ use App\Models\Csdb;
 use App\Models\Csdb\Dmc;
 use BREXValidator;
 use Closure;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Ptdi\Mpub\Validation\CSDBValidatee;
 use Ptdi\Mpub\Validation\CSDBValidator;
 use Ptdi\Mpub\Validation\Validator\Brex;
@@ -80,5 +82,14 @@ class BrexValidation extends FormRequest
     $validatee = new CSDBValidatee($validateeObject);
     $validator = new CSDBValidator($validatorObject);
     $this->brexValidation = new Brex($validator, $validatee);
+  }
+
+  protected function failedValidation(Validator $validator)
+  {
+    throw (new HttpResponseException(response([
+      'infotype' => 'caution',
+      'message' => $validator->errors()->first(),
+      'errors' => $validator->errors()->toArray(),
+    ],422)));
   }
 }

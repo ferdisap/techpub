@@ -6,7 +6,9 @@ use App\Models\Csdb;
 use App\Rules\Csdb\Path;
 use BREXValidator;
 use Closure;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Ptdi\Mpub\Main\CSDBError;
@@ -16,6 +18,7 @@ use Ptdi\Mpub\Validation\CSDBValidatee;
 use Ptdi\Mpub\Validation\CSDBValidator;
 use Ptdi\Mpub\Validation\Validator\Brex;
 use Ptdi\Mpub\Validation\Validator\Xsi;
+use Symfony\Component\HttpFoundation\Response;
 
 class CsdbUpdateByXMLEditor extends FormRequest
 {
@@ -85,6 +88,10 @@ class CsdbUpdateByXMLEditor extends FormRequest
    */
   protected function prepareForValidation(): void
   {
+    if($this->route('CSDBModel')->lastHistory->code === 'CSDB-DELL' || $this->route('CSDBModel')->lastHistory->code === 'CSDB-PDEL'){
+      abort(404, $this->route('CSDBModel')->filename . " has been deleted.");
+    }
+
     $CSDBObject = new CSDBObject("5.0");
     if($this->xmleditor) $CSDBObject->loadByString($this->xmleditor); // biar ga error ditambah if
 
@@ -93,7 +100,17 @@ class CsdbUpdateByXMLEditor extends FormRequest
       'xmleditor' => [$CSDBObject], // harus array atau scalar
       'xsi_validate' => $this->xsi_validate,
       'brex_validate' => $this->brex_validate,
-      'oldCSDBModel' => [Csdb::getCsdb($this->route('CSDBModel')->filename,["exception" => ['CSDB-DELL','CSDB-PDEL']])->first()],
+      // 'oldCSDBModel' => [Csdb::getCsdb($this->route('CSDBModel')->filename,["exception" => ['CSDB-DELL','CSDB-PDEL']])->first()],
+      'oldCSDBModel' => [$this->route('CSDBModel')], // deprecated karena tidak dipakai lagi di MainController, tapi masih dipakai di CsdbController
     ]);
+  }
+
+  protected function failedValidation(Validator $validator)
+  {
+    throw (new HttpResponseException(response([
+      'infotype' => 'caution',
+      'message' => $validator->errors()->first(),
+      'errors' => $validator->errors()->toArray(),
+    ],422)));
   }
 }

@@ -14,7 +14,9 @@ use App\Rules\Csdb\SecurityClassification;
 use App\Rules\Csdb\SeqNumber;
 use App\Rules\EnterpriseCode;
 use Closure;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Ptdi\Mpub\Main\CSDBStatic;
@@ -195,5 +197,14 @@ class CommentCreate extends FormRequest
       // Expected a scalar, or an array as a 2nd argument to \"Symfony\\Component\\HttpFoundation\\InputBag::set()\", \"Ptdi\\Mpub\\Main\\CSDBObject\" given.
       'CSDBObject' => [$COMModel->CSDBObject],
     ]);
+  }
+
+  protected function failedValidation(Validator $validator)
+  {
+    throw (new HttpResponseException(response([
+      'infotype' => 'caution',
+      'message' => $validator->errors()->first(),
+      'errors' => $validator->errors()->toArray(),
+    ],422)));
   }
 }

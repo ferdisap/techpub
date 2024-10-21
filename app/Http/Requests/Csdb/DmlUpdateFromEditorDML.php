@@ -9,7 +9,9 @@ use App\Rules\Dml\EntryIssueType;
 use App\Rules\Dml\EntryType;
 use App\Rules\EnterpriseCode;
 use Closure;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Ptdi\Mpub\Main\CSDBStatic;
 
 class DmlUpdateFromEditorDML extends FormRequest
@@ -56,8 +58,16 @@ class DmlUpdateFromEditorDML extends FormRequest
 
   public function prepareForValidation()
   {
+    if($this->route('CSDBModel')->lastHistory->code === 'CSDB-DELL' || $this->route('CSDBModel')->lastHistory->code === 'CSDB-PDEL'){
+      abort(404, $this->route('CSDBModel')->filename . " has been deleted.");
+    }
+
     $ident = $this->get('ident'); // array
     $this->request->remove('ident');
+
+    if(!is_array($ident['ident-remarks']) AND is_string($ident['ident-remarks'])){
+      $ident['ident-remarks'] = explode("\n",$ident['ident-remarks']);
+    }
 
     $entries = $this->get('entries');
     $this->request->remove('entries');
@@ -96,8 +106,21 @@ class DmlUpdateFromEditorDML extends FormRequest
     $this->replace(array_merge($ident,$entries));
   }
 
+  /**
+   * @deprecated karena tidak dipakai lagi di CsdbApi/DmlController
+   */
   protected function passedValidation()
   {
-    $this->DMLModel = Csdb::getObject($this->route('filename'))->first();
+    // $this->DMLModel = Csdb::getObject($this->route('filename'))->first();
+    $this->DMLModel = $this->route('CSDBModel')->object;
+  }
+
+  protected function failedValidation(Validator $validator)
+  {
+    throw (new HttpResponseException(response([
+      'infotype' => 'caution',
+      'message' => $validator->errors()->first(),
+      'errors' => $validator->errors()->toArray(),
+    ],422)));
   }
 }

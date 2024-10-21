@@ -57,6 +57,9 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post("/s1000d/csdb/update/{CSDBModel:filename}", [MainController::class, 'update'])
   ->missing(fn() => throw new HttpResponseException(response(["message" => "There is no such csdb."],404)))
   ->name('api.update_object');
+  Route::post("/s1000d/dml/update/{CSDBModel:filename}", [CsdbApiDmlController::class, 'update'])
+  ->missing(fn() => throw new HttpResponseException(response(["message" => "There is no such csdb."],404)))
+  ->name('api.update_dml');
 
   // delete
   Route::delete("/s1000d/csdb/delete", [MainController::class, 'delete'])->name('api.delete_csdbs');
