@@ -146,7 +146,7 @@ class Comment extends Csdb
     if (!empty($commentRefs)) {
       $r = [];
       foreach ($commentRefs as $refsGroup) {
-        $r[] = CSDBStatic::resolve_ident($refsGroup->firstElementChild);
+        $r[] = CSDBStatic::resolve_ident($refsGroup->firstElementChild, 'auto');
       }
       $commentRefs = $r;
     } else {

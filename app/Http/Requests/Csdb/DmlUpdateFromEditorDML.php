@@ -59,7 +59,7 @@ class DmlUpdateFromEditorDML extends FormRequest
   public function prepareForValidation()
   {
     if($this->route('CSDBModel')->lastHistory->code === 'CSDB-DELL' || $this->route('CSDBModel')->lastHistory->code === 'CSDB-PDEL'){
-      abort(404, $this->route('CSDBModel')->filename . " has been deleted.");
+      throw new HttpResponseException(response(["message" => $this->route('CSDBModel')->filename . " has been deleted."],404));
     }
 
     $ident = $this->get('ident'); // array

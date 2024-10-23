@@ -6,6 +6,7 @@ use App\Http\Controllers\Csdb\CommentController;
 use App\Http\Controllers\Csdb\DdnController;
 use App\Http\Controllers\Csdb\DmlController;
 use App\Http\Controllers\Csdb\HistoryController;
+use App\Http\Controllers\CsdbApi\ComController;
 use App\Http\Controllers\CsdbApi\DmlController as CsdbApiDmlController;
 use App\Http\Controllers\CsdbApi\MainController;
 use App\Http\Controllers\EnterpriseController;
@@ -37,12 +38,24 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::put("/s1000d/csdb/create",[MainController::class, 'create'])->name('api.create_object');
   Route::put("/s1000d/dml/create",[CsdbApiDmlController::class, 'create'])->name('api.create_dml');
   Route::put("/s1000d/dml/merge/{filename}", [CsdbApiDmlController::class, 'merge'])->name('api.dml_merge');
+  Route::post("/s1000d/comment/create",[ComController::class, 'create'])->name('api.create_comment');
 
   // read
   Route::get('/s1000d/csdb/read/{CSDBModel:filename}', [MainController::class, 'read'])
   ->missing(fn() => throw new HttpResponseException(response(["message" => "There is no such csdb."],404)))
   ->name('api.read_object');
-
+  Route::get('/s1000d/ident/{CSDBModel:filename}', [MainController::class, 'ident'])
+  ->missing(fn() => throw new HttpResponseException(response(["message" => "There is no such csdb."],404)))
+  ->name('api.ident_object');
+  Route::get('/s1000d/status/{CSDBModel:filename}', [MainController::class, 'status'])
+  ->missing(fn() => throw new HttpResponseException(response(["message" => "There is no such csdb."],404)))
+  ->name('api.status_object');
+  Route::get("/s1000d/histories/{CSDBModel:filename}", [MainController::class, 'histories'])
+  ->missing(fn() => throw new HttpResponseException(response(["message" => "There is no such csdb."],404)))
+  ->name('api.histories');
+  Route::get("/s1000d/comments/{CSDBModel:filename}",[MainController::class, 'comments'])
+  ->missing(fn() => throw new HttpResponseException(response(["message" => "There is no such csdb."],404)))
+  ->name('api.comments');  
 
   // index
   Route::get("/s1000d/all",[MainController::class, 'getCsdbs'])->name('api.get_csdbs'); // api.get_allobjects_list
@@ -71,7 +84,7 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post("/s1000d/icn/upload", [CsdbController::class, 'uploadICN'])->name('api.upload_ICN');
   Route::post('/s1000d/csdb/update/path', [CsdbController::class, 'change_object_path'])->name('api.change_object_path');
   Route::post("/s1000d/dml/update/{filename}",[DmlController::class, 'update'])->name('api.dmlupdate');
-  Route::post("/s1000d/comment/create",[CommentController::class, 'create'])->name('api.create_comment');
+  // Route::post("/s1000d/comment/create",[CommentController::class, 'create'])->name('api.create_comment');
   Route::post("/s1000d/ddn/create",[DdnCOntroller::class, 'create'])->name('api.create_ddn');
   Route::put('/s1000d/ddn/import/{filename}', [DdnController::class, 'import'])->name('api.import_ddn_list');
   // Route::put("/s1000d/dml/{filename}/merge", [DmlController::class, 'merge'])->name('api.dml_merge');
@@ -90,7 +103,7 @@ Route::middleware('auth:sanctum')->group(function () {
   // user
   Route::get('/s1000d/user/search', [UserController::class, 'searchModel'])->name('api.user_search_model');
   // history
-  Route::get("/s1000d/csdb/{filename}/histories", [HistoryController::class, 'all'])->name('api.get_csdb_history');
+  // Route::get("/s1000d/csdb/{filename}/histories", [HistoryController::class, 'all'])->name('api.get_csdb_history');
   // comment
   Route::get("/s1000d/csdb/{filename}/comments",[CommentController::class, 'all'])->name('api.get_csdb_comments');  
   // ddn

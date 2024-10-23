@@ -4,6 +4,7 @@ namespace App\Http\Requests\Csdb;
 
 use App\Models\Csdb;
 use App\Models\Csdb\Comment;
+use App\Models\User;
 use App\Rules\Csdb\BrexDmRef;
 use App\Rules\Csdb\CommentRefs;
 use App\Rules\Csdb\CommentType;
@@ -24,6 +25,19 @@ use Illuminate\Support\Str;
 
 /**
  * Dalam pembuatan comment, maximum comment dengan commentType = 'i' hanya 99x karena 3digit pertama adalah parentComment ('q') dan 2 digit terakhir adalah sequential
+ * 
+ * NOTE
+ * - modelIdentCode didapat dari $commentRefs[0], atau $parentCommentFilename, atau $brexDmRef, atau null
+ * - senderIdent didapat dari EnterpriseModel request user
+ * - seqNumber digenerate otomatis
+ * - commentType didapat dari $parentCommentFilename, atau client request
+ * - languageIsoCode dan countryIsoCode didapat dari commentRefs[0], atau client request
+ * - securityClassification didapat dari client request
+ * - commentPriorityCode didapat dari client request
+ * - responseType didapat dari client request
+ * - brexDmRef didapat dari client request atau dari request csdb berisi filename, path, storage
+ * - commentRefs didapat dari client request
+ * 
  */
 class CommentCreate extends FormRequest
 {
@@ -47,26 +61,27 @@ class CommentCreate extends FormRequest
       // ident
       'modelIdentCode' => 'required',
       'senderIdent' => [new EnterpriseCode(true)],
-      'seqNumber' => [new SeqNumber(true, 'comment')],
-      'commentType' => [new CommentType],
+      // 'seqNumber' => [new SeqNumber(true, 'comment')], 
+      'seqNumber' => [new SeqNumber(true, 'comment')], 
+      'commentType' => ['required', new CommentType($this->parentCommentFilename)],
       'yearOfDataIssue' => '',
-      'languageIsoCode' => [new Language],
-      'countryIsoCode' => [new Language],
+      'languageIsoCode' => ['required', new Language],
+      'countryIsoCode' => ['required', new Language],
 
       // address
       'commentTitle' => 'max:50',
-      'enterpriseName' => '',
+      'enterpriseName' => 'required',
       'division' => '',
       'enterpriseUnit' => '',
-      'lastName' => '',
+      'lastName' => 'required',
       'firstName' => '',
       'jobTitle' => '',
       'department' => '',
       'street' => '',
       'postOfficeBox' => '',
       'postalZipCode' => '',
-      'city' => '',
-      'country' => '',
+      'city' => 'required',
+      'country' => 'required',
       'state' => '',
       'province' => '',
       'building' => '',
@@ -78,11 +93,12 @@ class CommentCreate extends FormRequest
       'SITA' => '',
 
       // status
-      'securityClassification' => [new SecurityClassification],
-      'commentPriorityCode' => [new S1000DConfigurableAttributeValue('cp')],
-      'responseType' => [new S1000DConfigurableAttributeValue('rt')],
-      'brexDmRef' => [new BrexDmRef],
-      'commentRefs' => [new CommentRefs],
+      'securityClassification' => ['required', new SecurityClassification],
+      'commentPriorityCode' => ['required', new S1000DConfigurableAttributeValue('cp')],
+      'responseType' => ['required', new S1000DConfigurableAttributeValue('rt')],
+      // 'brexDmRef' => ['required', new BrexDmRef],
+      'brexDmRef' => ['required'], // untuk tes saja
+      'commentRefs' => ['required', new CommentRefs],
       'commentRemarks' => ['array'],
 
       // content
@@ -95,6 +111,7 @@ class CommentCreate extends FormRequest
    */
   protected function prepareForValidation(): void
   {
+    $brexDmRef = $this->get('brexDmRef');
     $commentCreator = $this->user();
     $creatorEnterpriseModel = $commentCreator->work_enterprise;
     $senderIdent = $creatorEnterpriseModel->code->name;
@@ -102,7 +119,7 @@ class CommentCreate extends FormRequest
     // $brexModel = Csdb::getObject($this->get('brexDmRef'),['exception' => ['CSDB-DELL', 'CSDB-PDEL']])->first();
     // $modelIdentCode = $brexModel ? $brexModel->modelIdentCode : null;
 
-    if (str_contains($this->commentRefs, 'noReferences')) $commentRefs = ['noReferences'];
+    if (!$this->commentRefs || str_contains($this->commentRefs, 'noReferences')) $commentRefs = ['noReferences'];
     else {
       $commentRefs = explode(',', $this->commentRefs);
       array_walk($commentRefs, (fn (&$v) => $v = trim($v)));
@@ -110,8 +127,8 @@ class CommentCreate extends FormRequest
 
       $objectReference = $commentRefs[0];
       $objectReferenceDecoded = CSDBStatic::decode_ident($objectReference);
-      $first_key = array_key_first($objectReferenceDecoded); //commentCOde, dmCode, pmCode, etc
-      $modelIdentCode = $objectReferenceDecoded[$first_key]['modelIdentCode'];
+      // first_key = ; //commentCode, dmCode, pmCode, etc
+      $modelIdentCode = $objectReferenceDecoded[array_key_first($objectReferenceDecoded)]['modelIdentCode'];
       $languageIsoCode = $objectReferenceDecoded['language']['languageIsoCode'] ?? $this->get('languageIsoCode');
       $countryIsoCode = $objectReferenceDecoded['language']['countryIsoCode'] ?? $this->get('countryIsoCode');
     }
@@ -136,18 +153,29 @@ class CommentCreate extends FormRequest
       $seqNumber = str_pad($seqNumber, 5, '0', STR_PAD_LEFT);
       $commentType = $this->get('commentType') ?? 'q';
     }
-    // dd($commentType, $seqNumber);
+    
+    if(!$brexDmRef && $this->csdb){
+      $CSDBModel = Csdb::where('filename', $this->csdb['filename'])->where('path', $this->csdb['path'])->where('storage_id', User::where('storage', $this->csdb['storage'])->first(['id'])->id)->first();
+      if($CSDBModel){
+        $brexDmRef = $CSDBModel->object->brexDmRef;
+      }
+    }
+
+    if(!isset($modelIdentCode) && $brexDmRef){
+      $brexDecoded = CSDBStatic::decode_ident($brexDmRef);
+      $modelIdentCode = $brexDecoded[array_key_first($brexDecoded)]['modelIdentCode'];
+    }
 
     $this->merge([
       'path' => $this->get('path') ?? 'CSDB/COMMENTS',
       // ident
-      'modelIdentCode' => $modelIdentCode,
+      'modelIdentCode' => $modelIdentCode ?? null,
       'senderIdent' => $senderIdent,
       'seqNumber' => $seqNumber,
       'commentType' => $commentType,
       'yearOfDataIssue' => date("Y"),
-      'languageIsoCode' => $languageIsoCode,
-      'countryIsoCode' => $countryIsoCode,
+      'languageIsoCode' => $languageIsoCode ?? ($this->get('languageIsoCode') ?? null),
+      'countryIsoCode' => $countryIsoCode ?? ($this->get('countryIsoCode') ?? null),
 
       // address
       'commentTitle' => $this->get('commentTitle'),
@@ -177,7 +205,7 @@ class CommentCreate extends FormRequest
       'securityClassification' => $this->get('securityClassification'),
       'commentPriorityCode' => $this->get('commentPriorityCode'),
       'responseType' => $this->get('responseType'),
-      'brexDmRef' => $this->get('brexDmRef'),
+      'brexDmRef' => $brexDmRef,
       'commentContentSimplePara' => preg_split("/<br\/>|<br>|&#10;/m", $this->remarks),
       'commentRefs' => $commentRefs,
       'remarks' => $this->get('commentRemarks'),

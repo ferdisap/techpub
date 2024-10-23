@@ -17,7 +17,8 @@ class History extends Model
 
   protected $table = 'history';
 
-  protected $hidden = ['id','owner_class', 'owner_id'];
+  // protected $hidden = ['id','owner_class', 'owner_id'];
+  protected $hidden = ['id','owner_class', 'owner_id', 'description'];
 
   public $timestamps = false;
 

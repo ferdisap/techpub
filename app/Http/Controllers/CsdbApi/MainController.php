@@ -7,9 +7,13 @@ use App\Http\Requests\Csdb\CsdbDelete;
 use App\Http\Requests\Csdb\CsdbPermanentDelete;
 use App\Http\Requests\Csdb\CsdbRestore;
 use App\Http\Requests\Csdb\CsdbUpdateByXMLEditor;
+use App\Http\Resources\HistoryResource;
 use App\Jobs\Csdb\FillObjectTable;
 use App\Models\Csdb;
+use App\Models\Csdb\Comment;
 use App\Models\Csdb\History;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
@@ -60,12 +64,16 @@ class MainController extends BaseController
    */
   public function read(Request $request, Csdb $CSDBModel)
   {
+    if ($request->route('CSDBModel')->lastHistory->code === 'CSDB-DELL' || $request->route('CSDBModel')->lastHistory->code === 'CSDB-PDEL') {
+      throw new HttpResponseException(response(["message" => $request->route('CSDBModel')->filename . " has been deleted."], 404));
+    }
+
     $CSDBModel->CSDBObject->load(CSDB_STORAGE_PATH . "/" . $request->user()->storage . "/" . $CSDBModel->filename);
     if ($CSDBModel->CSDBObject->document) {
       switch ($request->form) {
         case 'json':
           $CSDBModel->object;
-          if(isset($CSDBModel->object)) $CSDBModel->object->makeHidden(['content', 'json']); // karena pakai supervisor untuk membuat object jadi belum tentu
+          if (isset($CSDBModel->object)) $CSDBModel->object->makeHidden(['content', 'json']); // karena pakai supervisor untuk membuat object jadi belum tentu
           else {
             $CSDBModel->setRelations([]); // di set relationnya menjadi kosong karena sebelumnya ada $CSDBModel->object;. Relation 'object' akan gagal karena akan membaca slef::class sehingga akan mencari where 'csdb'.'csdb_id' = ... padahal bukan 'csdb_id' tapi 'id'
             FillObjectTable::dispatchSync($request->user(), $CSDBModel, false);
@@ -94,6 +102,205 @@ class MainController extends BaseController
       }
     }
     return abort(204);
+  }
+
+  public function ident(Request $request, Csdb $CSDBModel)
+  {
+    // if($request->route('CSDBModel')->lastHistory->code === 'CSDB-DELL' || $request->route('CSDBModel')->lastHistory->code === 'CSDB-PDEL'){
+    //   throw new HttpResponseException(response(["message" => $request->route('CSDBModel')->filename . " has been deleted."],404));
+    // }
+    if ($CSDBModel->loadCSDBObject() && $CSDBModel->CSDBObject->document->doctype) {
+      $CSDBModel->object;
+      if (!$CSDBModel->object) {
+        $CSDBModel->setRelations([]); // di set relationnya menjadi kosong karena sebelumnya ada $CSDBModel->object;. Relation 'object' akan gagal karena akan membaca slef::class sehingga akan mencari where 'csdb'.'csdb_id' = ... padahal bukan 'csdb_id' tapi 'id'
+        FillObjectTable::dispatchSync($request->user(), $CSDBModel, false);
+        $CSDBModel->object;
+      }
+      switch ($CSDBModel->CSDBObject->document->doctype->nodeName) {
+        case 'dmodule':
+          $data = [
+            'modelIdentCode' => $CSDBModel->object->modelIdentCode,
+            'systemDiffCode' => $CSDBModel->object->systemDiffCode,
+            'systemCode' => $CSDBModel->object->systemCode,
+            'subSystemCode' => $CSDBModel->object->subSystemCode,
+            'subSubSystemcode' => $CSDBModel->object->subSubSystemcode,
+            'assyCode' => $CSDBModel->object->assyCode,
+            'disassyCode' => $CSDBModel->object->disassyCode,
+            'disassyCodeVariant' => $CSDBModel->object->disassyCodeVariant,
+            'infoCode' => $CSDBModel->object->infoCode,
+            'infoCodeVariant' => $CSDBModel->object->infoCodeVariant,
+            'itemLocationCode' => $CSDBModel->object->itemLocationCode,
+            'languageIsoCode' => $CSDBModel->object->languageIsoCode,
+            'countryIsoCode' => $CSDBModel->object->countryIsoCode,
+            'issueNumber' => $CSDBModel->object->issueNumber,
+            'inWork' => $CSDBModel->object->inWork,
+          ];
+          break;
+        case 'pm':
+          $data = [
+            'modelIdentCode' => $CSDBModel->object->modelIdentCode,
+            'pmIssuer' => $CSDBModel->object->pmIssuer,
+            'pmNumber' => $CSDBModel->object->pmNumber,
+            'pmVolume' => $CSDBModel->object->pmVolume,
+            'languageIsoCode' => $CSDBModel->object->languageIsoCode,
+            'countryIsoCode' => $CSDBModel->object->countryIsoCode,
+            'issueNumber' => $CSDBModel->object->issueNumber,
+            'inWork' => $CSDBModel->object->inWork,
+          ];
+          break;
+        case 'dml':
+          $data = [
+            'modelIdentCode' => $CSDBModel->object->modelIdentCode,
+            'senderIdent' => $CSDBModel->object->senderIdent,
+            'dmlType' => $CSDBModel->object->dmlType,
+            'yearOfDataIssue' => $CSDBModel->object->yearOfDataIssue,
+            'seqNumber' => $CSDBModel->object->seqNumber,
+          ];
+          break;
+        case 'ddn':
+          $data = [
+            'modelIdentCode' => $CSDBModel->object->modelIdentCode,
+            'senderIdent' => $CSDBModel->object->senderIdent,
+            'receiverIdent' => $CSDBModel->object->receiverIdent,
+            'yearOfDataIssue' => $CSDBModel->object->yearOfDataIssue,
+            'seqNumber' => $CSDBModel->object->seqNumber,
+          ];
+          break;
+        case 'comment':
+          $data = [
+            'modelIdentCode' => $CSDBModel->object->modelIdentCode,
+            'senderIdent' => $CSDBModel->object->senderIdent,
+            'commentType' => $CSDBModel->object->commentType,
+            'yearOfDataIssue' => $CSDBModel->object->yearOfDataIssue,
+            'seqNumber' => $CSDBModel->object->seqNumber,
+          ];
+          break;
+        case 'icnmetadata':
+          // TBD, karena belum siap crud, serta menghubungannya ke ICN
+          $data = [];
+        default:
+          // TBD
+          // lakukan untuk ICN, ambil metadata, kalau tidak ada return kosongin aja object nya
+          $data = [];
+          break;
+      }
+      $CSDBModel->ident = $data;
+      return Response::make([
+        "csdb" => $CSDBModel,
+      ], 200, ['content-type' => 'application/json']);
+    }
+    // jika ICN masih TBD
+    return Response::make([
+      "ident" => [],
+    ], 200, ['content-type' => 'application/json']);
+  }
+
+  public function status(Request $request, Csdb $CSDBModel)
+  {
+    if ($CSDBModel->loadCSDBObject() && $CSDBModel->CSDBObject->document->doctype) {
+      $CSDBModel->object;
+      if (!$CSDBModel->object) {
+        $CSDBModel->setRelations([]); // di set relationnya menjadi kosong karena sebelumnya ada $CSDBModel->object;. Relation 'object' akan gagal karena akan membaca slef::class sehingga akan mencari where 'csdb'.'csdb_id' = ... padahal bukan 'csdb_id' tapi 'id'
+        FillObjectTable::dispatchSync($request->user(), $CSDBModel, false);
+        $CSDBModel->object;
+      }
+      switch ($CSDBModel->CSDBObject->document->doctype->nodeName) {
+        case 'dmodule':
+          $data = [
+            'securityClassification' => $CSDBModel->object->securityClassification,
+            'responsiblePartnerCompany' => $CSDBModel->object->responsiblePartnerCompany,
+            'originator' => $CSDBModel->object->originator,
+            'applicability' => $CSDBModel->object->applicability,
+            'brexDmRef' => $CSDBModel->object->brexDmRef,
+            'qa' => $CSDBModel->object->qa,
+            'remarks' => $CSDBModel->object->remarks,
+          ];
+          break;
+        case 'pm':
+          $data = [
+            'securityClassification' => $CSDBModel->object->securityClassification,
+            'responsiblePartnerCompany' => $CSDBModel->object->responsiblePartnerCompany,
+            'originator' => $CSDBModel->object->originator,
+            'applicability' => $CSDBModel->object->applicability,
+            'brexDmRef' => $CSDBModel->object->brexDmRef,
+            'qa' => $CSDBModel->object->qa,
+            'remarks' => $CSDBModel->object->remarks,
+          ];
+          break;
+        case 'dml':
+          $data = [
+            'securityClassification' => $CSDBModel->object->securityClassification,
+            'brexDmRef' => $CSDBModel->object->brexDmRef,
+            'dmlRef' => $CSDBModel->object->dmlRef,
+            'remarks' => $CSDBModel->object->remarks,
+          ];
+          break;
+        case 'ddn':
+          $data = [
+            'securityClassification' => $CSDBModel->object->securityClassification,
+            'brexDmRef' => $CSDBModel->object->brexDmRef,
+            'authorization' => $CSDBModel->object->authorization,
+            'remarks' => $CSDBModel->object->remarks,
+          ];
+          break;
+        case 'comment':
+          $data = [
+            'securityClassification' => $CSDBModel->object->securityClassification,
+            'commentPriority' => $CSDBModel->object->commentPriority,
+            'commentResponse' => $CSDBModel->object->commentResponse,
+            'commentRefs' => join(", ", $CSDBModel->object->commentRefs),
+            // $table->json('commentRefs'); // jika kosong harus di isi dengan Array
+            'brexDmRef' => $CSDBModel->object->brexDmRef,
+            'remarks' => $CSDBModel->object->remarks,
+          ];
+          break;
+        case 'icnmetadata':
+          // TBD, karena belum siap crud, serta menghubungannya ke ICN
+          $data = [];
+        default:
+          // TBD
+          // lakukan untuk ICN, ambil metadata, kalau tidak ada return kosongin aja object nya
+          $data = [];
+          break;
+      }
+      $CSDBModel->status = $data;
+      return Response::make([
+        "csdb" => $CSDBModel,
+      ], 200, ['content-type' => 'application/json']);
+    }
+    // jika ICN masih TBD
+    return Response::make([
+      "status" => [],
+    ], 200, ['content-type' => 'application/json']);
+  }
+
+  /**
+   * querykey? = 'pg?0/number', 'pgtype?simple/cursor'
+   */
+  public function histories(Request $request, Csdb $CSDBModel)
+  {
+    if ($request->pg) {
+      $CSDBModel->attachHistories($request->pg, $request->pgtype);
+    } else {
+      $CSDBModel->attachHistories(0, 'all')->histories->makeVisible(['id'])->makeHidden(['description']);
+      $CSDBModel->histories = $CSDBModel->histories->map(fn ($v) => new HistoryResource($v));
+    }
+    return Response::make([
+      'csdb' => $CSDBModel,
+    ], 200, ['content-type' => 'application/json']);
+  }
+
+  public function comments(Request $request, Csdb $CSDBModel)
+  {
+    $CSDBModel->comments = Csdb::getObjects(Comment::class, ['exception' => ['CSDB-DELL', 'CSDB-PDEL']])
+      ->where('commentRefs', 'like', "%{$CSDBModel->filename}%")->with('csdb.lastHistory')->get();
+      $CSDBModel->comments->map(function ($com) {
+      $com->csdb->initiator->makeHidden(['first_name', 'middle_name', 'last_name', 'job_title', 'storage', 'address', 'work_enterprise']);
+      $com->csdb->lastHistory->makeHidden(['code', 'description']);
+    });
+    return Response::make([
+      'csdb' => $CSDBModel
+    ],200,['content-type' => 'application/json']);
   }
 
   /**
@@ -253,6 +460,7 @@ class MainController extends BaseController
     } else {
       $CSDBModels = Csdb::where('storage_id', $request->user()->id);
     }
+
     if ($request->sc) {
       $keywords = array_merge(Helper::explodeSearchKeyAndValue($request->get('sc'), 'filename'));
       $query = Helper::generateWhereRawQueryString($keywords, $CSDBModels->getModel()->getTable(), ['path' => "#&value;"]);
@@ -263,8 +471,11 @@ class MainController extends BaseController
       $CSDBModels = $CSDBModels->limit($request->limit);
     }
 
+    $CSDBModels->with(['owner' => fn(BelongsTo $query) => $query->without(['work_enterprise'])->toBase()->select(['id','storage'])]);
+
     return Response::make([
-      "csdbs" => $CSDBModels->get(['filename', 'path'])->toArray(),
+      // "csdbs" => $CSDBModels->get(['id','storage_id','filename', 'path'])->toArray(),
+      "csdbs" => $CSDBModels->get(['id','storage_id','filename', 'path'])->map(fn($csdb) => [$csdb->owner->storage, $csdb->path, $csdb->filename]),
     ], 200, ["content-type" => 'application/json']);
   }
 
@@ -274,20 +485,17 @@ class MainController extends BaseController
    * @belum di test di CrudTest::class
    * 
    * querykey? = 'sc?', 'stt?act/dct',
+   * 
+   * untuk data owner, hanya csdb.owner.storage
+   * 
    */
   public function getCsdbsByPath(Request $request, string $path = 'csdb')
   {
-    // menyiapkan csdb object
-    $CSDBModels = Csdb::with(['initiator', 'lastHistory']);
+    // menyiapkan csdb object, bisa pakai $query->setEagerLoads([]) atau $query->without(['work_enterprise'])
+    $CSDBModels = Csdb::with(['lastHistory','owner' => fn(BelongsTo $query) => $query->without(['work_enterprise'])->toBase()->select(['id','storage'])]);
     $keywords = array_merge(Helper::explodeSearchKeyAndValue($request->get('sc'), 'filename'), ["path" => [$path]]);
     $query = Helper::generateWhereRawQueryString($keywords, $CSDBModels->getModel()->getTable(), ['path' => "#&value;"]);
 
-    // $hcode = $request->stt ? ($request->stt === 'all' ? [] : ($request->stt === 'act' ? ['CSDB-DELL', 'CSDB-PDEL'] : ($request->stt ===)))
-    // switch ($request->stt) {
-    //   case 'act': $hcode = ['exception' => ['CSDB-DELL', 'CSDB-PDEL']]; break;      
-    //   case 'dct': $hcode = ['code' => ['CSDB-DELL', 'CSDB-PDEL']]; break;      
-    //   default: $hcode = []; break;
-    // }
     if (!empty($query)) $CSDBModels = $CSDBModels->whereRaw($query[0], $query[1]);
 
     if ($request->stt === 'act') {
@@ -300,6 +508,7 @@ class MainController extends BaseController
 
     $CSDBModels = $CSDBModels->where('storage_id', $request->user()->id)
       ->orderBy('filename')->paginate(100);
+      // ->orderBy('filename')->setHidden(['owner.address'])->paginate(100);
     $CSDBModels->setPath($request->getUri());
 
     // message

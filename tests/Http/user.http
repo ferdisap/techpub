@@ -61,3 +61,31 @@ Authorization: Bearer 2|f9eTaMj4prk1BkhXiUshHssoLJeOhcL42fBYfbbT870fc934
   "tes" : "tesas",
   "xmleditor" : "axaasss"
 }
+
+###
+
+GET http://127.0.0.1:8000/api/s1000d/ident/DML-MALE-0001Z-P-2024-00002_000-01.xml HTTP/1.1
+Content-Type: application/json
+X-Requested-With: XMLHttpRequest
+Authorization: Bearer 2|f9eTaMj4prk1BkhXiUshHssoLJeOhcL42fBYfbbT870fc934
+
+###
+
+GET http://127.0.0.1:8000/api/s1000d/status/COM-MALE-0001Z-Q-2024-00500_EN-EN.xml HTTP/1.1
+Content-Type: application/json
+X-Requested-With: XMLHttpRequest
+Authorization: Bearer 2|f9eTaMj4prk1BkhXiUshHssoLJeOhcL42fBYfbbT870fc934
+
+###
+
+GET http://127.0.0.1:8000/api/s1000d/histories/COM-MALE-0001Z-Q-2024-00500_EN-EN.xml HTTP/1.1
+Content-Type: application/json
+X-Requested-With: XMLHttpRequest
+Authorization: Bearer 2|f9eTaMj4prk1BkhXiUshHssoLJeOhcL42fBYfbbT870fc934
+
+###
+
+GET http://127.0.0.1:8000/api/s1000d/comments/COM-MALE-0001Z-Q-2024-00500_EN-EN.xml HTTP/1.1
+Content-Type: application/json
+X-Requested-With: XMLHttpRequest
+Authorization: Bearer 2|f9eTaMj4prk1BkhXiUshHssoLJeOhcL42fBYfbbT870fc934

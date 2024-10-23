@@ -50,6 +50,8 @@ class DmlMerge extends FormRequest
   protected function prepareForValidation(): void
   {
     $CSDBModel = Csdb::getCsdb($this->route('filename'),['exception' => ['CSDB-DELL', 'CSDB-PDEL']])->first();
+    if(!$CSDBModel) throw new HttpResponseException(response(["message" => "There is no such csdb or it might be deleted."],404));
+
     $sourceModels = $this->source;
     if(is_string($sourceModels)) $sourceModels = preg_split("/,|\s/m",$sourceModels);
 

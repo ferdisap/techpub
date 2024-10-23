@@ -42,7 +42,9 @@ class CsdbUpdateByXMLEditor extends FormRequest
       'oldCSDBModel' => ['required', function(string $attribute, mixed $oldCSDBModel, Closure $fail){
         if(!$oldCSDBModel) $f[] = $fail("You are not authorize to update ". $oldCSDBModel->filename . ".");
       }],
+      // 'xmleditor' => '',
       'xmleditor' => ['required', function(string $attribute, mixed $value, Closure $fail){
+      // 'xmleditor_xx' => [function(string $attribute, mixed $value, Closure $fail){
         if(!($value[0]->document instanceof \DOMDocument)) return $fail('Document must be in XML form.'); // harus return agar script dibawah tidak di eksekusi
         if(!$value[0]->document) $fail('Fail to recognize xml file as CSDB object.');
 
@@ -89,7 +91,7 @@ class CsdbUpdateByXMLEditor extends FormRequest
   protected function prepareForValidation(): void
   {
     if($this->route('CSDBModel')->lastHistory->code === 'CSDB-DELL' || $this->route('CSDBModel')->lastHistory->code === 'CSDB-PDEL'){
-      abort(404, $this->route('CSDBModel')->filename . " has been deleted.");
+      throw new HttpResponseException(response(["message" => $this->route('CSDBModel')->filename . " has been deleted."],404));
     }
 
     $CSDBObject = new CSDBObject("5.0");

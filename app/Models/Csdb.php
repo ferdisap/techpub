@@ -84,6 +84,7 @@ class Csdb extends Model
    */
   // protected $hidden = ['initiator_id', 'id'];
   protected $hidden = ['id', 'initiator_id', 'storage_id'];
+  // protected $hidden = ['id', 'initiator_id'];
 
   /**
    * The attributes that should be cast.
@@ -111,12 +112,28 @@ class Csdb extends Model
   public $timestamps = false;
 
   protected $with = [];
+  // protected $with = ['owner']; // memberatkan, jadi disesuaikan keperluan, tidak default
 
   /**
    * digunakan untuk function getCsdb, getCsdbs, getObject, getObjects
    * jika null maka tidak pakai query storage_id, jika 0 maka pakai request()->user()->id
    */
   public static $storage_user_id = 0;
+
+  /**
+   * Retrieve the model for a bound value.
+   * Agar setiap CSDBModel menggunakan storage id nya
+   *
+   * @param  mixed  $value
+   * @param  string|null  $field
+   * @return \Illuminate\Database\Eloquent\Model|null
+   */
+  public function resolveRouteBinding($value, $field = null)
+  {
+    return $this->where($field, $value)->where('storage_id', request()->storage ? (User::where('storage','wIxv1')->first()->id) : request()->user()->id)->firstOrFail();
+  }
+
+
 
   /**
    * Set the model created_at touse current timezone.
@@ -264,19 +281,23 @@ class Csdb extends Model
   {
     return $this->morphMany(History::class, 'owner', 'owner_class'); //'owner' itu nanti dirender menjadi 'owner_id'
   }
-  public function attachHistories(int $paginate, $type = '')
+  public function attachHistories(int $paginate, $type = ' ')
   {
     switch ($type) {
       case 'simple':
-        $this->histories = History::getHistories($this)->orderByDesc('created_at')->simplePaginate($paginate);
+        $this->histories = History::getHistories($this)->orderByDesc('created_at')->simplePaginate($paginate)->setPath(request()->getUri());
         break;
       case 'cursor':
-        $this->histories = History::getHistories($this)->orderByDesc('created_at')->cursorPaginate($paginate);
+        $this->histories = History::getHistories($this)->orderByDesc('created_at')->cursorPaginate($paginate)->setPath(request()->getUri());
+        break;
+      case 'all':
+        $this->histories = History::getHistories($this)->orderByDesc('created_at')->get();
         break;
       default:
-        $this->histories = History::getHistories($this)->orderByDesc('created_at')->paginate($paginate);
+        $this->histories = History::getHistories($this)->orderByDesc('created_at')->paginate($paginate)->setPath(request()->getUri());
         break;
     }
+    return $this;
   }
 
   /**
@@ -358,7 +379,7 @@ class Csdb extends Model
   public static function getObject(string $filename, array $historyCode = [])
   {
     $eloquentClassModel = self::getClassObjectByFilename($filename);
-    if(!$eloquentClassModel) return self::getCsdb($filename, $historyCode);
+    if (!$eloquentClassModel) return self::getCsdb($filename, $historyCode);
     $OBJECTModel = new $eloquentClassModel();
     $OBJECTModel = $OBJECTModel->with(['csdb'])->whereHas('csdb', function (Builder $query) use ($historyCode, $filename) {
       $query->where('filename', $filename);
@@ -385,7 +406,7 @@ class Csdb extends Model
   public static function getObjects(string $eloquentClassModel, array $historyCode = [])
   {
     $eloquentClassModel = new $eloquentClassModel;
-    if(!$eloquentClassModel) return self::getCsdbs($historyCode);
+    if (!$eloquentClassModel) return self::getCsdbs($historyCode);
     $OBJECTModels = new $eloquentClassModel();
     $OBJECTModels = $OBJECTModels->with(['csdb'])->whereHas('csdb', function (Builder $query) use ($historyCode) {
       // $query->where('storage_id', self::$storage_user_id ?? request()->user()->id);
@@ -626,19 +647,19 @@ class Csdb extends Model
           $revert_save_file();
           return false;
         }
-        
+
         // fill object dilakukan oleh worker. @dispatchSync return 404 Not Found
         // $fillObjectTableConfig = ['connection' => 'sync', 'mailNotification' => true];
         // $fillObjectTableConfig = [];
         // foreach ($config as $key => $value) {
         //   $fillObjectTableConfig[$key] = $value;
         // }
-        if(isset($config['connection'])){
+        if (isset($config['connection'])) {
           // dd($config['connection']);
-          if(get_class($this) === Csdb::class) FillObjectTable::dispatch(request()->user(), $this, $fillObjectTableConfig['mailNotification'] ?? false)->onConnection($config['connection']); // using queue
+          if (get_class($this) === Csdb::class) FillObjectTable::dispatch(request()->user(), $this, $fillObjectTableConfig['mailNotification'] ?? false)->onConnection($config['connection']); // using queue
           else FillObjectTable::dispatch(request()->user(), $this->csdb, $fillObjectTableConfig['mailNotification'] ?? false)->onConnection($config['connection']);
         }
-        
+
         return true;
       }
       $revert_save_file();
@@ -698,16 +719,22 @@ class Csdb extends Model
     $class = "\App\Models\Csdb\\";
     switch ($type) {
       case 'DMC':
-        $class .= 'Dmc'; break;
+        $class .= 'Dmc';
+        break;
       case 'PMC':
-        $class .= 'Pmc'; break;
+        $class .= 'Pmc';
+        break;
       case 'DML':
-        $class .= 'Dml'; break;
+        $class .= 'Dml';
+        break;
       case 'DDN':
-        $class .= 'Ddn'; break;
+        $class .= 'Ddn';
+        break;
       case 'COM':
-        $class .= 'Comment'; break;
-      default: return '';
+        $class .= 'Comment';
+        break;
+      default:
+        return '';
     }
     return $class;
   }

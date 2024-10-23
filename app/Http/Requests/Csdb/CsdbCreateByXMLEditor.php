@@ -38,7 +38,9 @@ class CsdbCreateByXMLEditor extends FormRequest
   {
     return [
       'path' => [new Path],
+      // 'xmleditor' => '',
       'xmleditor' => ['required', function(string $attribute, mixed $value, Closure $fail){
+      // 'xmleditor_x' => [function(string $attribute, mixed $value, Closure $fail){
         if(!($value[0]->document instanceof \DOMDocument)) return $fail('Document must be in XML form.'); // harus return agar script dibawah tidak di eksekusi
         if(!$value[0]->document) $fail('Fail to recognize xml file as CSDB object.');
         if(!$value[0]->document->doctype) return $fail('Document must have a type.'); // harus return agar script dibawah tidak di eksekusi

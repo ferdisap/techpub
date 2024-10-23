@@ -6,6 +6,9 @@ use App\Models\Csdb;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 
+/**
+ * Jika value = '' di form request nya maka fungsi @validate tidak dijalankan, tested in 22 oktober 2024, di CommentCreate.php, casenya languageIsoCode
+ */
 class SeqNumber implements ValidationRule
 {
   public function __construct(
