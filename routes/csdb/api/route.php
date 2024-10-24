@@ -7,6 +7,7 @@ use App\Http\Controllers\Csdb\DdnController;
 use App\Http\Controllers\Csdb\DmlController;
 use App\Http\Controllers\Csdb\HistoryController;
 use App\Http\Controllers\CsdbApi\ComController;
+use App\Http\Controllers\CsdbApi\DdnController as CsdbApiDdnController;
 use App\Http\Controllers\CsdbApi\DmlController as CsdbApiDmlController;
 use App\Http\Controllers\CsdbApi\MainController;
 use App\Http\Controllers\EnterpriseController;
@@ -38,7 +39,8 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::put("/s1000d/csdb/create",[MainController::class, 'create'])->name('api.create_object');
   Route::put("/s1000d/dml/create",[CsdbApiDmlController::class, 'create'])->name('api.create_dml');
   Route::put("/s1000d/dml/merge/{filename}", [CsdbApiDmlController::class, 'merge'])->name('api.dml_merge');
-  Route::post("/s1000d/comment/create",[ComController::class, 'create'])->name('api.create_comment');
+  Route::put("/s1000d/comment/create",[ComController::class, 'create'])->name('api.create_comment');
+  Route::post("/s1000d/ddn/create",[CsdbApiDdnController::class, 'create'])->name('api.create_ddn');
 
   // read
   Route::get('/s1000d/csdb/read/{CSDBModel:filename}', [MainController::class, 'read'])
@@ -62,6 +64,7 @@ Route::middleware('auth:sanctum')->group(function () {
   // Route::get("/s1000d/folder/index",[MainController::class, 'forfolder_get_allobjects_list'])->name('api.index_folder'); // api.requestbyfolder.get_allobject_list
   // Route::get("/s1000d/folder/index",[CsdbController::class, 'forfolder_get_allobjects_list'])->name('api.index_folder'); // api.requestbyfolder.get_allobject_list
   Route::get("/s1000d/path/{path?}",[MainController::class, 'getCsdbsByPath'])->where('path', '.*')->name('api.index_path'); // api.requestbyfolder.get_allobject_list
+  Route::get('/s1000d/user/search', [UserController::class, 'searchModel'])->name('api.user_search_model');
 
   // update
   Route::post("/s1000d/csdb/update/{CSDBModel:filename}", [MainController::class, 'update'])
@@ -85,7 +88,7 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post('/s1000d/csdb/update/path', [CsdbController::class, 'change_object_path'])->name('api.change_object_path');
   Route::post("/s1000d/dml/update/{filename}",[DmlController::class, 'update'])->name('api.dmlupdate');
   // Route::post("/s1000d/comment/create",[CommentController::class, 'create'])->name('api.create_comment');
-  Route::post("/s1000d/ddn/create",[DdnCOntroller::class, 'create'])->name('api.create_ddn');
+  // Route::post("/s1000d/ddn/create",[DdnCOntroller::class, 'create'])->name('api.create_ddn');
   Route::put('/s1000d/ddn/import/{filename}', [DdnController::class, 'import'])->name('api.import_ddn_list');
   // Route::put("/s1000d/dml/{filename}/merge", [DmlController::class, 'merge'])->name('api.dml_merge');
 
@@ -101,7 +104,7 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::get("/s1000d/icn/{CSDBModel:filename}/raw", [CsdbController::class, 'get_icn_raw'])->name('api.get_icn_raw');
   Route::post("/s1000d/download", [CsdbController::class, 'download_objects'])->name('api.download_objects');
   // user
-  Route::get('/s1000d/user/search', [UserController::class, 'searchModel'])->name('api.user_search_model');
+  // Route::get('/s1000d/user/search', [UserController::class, 'searchModel'])->name('api.user_search_model');
   // history
   // Route::get("/s1000d/csdb/{filename}/histories", [HistoryController::class, 'all'])->name('api.get_csdb_history');
   // comment

@@ -96,8 +96,8 @@ class CommentCreate extends FormRequest
       'securityClassification' => ['required', new SecurityClassification],
       'commentPriorityCode' => ['required', new S1000DConfigurableAttributeValue('cp')],
       'responseType' => ['required', new S1000DConfigurableAttributeValue('rt')],
-      // 'brexDmRef' => ['required', new BrexDmRef],
-      'brexDmRef' => ['required'], // untuk tes saja
+      'brexDmRef' => ['required', new BrexDmRef],
+      // 'brexDmRef' => ['required'], // untuk tes saja
       'commentRefs' => ['required', new CommentRefs],
       'commentRemarks' => ['array'],
 

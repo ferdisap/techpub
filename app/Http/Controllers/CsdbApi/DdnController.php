@@ -4,32 +4,21 @@ namespace App\Http\Controllers\CsdbApi;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Csdb\CommentCreate;
+use App\Http\Requests\Csdb\DdnCreate;
 use App\Models\Csdb;
 use App\Rules\Csdb\Language;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Routing\Controller as BaseController;
 
-class ComController extends BaseController
+class DdnController extends BaseController
 {
-  /**
-   * selanjutnya buat attachment.
-   * COM attachment diujung filename ditambah -attachmentNmber.extension see pdf page 1906/3503
-   */
-  public function create(CommentCreate $request)
-  // public function create(Request $request)
+  public function create(DdnCreate $request)
   {
     $CSDBModel = new Csdb();
     $CSDBModel->CSDBObject = $request->CSDBObject[0];
     $CSDBModel->filename = $CSDBModel->CSDBObject->filename;
-    if (Csdb::where('filename', $CSDBModel->filename)->first()) {
-      return Response::make([
-        'infotype' => 'caution',
-        'message' => "Cannot create COM due to duplicate filename.",
-        'errors' => $CSDBModel->CSDBObject->errors->get(),
-      ]);
-    };
-    $CSDBModel->path = $request->validated()['path'];
+    $CSDBModel->path = $request->validated('path');
     $CSDBModel->storage_id = $request->user()->id;
     $CSDBModel->initiator_id = $request->user()->id;
 

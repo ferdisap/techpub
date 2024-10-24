@@ -18,6 +18,16 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Ptdi\Mpub\Main\CSDBStatic;
 
+/**
+ * NOTE
+ * - modelIdentCode: dari brex
+ * - senderIdent: dari dispatchFromPersonEmail
+ * - receiverIdent: dari dispatchToPersonEmail
+ * - securityClassification: dari client request
+ * - authorization: masih belum dijelaskan di S1000D nya
+ * - brexDmRef: dari client request
+ * - deliveryListItemsFilename: dari client request
+ */
 class DdnCreate extends FormRequest
 {
   /**
@@ -40,14 +50,15 @@ class DdnCreate extends FormRequest
     return [
       'path' => [new Path],
       
-      'seqNumber' => [new SeqNumber(true, 'ddn')],
+      'seqNumber' => ['required', new SeqNumber(true, 'ddn')],
       'modelIdentCode' => ['required'],
       'senderIdent' => 'required', // nani pakai class EnterpriseCode untuk validasi, chek di DMLController
       'receiverIdent' => 'required',
       
       'securityClassification' => ['required',new SecurityClassification], // nanti harus divalidasi valuenya harus dua digit dan nanti keynya harus dibedakan antara DDN dan COM jika dibuat dalam satu request yang sama
       'authorization' => 'required',
-      'brexDmRef' => ['required', new BrexDmRef],
+      // 'brexDmRef' => ['required', new BrexDmRef],
+      'brexDmRef' => ['required'], // untuk tes saja
       'remarks' => '',
       
       'dispatchTo_enterpriseName' => 'required',
@@ -127,7 +138,7 @@ class DdnCreate extends FormRequest
     
     if($dispatchToPersonModel = User::where('email', $this->get('dispatchToPersonEmail'))->first()){
       $dispatchToEnterpriseModel = $dispatchToPersonModel->work_enterprise;
-      $receiverIdent = $dispatchToEnterpriseModel->code->name;
+      $receiverIdent = $dispatchToEnterpriseModel->code->name ?? '';
     }
     
     if($brexDmRef = $this->get('brexDmRef')){
@@ -225,7 +236,7 @@ class DdnCreate extends FormRequest
   {
     throw (new HttpResponseException(response([
       'infotype' => 'caution',
-      'message' => $validator->errors()->first(),
+      'message' => "You may check the input of Dispatch To Person foor any error prefixed by 'dispatchTo' and your brex filename for any identification error, or your check your dispatch item.",
       'errors' => $validator->errors()->toArray(),
     ],422)));
   }
