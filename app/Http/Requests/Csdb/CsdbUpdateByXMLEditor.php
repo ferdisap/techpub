@@ -22,6 +22,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CsdbUpdateByXMLEditor extends FormRequest
 {
+  protected array $errors = []; // value must be array, key must be string
+
   /**
    * Determine if the user is authorized to make this request.
    */
@@ -97,8 +99,21 @@ class CsdbUpdateByXMLEditor extends FormRequest
     $CSDBObject = new CSDBObject("5.0");
     if($this->xmleditor) $CSDBObject->loadByString($this->xmleditor); // biar ga error ditambah if
 
+    if ($CSDBObject) {
+      try {
+        $prefix = substr($CSDBObject->filename, 0, 3);
+        $path = "CSDB/" . $prefix;
+        if(!str_starts_with($this->path, $path)) {
+          $path = null;
+          $this->errors['path'] = ["The path must be prefixed by 'CSDB/".$prefix."'."];
+        }
+        else $path = $this->path;
+      } catch (\Throwable $e) {
+      }
+    }
+
     $this->merge([
-      'path' => $this->path ?? 'CSDB',
+      'path' => $path ?? null,
       'xmleditor' => [$CSDBObject], // harus array atau scalar
       'xsi_validate' => $this->xsi_validate,
       'brex_validate' => $this->brex_validate,
@@ -109,10 +124,16 @@ class CsdbUpdateByXMLEditor extends FormRequest
 
   protected function failedValidation(Validator $validator)
   {
+    $errors = $validator->errors()->toArray();
+
+    foreach ($this->errors as $key => $value) {
+      $errors[$key] = $errors[$key] ? array_merge($errors[$key], $value) : $value;
+    }
+
     throw (new HttpResponseException(response([
       'infotype' => 'caution',
       'message' => $validator->errors()->first(),
-      'errors' => $validator->errors()->toArray(),
+      'errors' => $errors,
     ],422)));
   }
 }

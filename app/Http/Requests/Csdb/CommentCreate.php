@@ -35,7 +35,7 @@ use Illuminate\Support\Str;
  * - securityClassification didapat dari client request
  * - commentPriorityCode didapat dari client request
  * - responseType didapat dari client request
- * - brexDmRef didapat dari client request atau dari request csdb berisi filename, path, storage
+ * - brexDmRef didapat dari client request atau dari request csdb berisi filename, path, storage, atau filename yang diambil dari request client. Tapi disini bisa saja mengakses csdb orang lain karena ada storage nya
  * - commentRefs didapat dari client request
  * 
  */
@@ -155,7 +155,11 @@ class CommentCreate extends FormRequest
     }
     
     if(!$brexDmRef && $this->csdb){
-      $CSDBModel = Csdb::where('filename', $this->csdb['filename'])->where('path', $this->csdb['path'])->where('storage_id', User::where('storage', $this->csdb['storage'])->first(['id'])->id)->first();
+      try {
+        $CSDBModel = Csdb::where('filename', $this->csdb['filename'])->where('path', $this->csdb['path'])->where('storage_id', User::where('storage', $this->csdb['storage'])->first(['id'])->id)->first();
+      } catch (\Throwable $e) {
+        if($this->csdb['filename']) $CSDBModel = Csdb::where('filename', $this->csdb['filename'])->where('storage_id', $this->user()->id)->first();        
+      }
       if($CSDBModel){
         $brexDmRef = $CSDBModel->object->brexDmRef;
       }

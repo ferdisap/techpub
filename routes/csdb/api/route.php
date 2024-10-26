@@ -40,7 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::put("/s1000d/dml/create",[CsdbApiDmlController::class, 'create'])->name('api.create_dml');
   Route::put("/s1000d/dml/merge/{filename}", [CsdbApiDmlController::class, 'merge'])->name('api.dml_merge');
   Route::put("/s1000d/comment/create",[ComController::class, 'create'])->name('api.create_comment');
-  Route::post("/s1000d/ddn/create",[CsdbApiDdnController::class, 'create'])->name('api.create_ddn');
+  Route::put("/s1000d/ddn/create",[CsdbApiDdnController::class, 'create'])->name('api.create_ddn');
 
   // read
   Route::get('/s1000d/csdb/read/{CSDBModel:filename}', [MainController::class, 'read'])
@@ -60,11 +60,12 @@ Route::middleware('auth:sanctum')->group(function () {
   ->name('api.comments');  
 
   // index
-  Route::get("/s1000d/all",[MainController::class, 'getCsdbs'])->name('api.get_csdbs'); // api.get_allobjects_list
+  Route::get("/s1000d/csdb/all",[MainController::class, 'getCsdbs'])->name('api.get_csdbs'); // api.get_allobjects_list
   // Route::get("/s1000d/folder/index",[MainController::class, 'forfolder_get_allobjects_list'])->name('api.index_folder'); // api.requestbyfolder.get_allobject_list
   // Route::get("/s1000d/folder/index",[CsdbController::class, 'forfolder_get_allobjects_list'])->name('api.index_folder'); // api.requestbyfolder.get_allobject_list
   Route::get("/s1000d/path/{path?}",[MainController::class, 'getCsdbsByPath'])->where('path', '.*')->name('api.index_path'); // api.requestbyfolder.get_allobject_list
   Route::get('/s1000d/user/search', [UserController::class, 'searchModel'])->name('api.user_search_model');
+  Route::get('/s1000d/csdb/dispatched', [MainController::class, 'dispatched'])->name('api.ddn_dispatched');
 
   // update
   Route::post("/s1000d/csdb/update/{CSDBModel:filename}", [MainController::class, 'update'])
@@ -110,7 +111,7 @@ Route::middleware('auth:sanctum')->group(function () {
   // comment
   Route::get("/s1000d/csdb/{filename}/comments",[CommentController::class, 'all'])->name('api.get_csdb_comments');  
   // ddn
-  Route::get("/s1000d/ddn/dispatched",[DdnController::class, 'list'])->name('api.get_ddn_list');
+  // Route::get("/s1000d/ddn/dispatched",[DdnController::class, 'list'])->name('api.get_ddn_list');
   // dml
   Route::get("/s1000d/dmrl/all",[DmlController::class, 'get_dmrl_list'])->name('api.get_dmrl_list');
   Route::get("/s1000d/csl/{filename}", [DmlController::class, 'getCsl'])->name('api.get_csl');

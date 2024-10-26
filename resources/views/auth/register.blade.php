@@ -15,7 +15,7 @@
         </div>
         <div class="mb-3">
             <x-input-label for="middle_name_register" :value="__('Middle Name')" />
-            <x-text-input id="middle_name_register" class="form-control" type="text" name="middle_name_register" :value="old('middle_name_register')" required autofocus autocomplete="middle_name" />
+            <x-text-input id="middle_name_register" class="form-control" type="text" name="middle_name_register" :value="old('middle_name_register')" autofocus autocomplete="middle_name" />
             <x-input-error :messages="$errors->get('middle_name_register')" class="mt-2" />
         </div>
         <div class="mb-3">

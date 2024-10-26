@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\MessageBag;
 
 class RegisteredUserController extends Controller
 {
@@ -34,11 +36,11 @@ class RegisteredUserController extends Controller
    */
   // public function store(Request $request): RedirectResponse
   public function store(Request $request)
-  { 
+  {
     $request->validate([
       'first_name_register' => ['required', 'string', 'max:255'],
-      'middle_name_register' => ['string', 'max:255'],
-      'last_name_register' => ['string', 'max:255'],
+      'middle_name_register' => ['min:0', 'max:255'],
+      'last_name_register' => ['min:0', 'max:255'],
       'job_title_register' => ['string', 'max:255'],
       'enterprise_name' => ['required', 'string', 'max:255'],
       'email_register' => ['required', 'string', 'email', 'max:255', 'unique:' . User::class . ',email'],
@@ -46,8 +48,19 @@ class RegisteredUserController extends Controller
     ]);
 
     $storage = Str::random(5);
-    while(User::where('storage', $storage)->first()){
+    while (User::where('storage', $storage)->first()) {
       $storage = Str::random(5);
+    }
+
+    if (!($enterprise = Enterprise::where('name', $request->enterprise_name)->first())) {
+      if ($code = CodeSeeder::seed('')) {
+        if (!($enterprise = EnterpriseSeeder::seed($request->enterprise_name, $code->id))) {
+          $code->delete();
+        }
+      } else {
+        $enterprise->delete();
+        return abort(400);
+      };
     }
 
     $user = User::create([
@@ -60,19 +73,9 @@ class RegisteredUserController extends Controller
       'password' => Hash::make($request->password_register),
     ]);
 
-
-    if (!($enterprise = Enterprise::where('name', $request->enterprise_name)->first())) {
-      if ($code = CodeSeeder::seed('')) {
-        if (!($enterprise = EnterpriseSeeder::seed($request->enterprise_name, $code->id))) {
-          $code->delete();
-        }
-      } else {
-        $enterprise->delete();
-        return abort(400);
-      };
-    }
-    
     $user->work_in()->associate($enterprise);
+    
+    $user->save();
 
     event(new Registered($user));
 

@@ -21,6 +21,8 @@ use Ptdi\Mpub\Validation\Validator\Xsi;
 
 class CsdbCreateByXMLEditor extends FormRequest
 {
+  protected array $errors = []; // value must be array, key must be string
+
   /**
    * Determine if the user is authorized to make this request.
    */
@@ -37,31 +39,31 @@ class CsdbCreateByXMLEditor extends FormRequest
   public function rules(): array
   {
     return [
-      'path' => [new Path],
+      'path' => ['required', new Path],
       // 'xmleditor' => '',
-      'xmleditor' => ['required', function(string $attribute, mixed $value, Closure $fail){
-      // 'xmleditor_x' => [function(string $attribute, mixed $value, Closure $fail){
-        if(!($value[0]->document instanceof \DOMDocument)) return $fail('Document must be in XML form.'); // harus return agar script dibawah tidak di eksekusi
-        if(!$value[0]->document) $fail('Fail to recognize xml file as CSDB object.');
-        if(!$value[0]->document->doctype) return $fail('Document must have a type.'); // harus return agar script dibawah tidak di eksekusi
-        if($value[0]->document->doctype->nodeName !== $value[0]->document->documentElement->nodeName ) return $fail('Document type must same with root element name.'); // harus return agar script dibawah tidak di eksekusi
-        if(!in_array($value[0]->document->doctype->nodeName,['dmodule', 'pm', 'icnMetadataFile'])) return $fail('Document type must be dmodule, pm, or icnMetadataFile.'); // harus return agar script dibawah tidak di eksekusi
+      'xmleditor' => ['required', function (string $attribute, mixed $value, Closure $fail) {
+        // 'xmleditor_x' => [function(string $attribute, mixed $value, Closure $fail){
+        if (!($value[0]->document instanceof \DOMDocument)) return $fail('Document must be in XML form.'); // harus return agar script dibawah tidak di eksekusi
+        if (!$value[0]->document) $fail('Fail to recognize xml file as CSDB object.');
+        if (!$value[0]->document->doctype) return $fail('Document must have a type.'); // harus return agar script dibawah tidak di eksekusi
+        if ($value[0]->document->doctype->nodeName !== $value[0]->document->documentElement->nodeName) return $fail('Document type must same with root element name.'); // harus return agar script dibawah tidak di eksekusi
+        if (!in_array($value[0]->document->doctype->nodeName, ['dmodule', 'pm', 'icnMetadataFile'])) return $fail('Document type must be dmodule, pm, or icnMetadataFile.'); // harus return agar script dibawah tidak di eksekusi
 
         // xsi validation
-        if($this->xsi_validate) {
+        if ($this->xsi_validate) {
           $xsi = new Xsi($value[0]->document);
           $xsi->validate();
-          if(!$xsi->result()) $fail("Fail to validate by XSI. ".join(", ", $xsi->errors->get('xsi_validation')));
+          if (!$xsi->result()) $fail("Fail to validate by XSI. " . join(", ", $xsi->errors->get('xsi_validation')));
         }
         $domXpath = new \DOMXPath($value[0]->document);
         $filename = $value[0]->filename;
         $initial = $value[0]->getInitial();
         $code = preg_replace("/_.+/", '', $filename);
         $collection = Csdb::selectRaw('filename')->whereRaw("filename LIKE '{$code}%'")->get()->toArray();
-        array_walk($collection,function(&$v){
+        array_walk($collection, function (&$v) {
           $v = $v['filename'];
         });
-        if(empty($collection)){
+        if (empty($collection)) {
           $issueInfo = $domXpath->evaluate("//identAndStatusSection/{$initial}Address/{$initial}Ident/issueInfo")[0];
           $issueInfo->setAttribute('issueNumber', '000');
           $issueInfo->setAttribute('inWork', '01');
@@ -90,7 +92,7 @@ class CsdbCreateByXMLEditor extends FormRequest
         }
 
         $qa = $domXpath->evaluate("//identAndStatusSection/{$initial}Status/qualityAssurance")[0];
-        if(!$qa) {
+        if (!$qa) {
           $qa = $value[0]->document->createElement('qualityAssurance');
           $identStatus = $domXpath->evaluate("//identAndStatusSection/{$initial}Status")[0];
           $identStatus->appendChild($qa);
@@ -101,13 +103,13 @@ class CsdbCreateByXMLEditor extends FormRequest
         } catch (\Throwable $th) {
           $fail("Fail to determining filename.");
         }
-        if($this->brex_validate) {
+        if ($this->brex_validate) {
           $brex = new Brex(
             new ValidationCSDBValidator($value[0]->getBrexDm()),
             new CSDBValidatee($value[0])
           );
           $brex->validate();
-          if(empty($brex->result())) {
+          if (empty($brex->result())) {
             $fail("Fail to validate by BREX.");
           }
         }
@@ -121,9 +123,27 @@ class CsdbCreateByXMLEditor extends FormRequest
   protected function prepareForValidation(): void
   {
     $CSDBObject = new CSDBObject("5.0");
-    if($this->xmleditor) $CSDBObject->loadByString($this->xmleditor); // biar ga error ditambah if
+    if ($this->xmleditor) $CSDBObject->loadByString($this->xmleditor); // biar ga error ditambah if
+
+    if ($CSDBObject) {
+      try {
+        $prefix = substr($CSDBObject->filename, 0, 3);
+        $path = "CSDB\/" . $prefix;
+        if($this->path){
+          preg_match("/{$path}/",$this->path,$m);
+          if(!$m[0]) {
+            $path = null; // jika path dari request user tidak sesuai dengan $path, maka akan di null kan
+            $this->errors['path'] = ["The path must be prefixed by 'CSDB/".$prefix."'."];
+          } else {
+            $path = "CSDB/" . $prefix;
+          }
+        }
+      } catch (\Throwable $e) {
+      }
+    }
+
     $this->merge([
-      'path' => $this->path ?? 'CSDB',
+      'path' => $path ?? null,
       'xmleditor' => [$CSDBObject], // harus array atau scalar
       'xsi_validate' => $this->xsi_validate,
       'brex_validate' => $this->brex_validate,
@@ -132,10 +152,16 @@ class CsdbCreateByXMLEditor extends FormRequest
 
   protected function failedValidation(Validator $validator)
   {
+    $errors = $validator->errors()->toArray();
+
+    foreach ($this->errors as $key => $value) {
+      $errors[$key] = $errors[$key] ? array_merge($errors[$key], $value) : $value;
+    }
+
     throw (new HttpResponseException(response([
       'infotype' => 'caution',
       'message' => $validator->errors()->first(),
-      'errors' => $validator->errors()->toArray(),
-    ],422)));
+      'errors' => $errors,
+    ], 422)));
   }
 }

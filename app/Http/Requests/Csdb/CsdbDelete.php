@@ -61,12 +61,14 @@ class CsdbDelete extends FormRequest
       foreach($filename as $i => $f){
         // $m = Csdb::with(['object'])->where('filename',$f)->where('initiator_id',$this->user()->id)->first();
         $m = Csdb::getCsdb($f,['exception' => ['CSDB-DELL', 'CSDB-PDEL']])->first();
+        if($m) $m->path = preg_replace("/^CSDB/","DELETED",$m->path);
         $CSDBModelArray[$i] = $m;
       }
     } else {
       // $m = Csdb::where('filename',$filename)->where('initiator_id',$this->user()->id)->first();
       $m = Csdb::getCsdb($filename,['exception' => ['CSDB-DELL', 'CSDB-PDEL']])->first();
       // $m = Csdb::getCsdb($filename)->first();
+      if($m) $m->path = preg_replace("/^CSDB/","DELETED",$m->path);
       array_push($CSDBModelArray, $m);
       $filename = [$filename];
     }
