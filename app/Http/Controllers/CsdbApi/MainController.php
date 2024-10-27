@@ -525,7 +525,7 @@ class MainController extends BaseController
 
     $DDNModels = $DDNModels->get(['id', 'csdb_id', 'dispatchFrom_id', 'dispatchTo_id']);
     return Response::make([
-      "csdbs" => $DDNModels->map(fn ($v) => $v->csdb = [$v->csdb->owner->storage, "IMPORTED/".$v->csdb->path, $v->csdb->filename])      
+      "csdbs" => $DDNModels->map(fn ($v) => $v->csdb = [$v->csdb->owner->storage, 'DISPATCHED/' . $v->csdb->path, $v->csdb->filename])
     ], 200, ['content-type' => 'application/json']);
   }
 
@@ -534,45 +534,91 @@ class MainController extends BaseController
    * disini, tdaik support multiple path agar proses lebih cepat
    * @belum di test di CrudTest::class
    * 
-   * querykey? = 'sc?', 'stt?act/dct',
+   * querykey? = 'sc?', 'stt?act/dct', 
+   * dispatchTo?email
    * 
    * untuk data owner, hanya csdb.owner.storage
    * 
    */
   public function getCsdbsByPath(Request $request, string $path = 'csdb')
   {
-    // menyiapkan csdb object, bisa pakai $query->setEagerLoads([]) atau $query->without(['work_enterprise'])
-    $CSDBModels = Csdb::with(['lastHistory', 'owner' => fn (BelongsTo $query) => $query->without(['work_enterprise'])->toBase()->select(['id', 'storage'])]);
-    $keywords = array_merge(Helper::explodeSearchKeyAndValue($request->get('sc'), 'filename'), ["path" => [$path]]);
-    $query = Helper::generateWhereRawQueryString($keywords, $CSDBModels->getModel()->getTable(), ['path' => "#&value;"]);
-
-    if (!empty($query)) $CSDBModels = $CSDBModels->whereRaw($query[0], $query[1]);
-
-    if ($request->stt === 'act') {
-      $queryCode = History::generateWhereRawQueryString_historyException(['CSDB-DELL', 'CSDB-PDEL'], Csdb::class, $CSDBModels->getModel()->getTable());
-      $CSDBModels = $CSDBModels->whereRaw($queryCode[0], $queryCode[1]);
-    } else if ($request->stt === 'dct') {
-      $queryCode = History::generateWhereRawQueryString(['CSDB-DELL', 'CSDB-PDEL'], Csdb::class, $CSDBModels->getModel()->getTable());
-      $CSDBModels = $CSDBModels->whereRaw($queryCode[0], $queryCode[1]);
+    $isDispatch = false;
+    // if path start with 'DISPATCHED', then it will look DDN list only where dispatched to client/request-user
+    if (str_starts_with($path, 'DISPATCHED')) {
+      $isDispatch = true;
+      $path = preg_replace("/DISPATCHED\/?/", "", $path);
+      $CSDBModels = new Csdb();      
+      $CSDBModels->objectClass = Ddn::class;
+      $CSDBModels = $CSDBModels->where("filename", "like", "DDN-%"); // sengaja $CSDBModels di assign supaya menjadi class Builder dan $objectClass terinstance 
+      $CSDBModels->with([
+        'lastHistory',
+        'owner' => function (Builder $USERModel) {
+          $USERModel->without(['work_enterprise'])->select(['id', 'storage']);
+        }
+      ]);
+      $userId = $request->user()->id;
+      $CSDBModels = $CSDBModels->whereHas(
+        'object', function (Builder $DDNModel) use ($userId) {
+          $DDNModel->select(['id', 'csdb_id', 'dispatchFrom_id', 'dispatchTo_id'])->where('dispatchTo_id', $userId)->whereNot('dispatchFrom_id', $userId);
+        }
+      );
+      // sc
+      $keywords = array_merge(Helper::explodeSearchKeyAndValue($request->sc, 'filename'), ["path" => [$path]]);
+      $query = Helper::generateWhereRawQueryString($keywords, $CSDBModels->getModel()->getTable(), ['path' => "#&value;"]);
+      if (!empty($query)) $CSDBModels = $CSDBModels->whereRaw($query[0], $query[1]);
+      // stt
+      if ($request->stt === 'act') {
+        $queryCodeHistory = History::generateWhereRawQueryString_historyException(['CSDB-DELL', 'CSDB-PDEL'], Csdb::class, $CSDBModels->getModel()->getTable());
+        $CSDBModels = $CSDBModels->whereRaw($queryCodeHistory[0], $queryCodeHistory[1]);
+      } else if ($request->stt === 'dct') {
+        $queryCodeHistory = History::generateWhereRawQueryString(['CSDB-DELL', 'CSDB-PDEL'], Csdb::class, $CSDBModels->getModel()->getTable());
+        $CSDBModels = $CSDBModels->whereRaw($queryCodeHistory[0], $queryCodeHistory[1]);
+      }
+      $CSDBModels->select(['id', 'filename', 'path', 'storage_id']);
+      // get
+      $CSDBModels = $CSDBModels->orderBy('filename')->paginate(perPage:100, columns:['id', 'filename', 'path', 'storage_id']);
+      $CSDBModels->setPath($request->getUri());
+    } else {
+      // menyiapkan csdb object, bisa pakai $query->setEagerLoads([]) atau $query->without(['work_enterprise'])
+      $CSDBModels = Csdb::with(['lastHistory', 'owner' => fn (BelongsTo $query) => $query->without(['work_enterprise'])->toBase()->select(['id', 'storage'])]);
+      // sc
+      $keywords = array_merge(Helper::explodeSearchKeyAndValue($request->sc, 'filename'), ["path" => [$path]]);
+      $query = Helper::generateWhereRawQueryString($keywords, $CSDBModels->getModel()->getTable(), ['path' => "#&value;"]);
+      if (!empty($query)) $CSDBModels = $CSDBModels->whereRaw($query[0], $query[1]);
+      // stt
+      if ($request->stt === 'act') {
+        $queryCodeHistory = History::generateWhereRawQueryString_historyException(['CSDB-DELL', 'CSDB-PDEL'], Csdb::class, $CSDBModels->getModel()->getTable());
+        $CSDBModels = $CSDBModels->whereRaw($queryCodeHistory[0], $queryCodeHistory[1]);
+      } else if ($request->stt === 'dct') {
+        $queryCodeHistory = History::generateWhereRawQueryString(['CSDB-DELL', 'CSDB-PDEL'], Csdb::class, $CSDBModels->getModel()->getTable());
+        $CSDBModels = $CSDBModels->whereRaw($queryCodeHistory[0], $queryCodeHistory[1]);
+      }
+      $CSDBModels->select(['id', 'filename', 'path', 'storage_id']);
+      // get
+      $CSDBModels = $CSDBModels->where('storage_id', $request->user()->id)->orderBy('filename')->paginate(100);
+      $CSDBModels->setPath($request->getUri());
     }
-
-    $CSDBModels = $CSDBModels->where('storage_id', $request->user()->id)
-      ->orderBy('filename')->paginate(100);
-    // ->orderBy('filename')->setHidden(['owner.address'])->paginate(100);
-    $CSDBModels->setPath($request->getUri());
-
-    // message
-    $m = '';
 
     // menyiapkan folder
     $folders = new Csdb();
+    if($isDispatch) {
+      $userId = $request->user()->id;
+      $folders->objectClass = Ddn::class;
+      $folders->with(['object']);
+      $folders = $folders->whereHas(
+        'object', function (Builder $DDNModel) use ($userId) {
+          $DDNModel->select(['id', 'csdb_id', 'dispatchFrom_id', 'dispatchTo_id'])->where('dispatchTo_id', $userId)->whereNot('dispatchFrom_id', $userId);
+        }
+      );
+    }    
+
     // make query and get
-    $query = Helper::generateWhereRawQueryString(['path' => [$path . "/"]], $folders->getTable());
-    $folders = $folders->where('storage_id', $request->user()->id)
-      ->whereRaw($query[0], $query[1]);
+    $query = Helper::generateWhereRawQueryString(['path' => [$path . "/"]], $folders->getModel()->getTable());
+    $folders = $folders->where('storage_id', $request->user()->id)->whereRaw($query[0], $query[1]);
 
-    if (isset($queryCode)) $folders = $folders->whereRaw($queryCode[0], $queryCode[1]);
+    if (isset($queryCodeHistory)) $folders = $folders->whereRaw($queryCodeHistory[0], $queryCodeHistory[1]);    
 
+    $folders->select(['path']); // ini ditulis agar SQL tidak query seluruh column yang akan memberatkan. Sepertinya ini tidak perlu ditulis karena sudah ada get['path'], tapi tidak bisa lihat di toSql() nya
     $folders = array_values(array_unique($folders->get(['path'])->toArray(), SORT_REGULAR));
     // menyiapkan path untuk replace, dimana subfolder akan dihilangkan disetiap hasil query
     $pathReplace = str_replace("/", "\/", $path);
@@ -589,7 +635,7 @@ class MainController extends BaseController
     // return
     return Response::make([
       "infotype" => "note",
-      "message" => $m,
+      "message" => '',
       "pagination" => $CSDBModels,
       "path" => $path,
       'paths' => $folders ?? [],

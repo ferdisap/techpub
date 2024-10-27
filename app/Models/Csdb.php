@@ -130,7 +130,9 @@ class Csdb extends Model
    */
   public function resolveRouteBinding($value, $field = null)
   {
-    return $this->where($field, $value)->where('storage_id', request()->storage ? (User::where('storage','wIxv1')->first()->id) : request()->user()->id)->firstOrFail();
+    // $isDDN = substr($value, 0,3) === 'DDN';
+    $storageId = request()->storage ? (User::where('storage','wIxv1')->first()->id) : request()->user()->id;
+    return $this->where($field, $value)->where('storage_id', $storageId)->firstOrFail();
   }
 
 
@@ -220,7 +222,8 @@ class Csdb extends Model
   {
     $filename = self::$objectClass ?? $this->filename ?? request()->route()->parameter('filename') ?? request()->get('filename');
     if ($filename) $class = self::getClassObjectByFilename($filename);
-    else $class = self::class; // nanti jadinya null kalau pakai $class self
+    else $class = $this->objectClass ?? self::class; // nanti jadinya null kalau pakai $class self
+    // var_dump($this->objectClass ?? null, $class);
     return $this->hasOne($class);
   }
 
