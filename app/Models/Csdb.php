@@ -13,6 +13,7 @@ use App\Models\Csdb\Pmc;
 use Carbon\Carbon;
 use DOMDocument;
 use Exception;
+use Illuminate\Contracts\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -25,6 +26,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use PhpParser\Node\Stmt\TryCatch;
 use Ptdi\Mpub\CSDB as MpubCSDB;
@@ -132,13 +134,28 @@ class Csdb extends Model
   {
     $isDDN = substr($value, 0,3) === 'DDN';
     if($isDDN){
-      return self::where($field, $value)->first(); // Tidak ada dua DDN yang sama persis bukan hanya di seq. number tapi, modelIdentCode, senderIdent, receiverIdent, seqNumber
+      request()->isDDN = true;
+      $CSDBModel = Csdb::where($field, $value)->whereHas('object', function (Builder $DDNModel) {
+        $id = request()->user()->id;
+        $DDNModel->select(['id', 'csdb_id', 'dispatchFrom_id', 'dispatchTo_id'])->where('dispatchTo_id', $id)->orWhere('dispatchFrom_id', $id);
+      });
+      return $CSDBModel->first(); // Tidak ada dua DDN yang sama persis bukan hanya di seq. number tapi, modelIdentCode, senderIdent, receiverIdent, seqNumber
     }
     $storageId = request()->storage ? (User::where('storage','wIxv1')->first()->id) : request()->user()->id;
     return $this->where($field, $value)->where('storage_id', $storageId)->firstOrFail();
   }
 
-
+  /**
+   * cara pakainya, yaitu $DDNModel->minimal(); bisa ditambah parameter jika nanti mau
+   */
+  public function scopeMinimal(Builder $query, Array $exclude = ['json','xml'])
+  {
+    $tables = Schema::getColumnListing($this->getTable());
+    foreach ($exclude as $colName) {
+      if(($key = array_search($colName, $tables)) !== false) unset($tables[$key]);
+    }
+    return $query->select($tables);
+  }
 
   /**
    * Set the model created_at touse current timezone.
@@ -221,12 +238,13 @@ class Csdb extends Model
    * tidak bisa dipakai untuk eager loading, kecuali static attribute objectClass sudah di instantiate atau ada param/query filename
    */
   public string $objectClass;
-  public function object(): hasOne
+  public function object(): HasOne
   {
-    $filename = self::$objectClass ?? $this->filename ?? request()->route()->parameter('filename') ?? request()->get('filename');
+    // request()->route()->parameter('CSDBModel') === filename karena route belum di resolve
+    $filename = $this->filename ?? request()->route()->parameter('CSDBModel') ?? request()->route()->parameter('filename') ?? request()->get('filename');
     if ($filename) $class = self::getClassObjectByFilename($filename);
     else $class = $this->objectClass ?? self::class; // nanti jadinya null kalau pakai $class self
-    // var_dump($this->objectClass ?? null, $class);
+    // var_dump($class);
     return $this->hasOne($class);
   }
 

@@ -36,11 +36,12 @@ use Illuminate\Support\Facades\Route;
 // });
 Route::middleware('auth:sanctum')->group(function () {
   // create
-  Route::put("/s1000d/csdb/create",[MainController::class, 'create'])->name('api.create_object');
+  Route::put("/s1000d/csdb/create",[MainController::class, 'create'])->name('api.create_csdb');
   Route::put("/s1000d/dml/create",[CsdbApiDmlController::class, 'create'])->name('api.create_dml');
   Route::put("/s1000d/dml/merge/{filename}", [CsdbApiDmlController::class, 'merge'])->name('api.dml_merge');
   Route::put("/s1000d/comment/create",[ComController::class, 'create'])->name('api.create_comment');
   Route::put("/s1000d/ddn/create",[CsdbApiDdnController::class, 'create'])->name('api.create_ddn');
+  Route::put("/s1000d/csdb/import/{CSDBModel:filename}",[MainController::class, 'import'])->name('api.import_csdb');
 
   // read
   Route::get('/s1000d/csdb/read/{CSDBModel:filename}', [MainController::class, 'read'])

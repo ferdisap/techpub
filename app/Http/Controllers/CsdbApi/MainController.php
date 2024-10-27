@@ -4,6 +4,7 @@ namespace App\Http\Controllers\CsdbApi;
 
 use App\Http\Requests\Csdb\CsdbCreateByXMLEditor;
 use App\Http\Requests\Csdb\CsdbDelete;
+use App\Http\Requests\Csdb\CsdbImportFromDDN;
 use App\Http\Requests\Csdb\CsdbPermanentDelete;
 use App\Http\Requests\Csdb\CsdbRestore;
 use App\Http\Requests\Csdb\CsdbUpdateByXMLEditor;
@@ -24,7 +25,7 @@ use Ptdi\Mpub\Main\CSDBStatic;
 use Ptdi\Mpub\Main\Helper;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use App\Models\Csdb\Ddn;
-
+use App\Models\User;
 
 class MainController extends BaseController
 {
@@ -63,6 +64,62 @@ class MainController extends BaseController
   }
 
   /**
+   * import csdb akan meng copy CSDBObject/xml nya juga
+   */
+  public function import(CsdbImportFromDDN $request, Csdb $CSDBModel)
+  {
+    // check duplicated file
+    if (!($request->overwrite) && !empty($request->duplicatedCSDBModels)) {
+      $filenames = $request->duplicatedCSDBModels;
+      array_walk($filenames, fn (&$v) => $v = $v['filename']);
+      return Response::make([
+        "infotype" => "warning",
+        "message" => "There is none of csdb imported. Some csdb's is prevented to overwrite.",
+        "errors" => [
+          'failure' => $filenames,
+        ]
+      ], 499, ['content-type' => "application/json"]);
+    } else {
+      $success = [];
+      $fail = [];
+      $storage = $CSDBModel->owner->storage;
+      foreach ($request->validated('filenames') as $filename) {
+        $CSDBModel = Csdb::getCsdb($filename)->first() ?? new Csdb();
+        $CSDBModel->CSDBObject->load(CSDB_STORAGE_PATH . DIRECTORY_SEPARATOR . $storage . DIRECTORY_SEPARATOR . $filename);
+        $CSDBModel->filename = $filename;
+        $CSDBModel->path = $request->validated('path');
+        $CSDBModel->storage_id = $request->user()->id;
+        $CSDBModel->initiator_id = $request->user()->id;
+
+        if ($CSDBModel->saveDOMandModel($request->user()->storage, [
+          ['MAKE_CSDB_IMPT_History', [Csdb::class]],
+          ['MAKE_USER_IMPT_History', [$request->user(), '', $CSDBModel->filename]]
+        ])) {
+          $success[] = $CSDBModel->filename;
+        } else $fail[] = $CSDBModel->filename;
+      }
+      $totalFail = count($fail);
+      $totalSuccess = count($success);
+      $infotype = $totalSuccess < 1 ? "warning" : ($totalFail > 0 ? 'caution' : 'note');
+      $code = $totalSuccess && !$totalFail ? 200 : (!$totalSuccess ? 400 : 299);
+      $message = "Success to import " . join(", ", $success) . (!empty($fail) ? " and fail to import " . join(", ", $fail) : '.');
+
+      $responseContent = [
+        'infotype' => $infotype,
+        'message' => $message,
+        'data' => [
+          'success' => $success
+        ]
+      ];
+
+      if ($code != 200) $responseContent['errors'] = [
+        'failure' => $fail,
+      ];
+      return Response::make($responseContent, $code, ['content-type' => 'application/json']);
+    }
+  }
+
+  /**
    * querykey? = 'form?xml/json (default xml)
    */
   public function read(Request $request, Csdb $CSDBModel)
@@ -70,8 +127,9 @@ class MainController extends BaseController
     if ($request->route('CSDBModel')->lastHistory->code === 'CSDB-DELL' || $request->route('CSDBModel')->lastHistory->code === 'CSDB-PDEL') {
       throw new HttpResponseException(response(["message" => $request->route('CSDBModel')->filename . " has been deleted."], 404));
     }
-
-    $CSDBModel->CSDBObject->load(CSDB_STORAGE_PATH . "/" . $request->user()->storage . "/" . $CSDBModel->filename);
+    $storage = $request->isDDN ? User::find($CSDBModel->storage_id)->storage : $request->user()->storage;
+    $CSDBModel->CSDBObject->load(CSDB_STORAGE_PATH . "/" . $storage . "/" . $CSDBModel->filename);
+    // return $CSDBModel->CSDBObject->document ? 'foo' : 'bar';
     if ($CSDBModel->CSDBObject->document) {
       switch ($request->form) {
         case 'json':
@@ -547,7 +605,7 @@ class MainController extends BaseController
     if (str_starts_with($path, 'DISPATCHED')) {
       $isDispatch = true;
       $path = preg_replace("/DISPATCHED\/?/", "", $path);
-      $CSDBModels = new Csdb();      
+      $CSDBModels = new Csdb();
       $CSDBModels->objectClass = Ddn::class;
       $CSDBModels = $CSDBModels->where("filename", "like", "DDN-%"); // sengaja $CSDBModels di assign supaya menjadi class Builder dan $objectClass terinstance 
       $CSDBModels->with([
@@ -558,7 +616,8 @@ class MainController extends BaseController
       ]);
       $userId = $request->user()->id;
       $CSDBModels = $CSDBModels->whereHas(
-        'object', function (Builder $DDNModel) use ($userId) {
+        'object',
+        function (Builder $DDNModel) use ($userId) {
           $DDNModel->select(['id', 'csdb_id', 'dispatchFrom_id', 'dispatchTo_id'])->where('dispatchTo_id', $userId)->whereNot('dispatchFrom_id', $userId);
         }
       );
@@ -576,7 +635,7 @@ class MainController extends BaseController
       }
       $CSDBModels->select(['id', 'filename', 'path', 'storage_id']);
       // get
-      $CSDBModels = $CSDBModels->orderBy('filename')->paginate(perPage:100, columns:['id', 'filename', 'path', 'storage_id']);
+      $CSDBModels = $CSDBModels->orderBy('filename')->paginate(perPage: 100, columns: ['id', 'filename', 'path', 'storage_id']);
       $CSDBModels->setPath($request->getUri());
     } else {
       // menyiapkan csdb object, bisa pakai $query->setEagerLoads([]) atau $query->without(['work_enterprise'])
@@ -601,22 +660,23 @@ class MainController extends BaseController
 
     // menyiapkan folder
     $folders = new Csdb();
-    if($isDispatch) {
+    if ($isDispatch) {
       $userId = $request->user()->id;
       $folders->objectClass = Ddn::class;
       $folders->with(['object']);
       $folders = $folders->whereHas(
-        'object', function (Builder $DDNModel) use ($userId) {
+        'object',
+        function (Builder $DDNModel) use ($userId) {
           $DDNModel->select(['id', 'csdb_id', 'dispatchFrom_id', 'dispatchTo_id'])->where('dispatchTo_id', $userId)->whereNot('dispatchFrom_id', $userId);
         }
       );
-    }    
+    }
 
     // make query and get
     $query = Helper::generateWhereRawQueryString(['path' => [$path . "/"]], $folders->getModel()->getTable());
     $folders = $folders->where('storage_id', $request->user()->id)->whereRaw($query[0], $query[1]);
 
-    if (isset($queryCodeHistory)) $folders = $folders->whereRaw($queryCodeHistory[0], $queryCodeHistory[1]);    
+    if (isset($queryCodeHistory)) $folders = $folders->whereRaw($queryCodeHistory[0], $queryCodeHistory[1]);
 
     $folders->select(['path']); // ini ditulis agar SQL tidak query seluruh column yang akan memberatkan. Sepertinya ini tidak perlu ditulis karena sudah ada get['path'], tapi tidak bisa lihat di toSql() nya
     $folders = array_values(array_unique($folders->get(['path'])->toArray(), SORT_REGULAR));
