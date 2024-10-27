@@ -123,28 +123,29 @@ class DdnCreate extends FormRequest
    * Prepare the data for validation.
    */
   protected function prepareForValidation(): void
-  {
-    // $seqNumber = DB::table(env('DB_TABLE_DDN', 'ddn'))->select('seqNumber')->orderBy('seqNumber', 'desc')->first()->seqNumber ?? '00000';
-    $previous_csdb_ddn = DB::table(env('DB_TABLE_CSDB', 'csdb'))->where('filename',  'like', 'DDN-%')->orderBy('filename', 'desc')->first();
+  {   
+    if($brexDmRef = $this->get('brexDmRef')){
+      $brexDmRefDecoded = CSDBStatic::decode_dmIdent($brexDmRef);
+      $modelIdentCode = $brexDmRefDecoded['dmCode']['modelIdentCode'] ?? null;
+    }
+
+    $dispatchFromPersonModel = $this->user(); // lihat di fungsi authorize calss ini, bisa apaki this request atau Auth::
+    $dispatchFromEnterpriseModel = $dispatchFromPersonModel->work_enterprise;
+    $senderIdent = $dispatchFromEnterpriseModel->code->name;
+
+    if($dispatchToPersonModel = User::where('email', $this->get('dispatchToPersonEmail'))->first()){
+      $dispatchToEnterpriseModel = $dispatchToPersonModel->work_enterprise;
+      $receiverIdent = $dispatchToEnterpriseModel->code->name ?? null;
+    }
+
+    $previous_csdb_ddn = DB::table(env('DB_TABLE_CSDB', 'csdb'))->where('filename', 'like', 
+      join("-", [ 'DDN', (isset($modelIdentCode) && $modelIdentCode ? $modelIdentCode : '%'), (isset($senderIdent) && $senderIdent ? $senderIdent : '%'), (isset($receiverIdent) && $receiverIdent ? $receiverIdent : '%')]) . "-%"
+    )->orderBy('filename', 'desc')->first();
     if($previous_csdb_ddn && $previous_csdb_ddn->filename){
       $seqNumber = CSDBStatic::decode_ddnIdent($previous_csdb_ddn->filename)['ddnCode']['seqNumber'];
     } else $seqNumber = '00000';
     $seqNumber++;
     $seqNumber = str_pad($seqNumber, 5, '0', STR_PAD_LEFT);
-
-    $dispatchFromPersonModel = $this->user(); // lihat di fungsi authorize calss ini, bisa apaki this request atau Auth::
-    $dispatchFromEnterpriseModel = $dispatchFromPersonModel->work_enterprise;
-    $senderIdent = $dispatchFromEnterpriseModel->code->name;
-    
-    if($dispatchToPersonModel = User::where('email', $this->get('dispatchToPersonEmail'))->first()){
-      $dispatchToEnterpriseModel = $dispatchToPersonModel->work_enterprise;
-      $receiverIdent = $dispatchToEnterpriseModel->code->name ?? '';
-    }
-    
-    if($brexDmRef = $this->get('brexDmRef')){
-      $brexDmRefDecoded = CSDBStatic::decode_dmIdent($brexDmRef);
-      $modelIdentCode = $brexDmRefDecoded['dmCode']['modelIdentCode'] ?? '';
-    }
     
     $remarks = $this->get('remarks');
     if(!is_array($remarks) AND is_string($remarks)){

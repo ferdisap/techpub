@@ -130,7 +130,10 @@ class Csdb extends Model
    */
   public function resolveRouteBinding($value, $field = null)
   {
-    // $isDDN = substr($value, 0,3) === 'DDN';
+    $isDDN = substr($value, 0,3) === 'DDN';
+    if($isDDN){
+      return self::where($field, $value)->first(); // Tidak ada dua DDN yang sama persis bukan hanya di seq. number tapi, modelIdentCode, senderIdent, receiverIdent, seqNumber
+    }
     $storageId = request()->storage ? (User::where('storage','wIxv1')->first()->id) : request()->user()->id;
     return $this->where($field, $value)->where('storage_id', $storageId)->firstOrFail();
   }
