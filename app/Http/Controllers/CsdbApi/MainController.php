@@ -515,7 +515,7 @@ class MainController extends BaseController
   /**
    * querykey? = 'sc?', 'stt?act/dct', limit?integer
    */
-  public function getCsdbs(Request $request)
+  public function all(Request $request)
   {
     if ($request->stt === 'act') {
       $CSDBModels = Csdb::getCsdbs(['exception' => ['CSDB-DELL', 'CSDB-PDEL']]);
@@ -538,11 +538,13 @@ class MainController extends BaseController
       $CSDBModels->limit($request->limit);
     }
 
-    $CSDBModels->with(['owner' => fn (BelongsTo $query) => $query->without(['work_enterprise'])->toBase()->select(['id', 'storage'])]);
+    // $CSDBModels->with(['owner' => fn (BelongsTo $query) => $query->without(['work_enterprise'])->toBase()->select(['id', 'storage'])]);
+    $CSDBModels->with(['accessKey']);
 
     return Response::make([
       // "csdbs" => $CSDBModels->get(['id','storage_id','filename', 'path'])->toArray(),
-      "csdbs" => $CSDBModels->get(['id', 'storage_id', 'filename', 'path'])->map(fn ($csdb) => [$csdb->owner->storage, $csdb->path, $csdb->filename]),
+      // "csdbs" => $CSDBModels->get(['id', 'storage_id', 'filename', 'path'])->map(fn ($csdb) => [$csdb->owner->storage, $csdb->path, $csdb->filename]),
+      "csdbs" => $CSDBModels->get(['id', 'storage_id', 'filename', 'path'])->map(fn ($csdb) => "{$csdb->path}/{$csdb->filename}?access_key={$csdb->accessKey[0]->key}"),
     ], 200, ["content-type" => 'application/json']);
   }
 

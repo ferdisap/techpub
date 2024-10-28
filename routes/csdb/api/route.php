@@ -61,7 +61,7 @@ Route::middleware('auth:sanctum')->group(function () {
   ->name('api.comments');  
 
   // index
-  Route::get("/s1000d/csdb/all",[MainController::class, 'getCsdbs'])->name('api.get_csdbs'); // api.get_allobjects_list
+  Route::get("/s1000d/csdb/all",[MainController::class, 'all'])->name('api.get_csdbs'); // api.get_allobjects_list
   // Route::get("/s1000d/folder/index",[MainController::class, 'forfolder_get_allobjects_list'])->name('api.index_folder'); // api.requestbyfolder.get_allobject_list
   // Route::get("/s1000d/folder/index",[CsdbController::class, 'forfolder_get_allobjects_list'])->name('api.index_folder'); // api.requestbyfolder.get_allobject_list
   Route::get("/s1000d/path/{path?}",[MainController::class, 'getCsdbsByPath'])->where('path', '.*')->name('api.index_path'); // api.requestbyfolder.get_allobject_list

@@ -21,22 +21,22 @@ use Ptdi\Mpub\Main\CSDBStatic;
 use Ptdi\Mpub\Main\Helper;
 
 // ### Route utama ###
-Route::get("/csdb/{view?}",[CsdbController::class, 'app'])->where('view','(.*)')->middleware('auth');
+Route::get("/csdb/{view?}", [CsdbController::class, 'app'])->where('view', '(.*)')->middleware('auth');
 
-Route::post("/api/csdbcreate",[CsdbController::class, 'create'])->middleware('auth:sanctum')->name('api.create_object');
+Route::post("/api/csdbcreate", [CsdbController::class, 'create'])->middleware('auth:sanctum')->name('api.create_object');
 Route::post("/api/updateobject/{filename}", [CsdbController::class, 'update'])->middleware('auth')->name('api.update_object');
 Route::post("/api/uploadICN", [CsdbController::class, 'uploadICN'])->middleware('auth')->name('api.upload_ICN');
 
-Route::get("/api/allobjects",[CsdbController::class, 'get_allobjects_list'])->middleware('auth')->name('api.get_allobjects_list'); // ini nanti bisa juga di cacce pakai meddleware ETagGeneralContent, tapi jika diinstal di LAN tidak perlu karena available bandwith yang besar
-Route::get("/api/model/{filename}",[CsdbController::class, 'get_object_model'])->middleware('auth')->name('api.get_object_model');
-Route::get("/api/csdbs",[CsdbController::class, 'get_object_csdbs'])->middleware('auth')->name('api.get_object_csdbs');
-Route::get("/api/csdb/{CSDBModel:filename}",[CsdbController::class, 'get_csdb_model'])->middleware('auth')->name('api.get_csdb_model');
-Route::get("/api/byfolder-allobjects",[CsdbController::class, 'forfolder_get_allobjects_list'])->middleware('auth')->name('api.requestbyfolder.get_allobject_list');
+Route::get("/api/allobjects", [CsdbController::class, 'get_allobjects_list'])->middleware('auth')->name('api.get_allobjects_list'); // ini nanti bisa juga di cacce pakai meddleware ETagGeneralContent, tapi jika diinstal di LAN tidak perlu karena available bandwith yang besar
+Route::get("/api/model/{filename}", [CsdbController::class, 'get_object_model'])->middleware('auth')->name('api.get_object_model');
+Route::get("/api/csdbs", [CsdbController::class, 'get_object_csdbs'])->middleware('auth')->name('api.get_object_csdbs');
+Route::get("/api/csdb/{CSDBModel:filename}", [CsdbController::class, 'get_csdb_model'])->middleware('auth')->name('api.get_csdb_model');
+Route::get("/api/byfolder-allobjects", [CsdbController::class, 'forfolder_get_allobjects_list'])->middleware('auth')->name('api.requestbyfolder.get_allobject_list');
 
 Route::get('/api/object/raw/{CSDBModel:filename}', [CsdbController::class, 'get_object_raw'])->middleware('auth')->name('api.get_object_raw');
-Route::get('/api/content/{filename}/pdf', [CsdbController::class, 'read_pdf_object'])->middleware(['auth', 'ViaDDN','ETagCsdbPDF'])->name('api.read_pdf_object');
-Route::get("/api/content/{CSDBModel:filename}/html",[CsdbController::class, 'read_html_object'])->middleware('auth')->name('api.read_html_object');
-Route::get("/api/content/{CSDBModel:filename}/other",[CsdbController::class, 'read_html_object'])->middleware('auth')->name('api.read_other_object');
+Route::get('/api/content/{filename}/pdf', [CsdbController::class, 'read_pdf_object'])->middleware(['auth', 'ViaDDN', 'ETagCsdbPDF'])->name('api.read_pdf_object');
+Route::get("/api/content/{CSDBModel:filename}/html", [CsdbController::class, 'read_html_object'])->middleware('auth')->name('api.read_html_object');
+Route::get("/api/content/{CSDBModel:filename}/other", [CsdbController::class, 'read_html_object'])->middleware('auth')->name('api.read_other_object');
 Route::get("/api/icn/raw/{CSDBModel:filename}", [CsdbController::class, 'get_icn_raw'])->middleware('auth')->name('api.get_icn_raw');
 
 // delete
@@ -46,7 +46,7 @@ Route::post("/api/csdbdelete", [CsdbController::class, 'delete'])->middleware('a
 Route::get('/api/usersearch', [UserController::class, 'searchModel'])->middleware('auth')->name('api.user_search_model');
 
 // get deleted csdb
-Route::get("/api/deletion/all",[CsdbController::class, 'get_deletion_list'])->middleware('auth')->name('api.get_deletion_list');
+Route::get("/api/deletion/all", [CsdbController::class, 'get_deletion_list'])->middleware('auth')->name('api.get_deletion_list');
 
 // delete permanent csdb object
 Route::post("/api/permanentdelete", [CsdbController::class, 'permanentDelete'])->middleware('auth')->name('api.permanentdelete_object');
@@ -63,14 +63,29 @@ Route::post("/api/download", [CsdbController::class, 'download_objects'])->middl
 Route::get("/api/histories/{filename}", [HistoryController::class, 'all'])->middleware('auth')->name('api.get_csdb_history');
 
 // get list comment 
-Route::get("/api/comments/{filename}",[CommentController::class, 'all'])->middleware('auth')->name('api.get_csdb_comments');
+Route::get("/api/comments/{filename}", [CommentController::class, 'all'])->middleware('auth')->name('api.get_csdb_comments');
 
-Route::get("/api/json/{filename}",[CsdbController::class, 'read_json'])->middleware('auth')->name('api.read_json');
+Route::get("/api/json/{filename}", [CsdbController::class, 'read_json'])->middleware('auth')->name('api.read_json');
 
 // ### percobaan ###
-Route::get("/api/content/html/{filename}",[DmlController::class, 'read_html_content'])->middleware('auth')->name('api.get_html_content');
+Route::get("/api/content/html/{filename}", [DmlController::class, 'read_html_content'])->middleware('auth')->name('api.get_html_content');
 
-Route::get('/tesapaja',function(){
+Route::get('/tesapaja', function () {
+  // $accessKey = "9611222007552"; // from client
+  // $cipher_method = 'aes-128-ctr';
+  // $enc_key = openssl_digest(php_uname(), 'SHA256', TRUE);
+  // $enc_iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length($cipher_method));
+  // $crypted_key = openssl_encrypt($accessKey, $cipher_method, $enc_key, 0, $enc_iv) . "::" . bin2hex($enc_iv); // stored to db
+
+  // return $crypted_key;
+
+  // $crypted_key = "ckqGMKp+f1+fKQ/OFg==::1bcb320e201a51535f7b47d1c0ebb9de";
+  // list($crypted_key, $enc_iv) = explode("::", $crypted_key);  
+  // $cipher_method = 'aes-128-ctr';
+  // $enc_key = openssl_digest(php_uname(), 'SHA256', TRUE);
+  // $key = openssl_decrypt($crypted_key, $cipher_method, $enc_key, 0, hex2bin($enc_iv));
+  // return [$crypted_key, $key];
+
   dd('aa');
   $DMLCSDBModel = Csdb::find(34);
   $CSLCSDBModel = $DMLCSDBModel->object->toCsl(request()->user());

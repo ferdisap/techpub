@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Jobs\Csdb\DmcTableFiller;
 use App\Jobs\Csdb\FillObjectTable;
+use App\Models\Csdb\AccessKey;
 use App\Models\Csdb\Comment;
 use App\Models\Csdb\Ddn;
 use App\Models\Csdb\Dmc;
@@ -230,6 +231,14 @@ class Csdb extends Model
       $this->hidden[] = $column;
     }
     $this->hidden = array_unique($this->hidden);
+  }
+
+  /**
+   * relationship untuk AccessKey
+   */
+  public function accessKey(): HasMany
+  {
+    return $this->hasMany(AccessKey::class);
   }
 
   /**
@@ -690,6 +699,12 @@ class Csdb extends Model
           $revert_save_file();
           return false;
         }
+
+        // create csdb access key
+        $this->accessKey()->whereNull('abilities')->firstOrCreate([
+          'csdb_id' => $this->id,
+          'key' => \Illuminate\Support\Str::random(),
+        ]);
 
         // fill object dilakukan oleh worker. @dispatchSync return 404 Not Found
         // $fillObjectTableConfig = ['connection' => 'sync', 'mailNotification' => true];

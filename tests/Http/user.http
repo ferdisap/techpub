@@ -16,8 +16,9 @@ content-type: application/json
 
 
 ###POST http://127.0.0
-.1:8000/api/login HTTP/1.1
+POST http://127.0.0.1:8000/api/login HTTP/1.1
 Content-Type: application/json
+X-Requested-With: XMLHttpRequest
 X-DEVICE-NAME: http_client
 
 {
@@ -27,10 +28,10 @@ X-DEVICE-NAME: http_client
 
 ###
 
-GET http://127.0.0.1:8000/api/s1000d/all HTTP/1.1
+GET http://127.0.0.1:8000/api/s1000d/csdb/all HTTP/1.1
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
-Authorization: Bearer 2|f9eTaMj4prk1BkhXiUshHssoLJeOhcL42fBYfbbT870fc934
+Authorization: Bearer 3|xEyVnL2vDEgHL3OA086YnvrUwKiuhwQLAj3S7BtFf22e4e44
 
 ###
 
@@ -40,7 +41,7 @@ Authorization: Bearer 2|f9eTaMj4prk1BkhXiUshHssoLJeOhcL42fBYfbbT870fc934
 POST http://127.0.0.1:8000/api/s1000d/csdb/update/foo.xml HTTP/1.1
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
-Authorization: Bearer 2|f9eTaMj4prk1BkhXiUshHssoLJeOhcL42fBYfbbT870fc934
+Authorization: Bearer 3|xEyVnL2vDEgHL3OA086YnvrUwKiuhwQLAj3S7BtFf22e4e44
 
 ###
 # GET http://127.0.0.1:8000/api/s1000d/folder/index?sc=path::csdb HTTP/1.1
@@ -50,14 +51,14 @@ Authorization: Bearer 2|f9eTaMj4prk1BkhXiUshHssoLJeOhcL42fBYfbbT870fc934
 GET http://127.0.0.1:8000/api/s1000d/path/csdb/amm?sc=DMC-&stt=act HTTP/1.1
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
-Authorization: Bearer 2|f9eTaMj4prk1BkhXiUshHssoLJeOhcL42fBYfbbT870fc934
+Authorization: Bearer 3|xEyVnL2vDEgHL3OA086YnvrUwKiuhwQLAj3S7BtFf22e4e44
 
 ###
 
 POST http://127.0.0.1:8000/api/s1000d/csdb/create HTTP/1.1
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
-Authorization: Bearer 2|f9eTaMj4prk1BkhXiUshHssoLJeOhcL42fBYfbbT870fc934
+Authorization: Bearer 3|xEyVnL2vDEgHL3OA086YnvrUwKiuhwQLAj3S7BtFf22e4e44
 
 {
   "tes" : "tesas",
@@ -69,61 +70,64 @@ Authorization: Bearer 2|f9eTaMj4prk1BkhXiUshHssoLJeOhcL42fBYfbbT870fc934
 GET http://127.0.0.1:8000/api/s1000d/ident/DML-MALE-0001Z-P-2024-00002_000-01.xml HTTP/1.1
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
-Authorization: Bearer 2|f9eTaMj4prk1BkhXiUshHssoLJeOhcL42fBYfbbT870fc934
+Authorization: Bearer 3|xEyVnL2vDEgHL3OA086YnvrUwKiuhwQLAj3S7BtFf22e4e44
 
 ###
 
 GET http://127.0.0.1:8000/api/s1000d/status/COM-MALE-0001Z-Q-2024-00500_EN-EN.xml HTTP/1.1
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
-Authorization: Bearer 2|f9eTaMj4prk1BkhXiUshHssoLJeOhcL42fBYfbbT870fc934
+Authorization: Bearer 3|xEyVnL2vDEgHL3OA086YnvrUwKiuhwQLAj3S7BtFf22e4e44
 
 ###
 
 GET http://127.0.0.1:8000/api/s1000d/histories/COM-MALE-0001Z-Q-2024-00500_EN-EN.xml HTTP/1.1
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
-Authorization: Bearer 2|f9eTaMj4prk1BkhXiUshHssoLJeOhcL42fBYfbbT870fc934
+Authorization: Bearer 3|xEyVnL2vDEgHL3OA086YnvrUwKiuhwQLAj3S7BtFf22e4e44
 
 ###
 
 GET http://127.0.0.1:8000/api/s1000d/comments/COM-MALE-0001Z-Q-2024-00500_EN-EN.xml HTTP/1.1
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
-Authorization: Bearer 2|f9eTaMj4prk1BkhXiUshHssoLJeOhcL42fBYfbbT870fc934
+Authorization: Bearer 3|xEyVnL2vDEgHL3OA086YnvrUwKiuhwQLAj3S7BtFf22e4e44
 
 ###
 
 GET http://127.0.0.1:8000/api/s1000d/ident/DMC-AKS-A-93-77-8000-05C-539C-B_000-01_EN-US.xml HTTP/1.1
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
-Authorization: Bearer 2|f9eTaMj4prk1BkhXiUshHssoLJeOhcL42fBYfbbT870fc934
+Authorization: Bearer 3|xEyVnL2vDEgHL3OA086YnvrUwKiuhwQLAj3S7BtFf22e4e44
 
 ###
 
 GET http://127.0.0.1:8000/api/s1000d/csdb/dispatched HTTP/1.1
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
-Authorization: Bearer 2|f9eTaMj4prk1BkhXiUshHssoLJeOhcL42fBYfbbT870fc934
+Authorization: Bearer 3|xEyVnL2vDEgHL3OA086YnvrUwKiuhwQLAj3S7BtFf22e4e44
 
 ###
 
 GET http://127.0.0.1:8000/api/s1000d/csdb/all HTTP/1.1
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
-Authorization: Bearer 2|f9eTaMj4prk1BkhXiUshHssoLJeOhcL42fBYfbbT870fc934
+Authorization: Bearer 3|xEyVnL2vDEgHL3OA086YnvrUwKiuhwQLAj3S7BtFf22e4e44
 
 ###
 
 GET http://127.0.0.1:8000/api/s1000d/path/CSDB/DDN HTTP/1.1
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
-Authorization: Bearer 2|f9eTaMj4prk1BkhXiUshHssoLJeOhcL42fBYfbbT870fc934
+Authorization: Bearer 3|xEyVnL2vDEgHL3OA086YnvrUwKiuhwQLAj3S7BtFf22e4e44
 
 ###
 
-GET http://127.0.0.1:8000/api/s1000d/csdb/read/DMC-N219-C-16-34-3200-17C-763A-A_000-01_EN-US.xml?csdbRef=DDN-S1000D-0001Z-0001Z-2024-00005.xml HTTP/1.1
+GET http://127.0.0.1:8000/api/s1000d/csdb/read/DMC-N219-C-16-34-3200-17C-763A-A_000-01_EN-US.xml?csdbRef=DDN-S1000D-0001Z-0001Z-2024-00005.xml&form=json HTTP/1.1
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
-Authorization: Bearer 71|q6EqqavvhocQdf0g3IJhS24lWmafcowaLlCV8xLBa90b7c66
+Authorization: Bearer 3|xEyVnL2vDEgHL3OA086YnvrUwKiuhwQLAj3S7BtFf22e4e44
 
+###
+
+GET http://127.0.0.1:8000/tesapaja HTTP/1.1

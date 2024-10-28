@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Route;
 Route::post('/login', [Authenticate::class, 'store'])->name('app.login');
 Route::post('/auth-check', function(Request $request){
   return response([
-    'user' => $request->user()->only(["email"]),
+    'user' => $request->user()->only(["email", 'first_name', 'middle_name', 'last_name', 'job_title']),
   ],200,['content-type' => 'application/json']);
 })->middleware('auth:sanctum')->name('app.auth_check');
 Route::post('/logout', [Authenticate::class, 'destroy'])->middleware('auth:sanctum')->name('app.logout');

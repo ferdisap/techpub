@@ -98,16 +98,22 @@ class CsdbUpdateByXMLEditor extends FormRequest
 
     $CSDBObject = new CSDBObject("5.0");
     if($this->xmleditor) $CSDBObject->loadByString($this->xmleditor); // biar ga error ditambah if
-
+    
     if ($CSDBObject) {
       try {
         $prefix = substr($CSDBObject->filename, 0, 3);
-        $path = "CSDB/" . $prefix;
-        if(!str_starts_with($this->path, $path)) {
-          $path = null;
-          $this->errors['path'] = ["The path must be prefixed by 'CSDB/".$prefix."'."];
+        if($this->path){
+          $path = "CSDB\/" . $prefix;
+          preg_match("/{$path}/",$this->path,$m);
+          if(!$m[0]) {
+            $path = null; // jika path dari request user tidak sesuai dengan $path, maka akan di null kan
+            $this->errors['path'] = ["The path must be prefixed by 'CSDB/".$prefix."'."];
+          } else {
+            $path = "CSDB/" . $prefix;
+          }
+        } else {
+          $path = "CSDB/" . $prefix;
         }
-        else $path = $this->path;
       } catch (\Throwable $e) {
       }
     }

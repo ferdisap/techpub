@@ -24,7 +24,7 @@ class CsdbFactory extends Factory
       filename: $file[0],
       path: 'csdb',
       storage_id: 1,
-      initiator_id: 1,
+      initiator_id: 1
     );
   }
 
@@ -214,6 +214,7 @@ class CsdbFactory extends Factory
                 <dmCode modelIdentCode="S1000D" systemDiffCode="G" systemCode="04" subSystemCode="1" subSubSystemCode="0" assyCode="0301" disassyCode="00" disassyCodeVariant="A" infoCode="022" infoCodeVariant="A" itemLocationCode="D"/>
                 <issueInfo issueNumber="001" inWork="00"/>
               </dmRefIdent>
+              <language languageIsoCode="{$languageIsoCode}" countryIsoCode="{$countryIsoCode}"/>
             </dmRef>
           </brexDmRef>
           <qualityAssurance>
