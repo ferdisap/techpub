@@ -115,7 +115,15 @@ Authorization: Bearer 2|f9eTaMj4prk1BkhXiUshHssoLJeOhcL42fBYfbbT870fc934
 
 ###
 
-GET http://127.0.0.1:8000/api/s1000d/path/DISPATCHED/CSDB/DDN HTTP/1.1
+GET http://127.0.0.1:8000/api/s1000d/path/CSDB/DDN HTTP/1.1
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 Authorization: Bearer 2|f9eTaMj4prk1BkhXiUshHssoLJeOhcL42fBYfbbT870fc934
+
+###
+
+GET http://127.0.0.1:8000/api/s1000d/csdb/read/DMC-N219-C-16-34-3200-17C-763A-A_000-01_EN-US.xml?csdbRef=DDN-S1000D-0001Z-0001Z-2024-00005.xml HTTP/1.1
+Content-Type: application/json
+X-Requested-With: XMLHttpRequest
+Authorization: Bearer 71|q6EqqavvhocQdf0g3IJhS24lWmafcowaLlCV8xLBa90b7c66
+

@@ -127,9 +127,8 @@ class MainController extends BaseController
     if ($request->route('CSDBModel')->lastHistory->code === 'CSDB-DELL' || $request->route('CSDBModel')->lastHistory->code === 'CSDB-PDEL') {
       throw new HttpResponseException(response(["message" => $request->route('CSDBModel')->filename . " has been deleted."], 404));
     }
-    $storage = $request->isDDN ? User::find($CSDBModel->storage_id)->storage : $request->user()->storage;
+    $storage = $CSDBModel->owner->storage;
     $CSDBModel->CSDBObject->load(CSDB_STORAGE_PATH . "/" . $storage . "/" . $CSDBModel->filename);
-    // return $CSDBModel->CSDBObject->document ? 'foo' : 'bar';
     if ($CSDBModel->CSDBObject->document) {
       switch ($request->form) {
         case 'json':
@@ -625,7 +624,7 @@ class MainController extends BaseController
       $keywords = array_merge(Helper::explodeSearchKeyAndValue($request->sc, 'filename'), ["path" => [$path]]);
       $query = Helper::generateWhereRawQueryString($keywords, $CSDBModels->getModel()->getTable(), ['path' => "#&value;"]);
       if (!empty($query)) $CSDBModels = $CSDBModels->whereRaw($query[0], $query[1]);
-      // stt
+    // stt
       if ($request->stt === 'act') {
         $queryCodeHistory = History::generateWhereRawQueryString_historyException(['CSDB-DELL', 'CSDB-PDEL'], Csdb::class, $CSDBModels->getModel()->getTable());
         $CSDBModels = $CSDBModels->whereRaw($queryCodeHistory[0], $queryCodeHistory[1]);
@@ -663,18 +662,20 @@ class MainController extends BaseController
     if ($isDispatch) {
       $userId = $request->user()->id;
       $folders->objectClass = Ddn::class;
-      $folders->with(['object']);
+      //$folders->with(['object']);
       $folders = $folders->whereHas(
         'object',
         function (Builder $DDNModel) use ($userId) {
           $DDNModel->select(['id', 'csdb_id', 'dispatchFrom_id', 'dispatchTo_id'])->where('dispatchTo_id', $userId)->whereNot('dispatchFrom_id', $userId);
         }
       );
+    } else {
+      $folders = $folders->where('storage_id', $request->user()->id);
     }
-
+    // var_dump($folders->toSql());
     // make query and get
     $query = Helper::generateWhereRawQueryString(['path' => [$path . "/"]], $folders->getModel()->getTable());
-    $folders = $folders->where('storage_id', $request->user()->id)->whereRaw($query[0], $query[1]);
+    $folders = $folders->whereRaw($query[0], $query[1]);
 
     if (isset($queryCodeHistory)) $folders = $folders->whereRaw($queryCodeHistory[0], $queryCodeHistory[1]);
 
@@ -687,7 +688,7 @@ class MainController extends BaseController
     for ($i = 0; $i < $l_folders; $i++) {
       // pengecekan terhadap setiap keyword paths tidak diperlukan lagi karena saat pencarian setiap path keyword sudah ditambah '/' sehingga pencarian spesifik untuk sub folder 
       $folders[$i] = join("", $folders[$i]); // saat didapat dari database, bentuknya array berisi satu path saja
-      $folders[$i] = preg_replace("/({$pathReplace})(\/[a-zA-Z0-9]+)(\/.+)?/", "$1$2", $folders[$i]); // menghilangkan subfolder. eg.: query path='csdb', result='csdb/cn235/amm'. Nah 'amm' nya dihilangkan
+      $folders[$i] = ($isDispatch ? 'DISPATCHED/' : '') . preg_replace("/({$pathReplace})(\/[a-zA-Z0-9]+)(\/.+)?/", "$1$2", $folders[$i]); // menghilangkan subfolder. eg.: query path='csdb', result='csdb/cn235/amm'. Nah 'amm' nya dihilangkan
     }
     $folders = array_values(array_filter(array_unique($folders, SORT_STRING), fn ($v) => ($v != null) || ($v != ''))); // array_values agar tidak assoc atau supaya indexnya teratur
     sort($folders);

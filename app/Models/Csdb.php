@@ -132,27 +132,42 @@ class Csdb extends Model
    */
   public function resolveRouteBinding($value, $field = null)
   {
-    $isDDN = substr($value, 0,3) === 'DDN';
-    if($isDDN){
-      request()->isDDN = true;
+    // jika user ingin meaksess DDN file milik dia atau orang lain
+    $isDDN = substr($value, 0, 3) === 'DDN';
+    if ($isDDN) {
       $CSDBModel = Csdb::where($field, $value)->whereHas('object', function (Builder $DDNModel) {
         $id = request()->user()->id;
         $DDNModel->select(['id', 'csdb_id', 'dispatchFrom_id', 'dispatchTo_id'])->where('dispatchTo_id', $id)->orWhere('dispatchFrom_id', $id);
       });
       return $CSDBModel->first(); // Tidak ada dua DDN yang sama persis bukan hanya di seq. number tapi, modelIdentCode, senderIdent, receiverIdent, seqNumber
     }
-    $storageId = request()->storage ? (User::where('storage','wIxv1')->first()->id) : request()->user()->id;
-    return $this->where($field, $value)->where('storage_id', $storageId)->firstOrFail();
+    // jika client ingin mengaksess CSDB milik client lain
+    else if ($csdbRef = request()->csdbRef) {
+      $CSDBDDNModel = new Csdb();
+      $CSDBDDNModel->objectClass = self::getClassObjectByFilename($csdbRef);
+      $CSDBDDNModel = $CSDBDDNModel->where('filename', $csdbRef);
+      $CSDBDDNModel = $CSDBDDNModel->whereHas('object', function (Builder $DDNModel) {
+        $id = request()->user()->id;
+        $DDNModel->select(['id', 'csdb_id', 'dispatchFrom_id', 'dispatchTo_id', 'ddnContent'])->where('dispatchTo_id', $id)->orWhere('dispatchFrom_id', $id);
+      })
+        ->firstOrFail();
+      if (in_array($value, $CSDBDDNModel->object->ddnContent)) {
+        return $this->where('filename', $value)->where('storage_id', $CSDBDDNModel->object->dispatchFrom_id)->firstOrFail();
+      }
+    } else {
+      $storageId = request()->storage ? (User::where('storage', 'wIxv1')->first()->id) : request()->user()->id;
+      return $this->where($field, $value)->where('storage_id', $storageId)->firstOrFail();
+    }
   }
 
   /**
    * cara pakainya, yaitu $DDNModel->minimal(); bisa ditambah parameter jika nanti mau
    */
-  public function scopeMinimal(Builder $query, Array $exclude = ['json','xml'])
+  public function scopeMinimal(Builder $query, array $exclude = ['json', 'xml'])
   {
     $tables = Schema::getColumnListing($this->getTable());
     foreach ($exclude as $colName) {
-      if(($key = array_search($colName, $tables)) !== false) unset($tables[$key]);
+      if (($key = array_search($colName, $tables)) !== false) unset($tables[$key]);
     }
     return $query->select($tables);
   }
@@ -240,12 +255,16 @@ class Csdb extends Model
   public string $objectClass;
   public function object(): HasOne
   {
-    // request()->route()->parameter('CSDBModel') === filename karena route belum di resolve
-    $filename = $this->filename ?? request()->route()->parameter('CSDBModel') ?? request()->route()->parameter('filename') ?? request()->get('filename');
-    if ($filename) $class = self::getClassObjectByFilename($filename);
-    else $class = $this->objectClass ?? self::class; // nanti jadinya null kalau pakai $class self
-    // var_dump($class);
+    $class = $this->objectClass ?? self::getClassObjectByFilename($this->filename ?? request()->csdbRef ?? request()->route()->parameter('CSDBModel') ?? request()->route()->parameter('filename') ?? request()->get('filename'));
+    // var_dump($class, $this->objectClass ?? 'aaa');
     return $this->hasOne($class);
+
+    // request()->route()->parameter('CSDBModel') === filename karena route belum di resolve
+    // $filename = $this->filename ?? request()->route()->parameter('CSDBModel') ?? request()->route()->parameter('filename') ?? request()->get('filename');
+    // if ($filename) $class = self::getClassObjectByFilename($filename);
+    // else $class = $this->objectClass ?? self::class; // nanti jadinya null kalau pakai $class self
+    // var_dump($class);
+    // return $this->hasOne($class);
   }
 
   /**
