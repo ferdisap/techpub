@@ -588,7 +588,7 @@ class Dml extends Csdb
     return $dom;
   }
 
-  public static function fillTable($csdb_id, CSDBObject $CSDBObject)
+  public static function fillTable($csdb_id, CSDBObject $CSDBObject, int $storage_id)
   {
     $filename = $CSDBObject->filename;
     $domXpath = new \DOMXpath($CSDBObject->document);
@@ -640,7 +640,7 @@ class Dml extends Csdb
       'xml' => $CSDBObject->document->C14N() // ga bisa pakai saveXML karena menghasilkan doctype, sementara SQL XML belum tahu caranya render xml yang ada dtd
     ];
 
-    $dml = Csdb::getObject($filename)->first() ?? Csdb::getModelClass('Dml');
+    $dml = Csdb::getObject($filename,[], $storage_id)->first() ?? Csdb::getModelClass('Dml');
     foreach ($arr as $prop => $v) {
       $dml->$prop = $v;
     }

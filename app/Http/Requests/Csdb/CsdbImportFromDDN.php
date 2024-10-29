@@ -30,6 +30,7 @@ class CsdbImportFromDDN extends FormRequest
    */
   public function rules(): array
   {
+    $userId = $this->user()->id;
     return [
       'path' => '',
       'dispatchTo' => ['required', function(string $a, mixed $v, Closure $fail){
@@ -39,9 +40,9 @@ class CsdbImportFromDDN extends FormRequest
       //   if($this->user()->id != $v->object->dispatchTo_id) $fail("The destination dispatch of {$v->filename} is not you.");
       // }],
       'filenames' => ['array'],
-      'filenames.*' => ['required', function(string $a, mixed $v, Closure $fail){
+      'filenames.*' => ['required', function(string $a, mixed $v, Closure $fail) use($userId){
         if(!in_array($v,  $this->route('CSDBModel')->object->ddnContent)) $fail("{$v} is not covered by the {$this->CSDBModel->filename}");
-        if($duplicated = Csdb::getCsdb($v)->first()){
+        if($duplicated = Csdb::getCsdb($v, $userId)->first()){
           $this->duplicatedCSDBModels[] = $duplicated;
         }
       }]

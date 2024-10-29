@@ -84,7 +84,7 @@ class MainController extends BaseController
       $fail = [];
       $storage = $CSDBModel->owner->storage;
       foreach ($request->validated('filenames') as $filename) {
-        $CSDBModel = Csdb::getCsdb($filename)->first() ?? new Csdb();
+        $CSDBModel = Csdb::getCsdb($filename, $request->user()->id)->first() ?? new Csdb();
         $CSDBModel->CSDBObject->load(CSDB_STORAGE_PATH . DIRECTORY_SEPARATOR . $storage . DIRECTORY_SEPARATOR . $filename);
         $CSDBModel->filename = $filename;
         $CSDBModel->path = $request->validated('path');
@@ -142,6 +142,7 @@ class MainController extends BaseController
             $CSDBModel->object;
             $CSDBModel->object->makeHidden(['content', 'json']);
           }
+          $CSDBModel->owner->makeHidden(['storage']);
           return Response::make(
             [
               'csdb' => $CSDBModel->makeHidden(['id']),
@@ -360,7 +361,7 @@ class MainController extends BaseController
       $com->csdb->lastHistory->makeHidden(['code', 'description']);
     });
     return Response::make([
-      'csdb' => $CSDBModel
+      'csdb' => $CSDBModel,
     ], 200, ['content-type' => 'application/json']);
   }
 
@@ -518,9 +519,9 @@ class MainController extends BaseController
   public function all(Request $request)
   {
     if ($request->stt === 'act') {
-      $CSDBModels = Csdb::getCsdbs(['exception' => ['CSDB-DELL', 'CSDB-PDEL']]);
+      $CSDBModels = Csdb::getCsdbs(['exception' => ['CSDB-DELL', 'CSDB-PDEL']], $request->user()->id);
     } elseif ($request->stt === 'dct') {
-      $CSDBModels = Csdb::getCsdbs();
+      $CSDBModels = Csdb::getCsdbs([], $request->user()->id);
     } else {
       $CSDBModels = Csdb::where('storage_id', $request->user()->id);
     }
@@ -544,7 +545,7 @@ class MainController extends BaseController
     return Response::make([
       // "csdbs" => $CSDBModels->get(['id','storage_id','filename', 'path'])->toArray(),
       // "csdbs" => $CSDBModels->get(['id', 'storage_id', 'filename', 'path'])->map(fn ($csdb) => [$csdb->owner->storage, $csdb->path, $csdb->filename]),
-      "csdbs" => $CSDBModels->get(['id', 'storage_id', 'filename', 'path'])->map(fn ($csdb) => "{$csdb->path}/{$csdb->filename}?access_key={$csdb->accessKey[0]->key}"),
+      "csdbs" => $CSDBModels->get(['id', 'storage_id', 'filename', 'path'])->map(fn ($csdb) => "s1000d:{$csdb->path}/{$csdb->filename}?access_key={$csdb->accessKey->key}"),
     ], 200, ["content-type" => 'application/json']);
   }
 
@@ -560,9 +561,10 @@ class MainController extends BaseController
 
     $DDNModels = Ddn::with(['csdb' => function (Builder $query) use ($sc) {
       $query->select(['id', 'filename', 'path', 'storage_id']);
-      $query->with(['owner' => function (Builder $query) {
-        $query->without(['work_enterprise'])->select(['id', 'storage']);
-      }]);
+      $query->with(['accessKey']);
+      // $query->with(['owner' => function (Builder $query) {
+      //   $query->without(['work_enterprise'])->select(['id', 'storage']);
+      // }]);
       if ($sc) {
         $keywords = array_merge(Helper::explodeSearchKeyAndValue($sc, 'filename'));
         $q = Helper::generateWhereRawQueryString($keywords, 'csdb', ['path' => "#&value;"]);
@@ -584,7 +586,8 @@ class MainController extends BaseController
 
     $DDNModels = $DDNModels->get(['id', 'csdb_id', 'dispatchFrom_id', 'dispatchTo_id']);
     return Response::make([
-      "csdbs" => $DDNModels->map(fn ($v) => $v->csdb = [$v->csdb->owner->storage, 'DISPATCHED/' . $v->csdb->path, $v->csdb->filename])
+      // "csdbs" => $DDNModels->map(fn ($v) => $v->csdb = [$v->csdb->owner->storage, 'DISPATCHED/' . $v->csdb->path, $v->csdb->filename])
+      "csdbs" => $DDNModels->map(fn ($v) => $v->csdb = 's1000d:'. 'DISPATCHED/' . $v->csdb->path."/".$v->csdb->filename."?access_key=".$v->csdb->accessKey->key),
     ], 200, ['content-type' => 'application/json']);
   }
 
@@ -611,9 +614,10 @@ class MainController extends BaseController
       $CSDBModels = $CSDBModels->where("filename", "like", "DDN-%"); // sengaja $CSDBModels di assign supaya menjadi class Builder dan $objectClass terinstance 
       $CSDBModels->with([
         'lastHistory',
-        'owner' => function (Builder $USERModel) {
-          $USERModel->without(['work_enterprise'])->select(['id', 'storage']);
-        }
+        'accessKey'
+        // 'owner' => function (Builder $USERModel) {
+        //   $USERModel->without(['work_enterprise'])->select(['id', 'storage']);
+        // }
       ]);
       $userId = $request->user()->id;
       $CSDBModels = $CSDBModels->whereHas(
@@ -640,7 +644,8 @@ class MainController extends BaseController
       $CSDBModels->setPath($request->getUri());
     } else {
       // menyiapkan csdb object, bisa pakai $query->setEagerLoads([]) atau $query->without(['work_enterprise'])
-      $CSDBModels = Csdb::with(['lastHistory', 'owner' => fn (BelongsTo $query) => $query->without(['work_enterprise'])->toBase()->select(['id', 'storage'])]);
+      // $CSDBModels = Csdb::with(['lastHistory', 'owner' => fn (BelongsTo $query) => $query->without(['work_enterprise'])->toBase()->select(['id', 'storage'])]);
+      $CSDBModels = Csdb::with(['lastHistory', 'accessKey']);
       // sc
       $keywords = array_merge(Helper::explodeSearchKeyAndValue($request->sc, 'filename'), ["path" => [$path]]);
       $query = Helper::generateWhereRawQueryString($keywords, $CSDBModels->getModel()->getTable(), ['path' => "#&value;"]);

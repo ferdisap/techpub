@@ -57,16 +57,17 @@ class CsdbPermanentDelete extends FormRequest
     $CSDBModelArray = [];
     $filename = $this->filename;
     if(!$filename) throw new HttpResponseException(response(['message' => "filename is required."],412,['content-type' => 'application/json']));
+    $requestUserId = $this->user()->id;
     if(is_array($filename) || ($filename = explode(",",$filename))){
       foreach($filename as $i => $f){
         // $m = Csdb::with(['object'])->where('filename',$f)->where('initiator_id',$this->user()->id)->first();
-        $m = Csdb::getCsdb($f,['code' => ['CSDB-DELL']])->first();
+        $m = Csdb::getCsdb($f,['code' => ['CSDB-DELL']], $requestUserId)->first();
         if($m) $m->path = preg_replace("/^CSDB/","DELETED",$m->path);
         $CSDBModelArray[$i] = $m;
       }
     } else {
       // $m = Csdb::where('filename',$filename)->where('initiator_id',$this->user()->id)->first();
-      $m = Csdb::getCsdb($filename,['code' => ['CSDB-DELL']])->first();
+      $m = Csdb::getCsdb($filename,['code' => ['CSDB-DELL']], $requestUserId)->first();
       if($m) $m->path = preg_replace("/^CSDB/","DELETED",$m->path);
       array_push($CSDBModelArray, $m);
       $filename = [$filename];

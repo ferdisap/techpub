@@ -36,32 +36,32 @@ class FillObjectTable implements ShouldQueue
    */
   public function handle(): void
   {
-    $previousStatic_storage_user_id = Csdb::$storage_user_id;
-    Csdb::$storage_user_id = $this->initiator->id;
+    // $previousStatic_storage_user_id = Csdb::$storage_user_id;
+    // Csdb::$storage_user_id = $this->initiator->id;
     $this->CSDBModel->loadCSDBObject();
     if ($this->CSDBModel->CSDBObject->document instanceof \DOMDocument) {
       $doctype = $this->CSDBModel->CSDBObject->document->doctype->nodeName;
       $csdbobject = false;
       switch ($doctype) {
         case 'dmodule':
-          $csdbobject = Dmc::fillTable($this->CSDBModel->id, $this->CSDBModel->CSDBObject);
+          $csdbobject = Dmc::fillTable($this->CSDBModel->id, $this->CSDBModel->CSDBObject, $this->initiator->id);
           break;
         case 'pm':
-          $csdbobject = Pmc::fillTable($this->CSDBModel->id, $this->CSDBModel->CSDBObject);
+          $csdbobject = Pmc::fillTable($this->CSDBModel->id, $this->CSDBModel->CSDBObject, $this->initiator->id);
           break;
         case 'dml':
-          $csdbobject = Dml::fillTable($this->CSDBModel->id, $this->CSDBModel->CSDBObject);
+          $csdbobject = Dml::fillTable($this->CSDBModel->id, $this->CSDBModel->CSDBObject, $this->initiator->id);
           break;
         case 'ddn':
-          $csdbobject = Ddn::fillTable($this->CSDBModel->id, $this->CSDBModel->CSDBObject);          
+          $csdbobject = Ddn::fillTable($this->CSDBModel->id, $this->CSDBModel->CSDBObject, $this->initiator->id);          
           if($csdbobject && $this->mailTo) event(new DdnCreated($csdbobject));
           break;
         case 'comment':
-          $csdbobject = Comment::fillTable($this->CSDBModel->id, $this->CSDBModel->CSDBObject);
+          $csdbobject = Comment::fillTable($this->CSDBModel->id, $this->CSDBModel->CSDBObject, $this->initiator->id);
           if($csdbobject && $this->mailTo) event(new CommentCreated($csdbobject));
           break;
       }
     }
-    Csdb::$storage_user_id = $previousStatic_storage_user_id;
+    // Csdb::$storage_user_id = $previousStatic_storage_user_id;
   }
 }

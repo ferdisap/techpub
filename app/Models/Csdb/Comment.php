@@ -121,7 +121,7 @@ class Comment extends Csdb
     return false;
   }
 
-  public static function fillTable($csdb_id, CSDBObject $CSDBObject)
+  public static function fillTable($csdb_id, CSDBObject $CSDBObject, int $storage_id)
   {
     $filename = $CSDBObject->filename;
     $domXpath = new \DOMXpath($CSDBObject->document);
@@ -146,12 +146,17 @@ class Comment extends Csdb
     if (!empty($commentRefs)) {
       $r = [];
       foreach ($commentRefs as $refsGroup) {
-        $r[] = CSDBStatic::resolve_ident($refsGroup->firstElementChild, 'auto');
+        $v = CSDBStatic::resolve_ident($refsGroup->firstElementChild, 'auto');
+        var_dump($v);
+        // var_dump($v, CSDBStatic::resolve_ddnIdent($refsGroup->firstElementChild));
+        $r[] = $v;
+        // $r[] = CSDBStatic::resolve_ident($refsGroup->firstElementChild, 'auto');
       }
       $commentRefs = $r;
     } else {
       $commentRefs = [];
     }
+    // var_dump($commentRefs);
     $brexElement = $domXpath->evaluate("//identAndStatusSection/descendant::brexDmRef/dmRef/dmRefIdent")[0];
     $brexDmRef = CSDBStatic::resolve_dmIdent($brexElement);
     $remarks = $CSDBObject->getRemarks($domXpath->evaluate("//identAndStatusSection/descendant::remarks")[0]);
@@ -205,7 +210,7 @@ class Comment extends Csdb
       'xml' => $CSDBObject->document->C14N() // ga bisa pakai saveXML karena menghasilkan doctype, sementara SQL XML belum tahu caranya render xml yang ada dtd
     ];
 
-    $comment = Csdb::getObject($filename)->first() ?? Csdb::getModelClass('comment');
+    $comment = Csdb::getObject($filename,[], $storage_id)->first() ?? Csdb::getModelClass('Comment');
     $comment->timestamps = false;
     foreach ($arr as $prop => $v) {
       $comment->$prop = $v;

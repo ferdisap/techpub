@@ -57,7 +57,7 @@ class Ddn extends Csdb
    *
    * @var array<int, string>
    */
-  protected $hidden = ['id', 'csdb_id', 'dispatchTo_id', 'dispatchFrom_id' ,'json', 'xml'];
+  protected $hidden = ['id', 'csdb_id', 'dispatchTo_id', 'dispatchFrom_id', 'json', 'xml'];
 
   public $timestamps = false;
 
@@ -73,33 +73,33 @@ class Ddn extends Csdb
   /**
    * relationship untuk user
    */
-  public function dispatchTo() :BelongsTo
+  public function dispatchTo(): BelongsTo
   {
-    return $this->belongsTo(User::class,'dispatchTo_id', 'id');
+    return $this->belongsTo(User::class, 'dispatchTo_id', 'id');
   }
 
   /**
    * relationship untuk user
    */
-  public function dispatchFrom() :BelongsTo
+  public function dispatchFrom(): BelongsTo
   {
-    return $this->belongsTo(User::class,'dispatchFrom_id');
+    return $this->belongsTo(User::class, 'dispatchFrom_id');
   }
 
-  public function create_xml(string $storagePath, Array $params)
+  public function create_xml(string $storagePath, array $params)
   {
     $this->CSDBObject = new CSDBObject('5.0');
     $this->CSDBObject->setPath(CSDB_STORAGE_PATH . "/" . $storagePath);
     $this->CSDBObject->setConfigXML(CSDB_VIEW_PATH . DIRECTORY_SEPARATOR . "xsl" . DIRECTORY_SEPARATOR . "Config.xml"); // nanti diubah mungkin berbeda antara pdf dan html meskupun harusnya SAMA. Nanti ConfigXML mungkin tidak diperlukan jika fitur BREX sudah siap sepenuhnya.
     $this->CSDBObject->createDDN($params);
 
-    if($this->CSDBObject->document){
+    if ($this->CSDBObject->document) {
       return true;
     }
     return false;
   }
 
-  public static function fillTable($csdb_id, CSDBObject $CSDBObject)
+  public static function fillTable($csdb_id, CSDBObject $CSDBObject, int $storage_id)
   {
     $filename = $CSDBObject->filename;
     // $decode_ident = CSDBStatic::decode_ddnIdent($filename,false); 
@@ -131,19 +131,19 @@ class Ddn extends Csdb
     $remarks = $CSDBObject->getRemarks($domXpath->evaluate("//identAndStatusSection/descendant::remarks")[0]);
 
     $dispatchTo_id = User::where('last_name', $domXpath->evaluate("string(//ddnAddressItems/dispatchTo/dispatchAddress/dispatchPerson/lastName)"));
-    if($firstName = $domXpath->evaluate("string(//ddnAddressItems/dispatchTo/dispatchAddress/dispatchPerson/firstName)")) $dispatchTo_id->where('first_name', $firstName);
-    if(count(($dispatchTo_id = $dispatchTo_id->get('id'))) > 1) $dispatchTo_id = 0;
+    if ($firstName = $domXpath->evaluate("string(//ddnAddressItems/dispatchTo/dispatchAddress/dispatchPerson/firstName)")) $dispatchTo_id->where('first_name', $firstName);
+    if (count(($dispatchTo_id = $dispatchTo_id->get('id'))) > 1) $dispatchTo_id = 0;
     else $dispatchTo_id = $dispatchTo_id[0]->id;
 
     $dispatchFrom_id = User::where('last_name', $domXpath->evaluate("string(//ddnAddressItems/dispatchFrom/dispatchAddress/dispatchPerson/lastName)"));
-    if($firstName = $domXpath->evaluate("string(//ddnAddressItems/dispatchFrom/dispatchAddress/dispatchPerson/firstName)")) $dispatchFrom_id->where('first_name', $firstName);
-    if(count(($dispatchFrom_id = $dispatchFrom_id->get('id'))) > 1) $dispatchFrom_id = 0;
+    if ($firstName = $domXpath->evaluate("string(//ddnAddressItems/dispatchFrom/dispatchAddress/dispatchPerson/firstName)")) $dispatchFrom_id->where('first_name', $firstName);
+    if (count(($dispatchFrom_id = $dispatchFrom_id->get('id'))) > 1) $dispatchFrom_id = 0;
     else $dispatchFrom_id = $dispatchFrom_id[0]->id;
 
     $ddnContent = $domXpath->evaluate("//ddnContent/descendant::dispatchFileName|//ddnContent/mediaIdent");
-    if(!empty($ddnContent)){
+    if (!empty($ddnContent)) {
       $r = [];
-      foreach($ddnContent as $content){
+      foreach ($ddnContent as $content) {
         switch ($content->tagName) {
           case 'dispatchFileName':
             $r[] = $content->nodeValue;
@@ -160,33 +160,33 @@ class Ddn extends Csdb
 
     $arr = [
       "csdb_id" => $csdb_id,
-      
+
       'modelIdentCode' => $modelIdentCode,
       'senderIdent' => $senderIdent,
       'receiverIdent' => $receiverIdent,
       'yearOfDataIssue' => $yearOfDataIssue,
       'seqNumber' => $seqNumber,
-      
+
       "year" => $year,
       "month" => $month,
       "day" => $day,
 
       "dispatchTo_id" => $dispatchTo_id,
       "dispatchFrom_id" => $dispatchFrom_id,
-      
+
       'securityClassification' => $securityClassification,
       'brexDmRef' => $brexDmRef,
       'authorization' => $authorization,
       'remarks' => $remarks,
-      
+
       'ddnContent' => $ddnContent,
 
       'json' => CSDBStatic::xml_to_json($CSDBObject->document),
       'xml' => $CSDBObject->document->C14N() // ga bisa pakai saveXML karena menghasilkan doctype, sementara SQL XML belum tahu caranya render xml yang ada dtd
     ];
 
-    $ddn = Csdb::getObject($filename)->first() ?? Csdb::getModelClass('Ddn');
-    foreach($arr as $prop => $v){
+    $ddn = Csdb::getObject($filename, [], $storage_id)->first() ?? Csdb::getModelClass('Ddn');
+    foreach ($arr as $prop => $v) {
       $ddn->$prop = $v;
     }
     return $ddn->save() ? $ddn : false;

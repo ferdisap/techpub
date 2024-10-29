@@ -79,7 +79,7 @@ class Dmc extends Csdb
    */
   protected $hidden = ['id', 'csdb_id', 'json', 'xml'];
 
-  public static function fillTable($csdb_id, CSDBObject $CSDBObject){
+  public static function fillTable($csdb_id, CSDBObject $CSDBObject, int $storage_id){
 
     $filename = $CSDBObject->filename;
     $domXpath = new \DOMXpath($CSDBObject->document);
@@ -161,7 +161,7 @@ class Dmc extends Csdb
       'xml' => $CSDBObject->document->C14N() // ga bisa pakai saveXML karena menghasilkan doctype, sementara SQL XML belum tahu caranya render xml yang ada dtd
     ];
 
-    $dmc = Csdb::getObject($filename)->first() ?? Csdb::getModelClass('Dmc');
+    $dmc = Csdb::getObject($filename,[], $storage_id)->first() ?? Csdb::getModelClass('Dmc');
     $dmc->timestamps = false;
     foreach($arr as $prop => $v){
       $dmc->$prop = $v;

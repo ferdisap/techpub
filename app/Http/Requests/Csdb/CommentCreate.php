@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Csdb;
 
 use App\Models\Csdb;
+use App\Models\Csdb\AccessKey;
 use App\Models\Csdb\Comment;
 use App\Models\User;
 use App\Rules\Csdb\BrexDmRef;
@@ -35,7 +36,8 @@ use Illuminate\Support\Str;
  * - securityClassification didapat dari client request
  * - commentPriorityCode didapat dari client request
  * - responseType didapat dari client request
- * - brexDmRef didapat dari client request atau dari request csdb berisi filename, path, storage, atau filename yang diambil dari request client. Tapi disini bisa saja mengakses csdb orang lain karena ada storage nya
+ * - SALAH: brexDmRef didapat dari client request atau dari request csdb berisi filename, path, storage, atau filename yang diambil dari request client. Tapi disini bisa saja mengakses csdb orang lain karena ada storage nya
+ * - brexDmRef bisa didapat dari access_key
  * - commentRefs didapat dari client request
  * 
  */
@@ -62,7 +64,7 @@ class CommentCreate extends FormRequest
       'modelIdentCode' => 'required',
       'senderIdent' => [new EnterpriseCode(true)],
       // 'seqNumber' => [new SeqNumber(true, 'comment')], 
-      'seqNumber' => [new SeqNumber(true, 'comment')], 
+      'seqNumber' => [new SeqNumber(true, 'comment')],
       'commentType' => ['required', new CommentType($this->parentCommentFilename)],
       'yearOfDataIssue' => '',
       'languageIsoCode' => ['required', new Language],
@@ -147,25 +149,21 @@ class CommentCreate extends FormRequest
       $modelIdentCode = $modelIdentCode ?? $parentCommentDecoded['commentCode']['modelIdentCode'];
     } else {
       $seqNumber = DB::table(env('DB_TABLE_COM', 'comment'))->select('seqNumber')->orderBy('seqNumber', 'desc')->first()->seqNumber ?? '00000';
-      $threeDigitFirst_seqNumber = substr($seqNumber,0,3);
+      $threeDigitFirst_seqNumber = substr($seqNumber, 0, 3);
       $threeDigitFirst_seqNumber++;
       $seqNumber = $threeDigitFirst_seqNumber . '00';
       $seqNumber = str_pad($seqNumber, 5, '0', STR_PAD_LEFT);
       $commentType = $this->get('commentType') ?? 'q';
     }
-    
-    if(!$brexDmRef && $this->csdb){
-      try {
-        $CSDBModel = Csdb::where('filename', $this->csdb['filename'])->where('path', $this->csdb['path'])->where('storage_id', User::where('storage', $this->csdb['storage'])->first(['id'])->id)->first();
-      } catch (\Throwable $e) {
-        if($this->csdb['filename']) $CSDBModel = Csdb::where('filename', $this->csdb['filename'])->where('storage_id', $this->user()->id)->first();        
-      }
-      if($CSDBModel){
-        $brexDmRef = $CSDBModel->object->brexDmRef;
+
+    if (!$brexDmRef && $this->access_key) {
+      $AccessKey = AccessKey::where('key', AccessKey::decryptAccessKey(\urldecode($this->access_key)))->first();
+      if ($AccessKey->csdb) {
+        $brexDmRef = $AccessKey->csdb->object->brexDmRef;
       }
     }
 
-    if(!isset($modelIdentCode) && $brexDmRef){
+    if (!isset($modelIdentCode) && $brexDmRef) {
       $brexDecoded = CSDBStatic::decode_ident($brexDmRef);
       $modelIdentCode = $brexDecoded[array_key_first($brexDecoded)]['modelIdentCode'];
     }
@@ -237,6 +235,6 @@ class CommentCreate extends FormRequest
       'infotype' => 'caution',
       'message' => $validator->errors()->first(),
       'errors' => $validator->errors()->toArray(),
-    ],422)));
+    ], 422)));
   }
 }

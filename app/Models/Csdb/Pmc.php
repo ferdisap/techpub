@@ -65,7 +65,7 @@ class Pmc extends Csdb
    */
   protected $hidden = ['id', 'csdb_id', 'json', 'xml'];
 
-  public static function fillTable($csdb_id, CSDBObject $CSDBObject)
+  public static function fillTable($csdb_id, CSDBObject $CSDBObject, int $storage_id)
   {
     $filename = $CSDBObject->filename;
     $domXpath = new \DOMXpath($CSDBObject->document);
@@ -134,7 +134,7 @@ class Pmc extends Csdb
       'xml' => $CSDBObject->document->C14N() // ga bisa pakai saveXML karena menghasilkan doctype, sementara SQL XML belum tahu caranya render xml yang ada dtd      
     ];
  
-    $pmc = Csdb::getObject($filename)->first() ?? Csdb::getModelClass('Pmc');
+    $pmc = Csdb::getObject($filename,[], $storage_id)->first() ?? Csdb::getModelClass('Pmc');
     $pmc->timestamps = false;
     foreach($arr as $prop => $v){
       $pmc->$prop = $v;

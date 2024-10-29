@@ -52,7 +52,7 @@ class UploadICN extends FormRequest
 
   protected function prepareForValidation(): void
   {
-    $oldCSDBModel = Csdb::getCsdb($this->filename)->first();
+    $oldCSDBModel = Csdb::getCsdb($this->filename,[], $this->user()->id)->first();
     if($oldCSDBModel){
       if(($oldCSDBModel->storage_id != $this->user()->id)){
         $this->fail['checkOldCsdb'] = "You are not authorize to update the " . $oldCSDBModel->filename . ".";

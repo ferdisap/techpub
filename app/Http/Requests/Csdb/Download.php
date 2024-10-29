@@ -49,14 +49,15 @@ class Download extends FormRequest
   {
     $CSDBModelArray = [];
     $filename = $this->get('filename');
+    $requestUserId = $this->user()->id;
     if (is_array($filename) || ($filename = explode(",", $filename))) {
       foreach ($filename as $i => $f) {
         // $m = Csdb::where('filename',$f)->where('initiator_id',$this->user()->id)->first();
-        $m = Csdb::getCsdb($f)->first();
+        $m = Csdb::getCsdb($f,[],$requestUserId)->first();
         $CSDBModelArray[$i] = $m;
       }
     } else {
-      $m = Csdb::getCsdb($filename)->first();
+      $m = Csdb::getCsdb($filename,[],$requestUserId)->first();
       array_push($CSDBModelArray, $m);
       $filename = [$filename];
     }

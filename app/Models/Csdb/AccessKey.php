@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class AccessKey extends Model
 {
@@ -54,8 +55,8 @@ class AccessKey extends Model
   {
     $ability = request()->route('ability');
     $date = \Carbon\Carbon::now();
-    return $ability ? Csdb::with(['accessKey' => fn(HasMany $AccessKeyModel) => $AccessKeyModel->where($field, $value)])->where('abilities', 'like', '%'. $ability .'%')->whereDate('expires_at', '>', $date)->firstOrFail() :
-    Csdb::with(['accessKey' => fn(HasMany $AccessKeyModel) => $AccessKeyModel->where($field, $value)])->orderBy('expires_at', 'desc')->whereDate('expires_at', '>', $date)->firstOrFail();
+    return $ability ? Csdb::with(['accessKey' => fn(HasMany $AccessKeyModel) => $AccessKeyModel->where($field, urldecode($value))])->where('abilities', 'like', '%'. $ability .'%')->whereDate('expires_at', '>', $date)->firstOrFail() :
+    Csdb::with(['accessKey' => fn(HasMany $AccessKeyModel) => $AccessKeyModel->where($field, urldecode($value))])->orderBy('expires_at', 'desc')->whereDate('expires_at', '>', $date)->firstOrFail();
   }
 
   /**
@@ -64,8 +65,9 @@ class AccessKey extends Model
   protected function key(): Attribute
   {
     return Attribute::make(
-      set: fn (string $v) => self::encryptAccessKey($v),
-      get: fn (string $v) => self::decryptAccessKey($v),
+      // set: fn (string $v) => self::encryptAccessKey($v),
+      // get: fn (string $v) => self::decryptAccessKey($v),
+      get: fn (string $v) => \urlencode(self::encryptAccessKey($v)),
     );
   }
 
@@ -84,6 +86,7 @@ class AccessKey extends Model
     // $accessKey = "9611222007552"; // from client
     // $cipher_method = 'aes-128-ctr';
     // $enc_key = openssl_digest(php_uname(), 'SHA256', TRUE);
+    // // var_dump(php_uname());
     // $enc_iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length($cipher_method));
     // $crypted_key = openssl_encrypt($accessKey, $cipher_method, $enc_key, 0, $enc_iv) . "::" . bin2hex($enc_iv); // stored to db
     // return $crypted_key;
@@ -98,7 +101,11 @@ class AccessKey extends Model
     // $enc_key = openssl_digest(php_uname(), 'SHA256', TRUE);
     // $accessKey = openssl_decrypt($cryptedKey, $cipher_method, $enc_key, 0, hex2bin($enc_iv));
     // return $accessKey;
-    list($cryptedKey, $enc_iv) = explode("::", $cryptedKey);
-    return openssl_decrypt($cryptedKey, 'aes-128-ctr', openssl_digest(php_uname(), 'SHA256', TRUE), 0, hex2bin($enc_iv));
+    try {
+      list($cryptedKey, $enc_iv) = explode("::", $cryptedKey);
+      return openssl_decrypt($cryptedKey, 'aes-128-ctr', openssl_digest(php_uname(), 'SHA256', TRUE), 0, hex2bin($enc_iv));
+    } catch (\Throwable $th) {
+      throw new HttpResponseException(response(["message" => "access_key is not valid."],400));
+    }
   }
 }

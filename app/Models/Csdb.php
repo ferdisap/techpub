@@ -118,6 +118,7 @@ class Csdb extends Model
   // protected $with = ['owner']; // memberatkan, jadi disesuaikan keperluan, tidak default
 
   /**
+   * @deprecated
    * digunakan untuk function getCsdb, getCsdbs, getObject, getObjects
    * jika null maka tidak pakai query storage_id, jika 0 maka pakai request()->user()->id
    */
@@ -135,14 +136,20 @@ class Csdb extends Model
   {
     // jika user ingin meaksess DDN file milik dia atau orang lain
     $isDDN = substr($value, 0, 3) === 'DDN';
-    if ($isDDN) {
-      $CSDBModel = Csdb::where($field, $value)->whereHas('object', function (Builder $DDNModel) {
+    if(($ak = request()->access_key) && in_array('GET',request()->route()->methods())){
+      return $this->where($field, $value)->with(['accessKey'])->whereHas('accessKey',function(Builder $AccessKey) use($ak){
+        $AccessKey->where('key',AccessKey::decryptAccessKey($ak));
+      })->firstOrFail();
+    }
+    else if ($isDDN) {
+      $CSDBModel = Csdb::with(['accessKey'])->where($field, $value)->whereHas('object', function (Builder $DDNModel) {
         $id = request()->user()->id;
         $DDNModel->select(['id', 'csdb_id', 'dispatchFrom_id', 'dispatchTo_id'])->where('dispatchTo_id', $id)->orWhere('dispatchFrom_id', $id);
       });
       return $CSDBModel->first(); // Tidak ada dua DDN yang sama persis bukan hanya di seq. number tapi, modelIdentCode, senderIdent, receiverIdent, seqNumber
     }
     // jika client ingin mengaksess CSDB milik client lain
+    // tanpa access key
     else if ($csdbRef = request()->csdbRef) {
       $CSDBDDNModel = new Csdb();
       $CSDBDDNModel->objectClass = self::getClassObjectByFilename($csdbRef);
@@ -150,14 +157,14 @@ class Csdb extends Model
       $CSDBDDNModel = $CSDBDDNModel->whereHas('object', function (Builder $DDNModel) {
         $id = request()->user()->id;
         $DDNModel->select(['id', 'csdb_id', 'dispatchFrom_id', 'dispatchTo_id', 'ddnContent'])->where('dispatchTo_id', $id)->orWhere('dispatchFrom_id', $id);
-      })
-        ->firstOrFail();
+      })->firstOrFail();
       if (in_array($value, $CSDBDDNModel->object->ddnContent)) {
         return $this->where('filename', $value)->where('storage_id', $CSDBDDNModel->object->dispatchFrom_id)->firstOrFail();
       }
-    } else {
-      $storageId = request()->storage ? (User::where('storage', 'wIxv1')->first()->id) : request()->user()->id;
-      return $this->where($field, $value)->where('storage_id', $storageId)->firstOrFail();
+    }
+    else {
+      $storageId = request()->storage ? (User::where('storage', request()->storage)->first()->id) : request()->user()->id;
+      return $this->with(['accessKey'])->where($field, $value)->where('storage_id', $storageId)->firstOrFail();
     }
   }
 
@@ -236,7 +243,15 @@ class Csdb extends Model
   /**
    * relationship untuk AccessKey
    */
-  public function accessKey(): HasMany
+  public function accessKey(): HasOne
+  {
+    return $this->hasOne(AccessKey::class)->whereNull('abilities');
+  }
+
+  /**
+   * relationship untuk AccessKey
+   */
+  public function accessKeys(): HasMany
   {
     return $this->hasMany(AccessKey::class);
   }
@@ -366,7 +381,7 @@ class Csdb extends Model
    * @param {array} $history where contains ['code' => [], 'exception' => []]
    * tinggal di get() saat selanjutnya
    */
-  public static function getCsdb(string $filename, array $historyCode = [])
+  public static function getCsdb(string $filename, array $historyCode = [], int $storage_id = 0)
   {
     $CSDBModel = new self();
 
@@ -377,9 +392,10 @@ class Csdb extends Model
     $CSDBModel = $CSDBModel->whereRaw('(filename = ? )', [$filename]);
 
     // filter by storage
+    if($storage_id > 0) $CSDBModels = $CSDBModels->whereRaw("({$table}.storage_id = ? )", [$storage_id]);
     // $CSDBModel = $CSDBModel->whereRaw('(storage_id = ? )',[request()->user()->id]);
-    if (self::$storage_user_id === 0) ($CSDBModel = $CSDBModel->whereRaw('(storage_id = ? )', [request()->user()->id]));
-    elseif (self::$storage_user_id) ($CSDBModel = $CSDBModel->whereRaw('(storage_id = ? )', [self::$storage_user_id]));
+    // if (self::$storage_user_id === 0) ($CSDBModel = $CSDBModel->whereRaw('(storage_id = ? )', [request()->user()->id]));
+    // elseif (self::$storage_user_id) ($CSDBModel = $CSDBModel->whereRaw('(storage_id = ? )', [self::$storage_user_id]));
 
     // filter by last history
     if (!empty($historyCode)) {
@@ -399,7 +415,7 @@ class Csdb extends Model
    * @param {array} $history where contains ['code' => [], 'exception' => []]
    * tinggal di get() saat selanjutnya
    */
-  public static function getCsdbs(array $historyCode = [])
+  public static function getCsdbs(array $historyCode = [], int $storage_id = 0)
   {
     $CSDBModels = new self();
 
@@ -407,9 +423,10 @@ class Csdb extends Model
     $class = self::class;
 
     // filter by storage
+    if($storage_id > 0) $CSDBModels = $CSDBModels->whereRaw("({$table}.storage_id = ? )", [$storage_id]);
     // $CSDBModels = $CSDBModels->whereRaw("({$table}.storage_id = ? )",[request()->user()->id]);
-    if (self::$storage_user_id === 0) ($CSDBModels = $CSDBModels->whereRaw("({$table}.storage_id = ? )", [request()->user()->id]));
-    elseif (self::$storage_user_id) ($CSDBModels = $CSDBModels->whereRaw("({$table}.storage_id = ? )", [self::$storage_user_id]));
+    // if (self::$storage_user_id === 0) ($CSDBModels = $CSDBModels->whereRaw("({$table}.storage_id = ? )", [request()->user()->id]));
+    // elseif (self::$storage_user_id) ($CSDBModels = $CSDBModels->whereRaw("({$table}.storage_id = ? )", [self::$storage_user_id]));
 
     // filter by last history
     if (!empty($historyCode)) {
@@ -428,16 +445,17 @@ class Csdb extends Model
    * @param {string} $filename object csdb 
    * @param {array} $history where contains ['code' => [], 'exception' => []]
    */
-  public static function getObject(string $filename, array $historyCode = [])
+  public static function getObject(string $filename, array $historyCode = [], int $storage_id = 0)
   {
     $eloquentClassModel = self::getClassObjectByFilename($filename);
     if (!$eloquentClassModel) return self::getCsdb($filename, $historyCode);
     $OBJECTModel = new $eloquentClassModel();
-    $OBJECTModel = $OBJECTModel->with(['csdb'])->whereHas('csdb', function (Builder $query) use ($historyCode, $filename) {
+    $OBJECTModel = $OBJECTModel->with(['csdb'])->whereHas('csdb', function (Builder $query) use ($historyCode, $filename, $storage_id) {
       $query->where('filename', $filename);
       // $query->where('storage_id', self::$storage_user_id ?? request()->user()->id);
-      if (self::$storage_user_id === 0) ($query->where('storage_id', request()->user()->id));
-      elseif (self::$storage_user_id) ($query->where('storage_id', self::$storage_user_id));
+      if($storage_id > 0) $query->where('storage_id', $storage_id);
+      // if (self::$storage_user_id === 0) ($query->where('storage_id', request()->user()->id));
+      // elseif (self::$storage_user_id) ($query->where('storage_id', self::$storage_user_id));
       if (!empty($historyCode)) {
         if (isset($historyCode['code'])) {
           $queryWhereRawHistory = History::generateWhereRawQueryString($historyCode['code'], Csdb::class, env('DB_TABLE_CSDB', 'csdb'));
@@ -455,15 +473,16 @@ class Csdb extends Model
    * @param {string} $filename object csdb 
    * @param {array} $history where contains ['code' => [], 'exception' => []]
    */
-  public static function getObjects(string $eloquentClassModel, array $historyCode = [])
+  public static function getObjects(string $eloquentClassModel, array $historyCode = [], int $storage_id = 0)
   {
     $eloquentClassModel = new $eloquentClassModel;
     if (!$eloquentClassModel) return self::getCsdbs($historyCode);
     $OBJECTModels = new $eloquentClassModel();
-    $OBJECTModels = $OBJECTModels->with(['csdb'])->whereHas('csdb', function (Builder $query) use ($historyCode) {
+    $OBJECTModels = $OBJECTModels->with(['csdb'])->whereHas('csdb', function (Builder $query) use ($historyCode, $storage_id) {
       // $query->where('storage_id', self::$storage_user_id ?? request()->user()->id);
-      if (self::$storage_user_id === 0) ($query->where('storage_id', request()->user()->id));
-      elseif (self::$storage_user_id) ($query->where('storage_id', self::$storage_user_id));
+      if($storage_id > 0) ($query->where('storage_id', $storage_id));
+      // if (self::$storage_user_id === 0) ($query->where('storage_id', request()->user()->id));
+      // elseif (self::$storage_user_id) ($query->where('storage_id', self::$storage_user_id));
 
       if (!empty($historyCode)) {
         if (isset($historyCode['code'])) {
