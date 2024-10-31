@@ -19,7 +19,7 @@ class DmlType implements ValidationRule
       case 'c': return;
       case 'p': return;
       case 's': return;
-      default: $fail("Comment type must be value of 'c','p',or 's'.");
+      default: $fail("DML type must be value of 'c','p',or 's'.");
     }
     dd($value);
   }

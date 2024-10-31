@@ -15,6 +15,10 @@ class DmlMerge extends FormRequest
    */
   public function authorize(): bool
   {
+    // return true;
+    foreach ($this->validated('sourceModels') as $CSDBModels) {
+      if($CSDBModels->owner->id != $this->user()->id) return false;
+    }
     return true;
   }
 

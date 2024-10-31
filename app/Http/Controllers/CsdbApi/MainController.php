@@ -101,7 +101,7 @@ class MainController extends BaseController
       $totalFail = count($fail);
       $totalSuccess = count($success);
       $infotype = $totalSuccess < 1 ? "warning" : ($totalFail > 0 ? 'caution' : 'note');
-      $code = $totalSuccess && !$totalFail ? 200 : (!$totalSuccess ? 400 : 299);
+      $code = $totalSuccess && !$totalFail ? 200 : (!$totalSuccess ? 422 : 299);
       $message = "Success to import " . join(", ", $success) . (!empty($fail) ? " and fail to import " . join(", ", $fail) : '.');
 
       $responseContent = [
@@ -252,9 +252,7 @@ class MainController extends BaseController
       ], 200, ['content-type' => 'application/json']);
     }
     // jika ICN masih TBD
-    return Response::make([
-      "csdb" => [],
-    ], 200, ['content-type' => 'application/json']);
+    return Response::make('', 204);
   }
 
   public function status(Request $request, Csdb $CSDBModel)
@@ -331,9 +329,7 @@ class MainController extends BaseController
       ], 200, ['content-type' => 'application/json']);
     }
     // jika ICN masih TBD
-    return Response::make([
-      "status" => [],
-    ], 200, ['content-type' => 'application/json']);
+    return Response::make('', 204);
   }
 
   /**
@@ -558,15 +554,12 @@ class MainController extends BaseController
   public function dispatched(Request $request)
   {
     $sc = $request->sc;
+    $keywords = Helper::explodeSearchKeyAndValue($sc, 'filename');
 
-    $DDNModels = Ddn::with(['csdb' => function (Builder $query) use ($sc) {
+    $DDNModels = Ddn::with(['csdb' => function (Builder $query) use ($sc, $keywords) {
       $query->select(['id', 'filename', 'path', 'storage_id']);
       $query->with(['accessKey']);
-      // $query->with(['owner' => function (Builder $query) {
-      //   $query->without(['work_enterprise'])->select(['id', 'storage']);
-      // }]);
       if ($sc) {
-        $keywords = array_merge(Helper::explodeSearchKeyAndValue($sc, 'filename'));
         $q = Helper::generateWhereRawQueryString($keywords, 'csdb', ['path' => "#&value;"]);
         $query->whereRaw($q[0], $q[1]);
       }
@@ -575,7 +568,6 @@ class MainController extends BaseController
       ->where('dispatchTo_id', $request->user()->id);
 
     if ($sc) {
-      $keywords = array_merge(Helper::explodeSearchKeyAndValue($sc, 'filename'));
       $query = Helper::generateWhereRawQueryString($keywords, $DDNModels->getModel()->getTable());
       $DDNModels = $DDNModels->whereRaw($query[0], $query[1]);
     }
@@ -586,8 +578,7 @@ class MainController extends BaseController
 
     $DDNModels = $DDNModels->get(['id', 'csdb_id', 'dispatchFrom_id', 'dispatchTo_id']);
     return Response::make([
-      // "csdbs" => $DDNModels->map(fn ($v) => $v->csdb = [$v->csdb->owner->storage, 'DISPATCHED/' . $v->csdb->path, $v->csdb->filename])
-      "csdbs" => $DDNModels->map(fn ($v) => $v->csdb = 's1000d:'. 'DISPATCHED/' . $v->csdb->path."/".$v->csdb->filename."?access_key=".$v->csdb->accessKey->key),
+      "csdbs" => $DDNModels->map(fn ($v) => $v->csdb = 's1000d:' . 'DISPATCHED/' . $v->csdb->path . "/" . $v->csdb->filename . "?access_key=" . $v->csdb->accessKey->key),
     ], 200, ['content-type' => 'application/json']);
   }
 
@@ -612,13 +603,7 @@ class MainController extends BaseController
       $CSDBModels = new Csdb();
       $CSDBModels->objectClass = Ddn::class;
       $CSDBModels = $CSDBModels->where("filename", "like", "DDN-%"); // sengaja $CSDBModels di assign supaya menjadi class Builder dan $objectClass terinstance 
-      $CSDBModels->with([
-        'lastHistory',
-        'accessKey'
-        // 'owner' => function (Builder $USERModel) {
-        //   $USERModel->without(['work_enterprise'])->select(['id', 'storage']);
-        // }
-      ]);
+      $CSDBModels->with(['lastHistory', 'accessKey']);
       $userId = $request->user()->id;
       $CSDBModels = $CSDBModels->whereHas(
         'object',
@@ -630,7 +615,7 @@ class MainController extends BaseController
       $keywords = array_merge(Helper::explodeSearchKeyAndValue($request->sc, 'filename'), ["path" => [$path]]);
       $query = Helper::generateWhereRawQueryString($keywords, $CSDBModels->getModel()->getTable(), ['path' => "#&value;"]);
       if (!empty($query)) $CSDBModels = $CSDBModels->whereRaw($query[0], $query[1]);
-    // stt
+      // stt
       if ($request->stt === 'act') {
         $queryCodeHistory = History::generateWhereRawQueryString_historyException(['CSDB-DELL', 'CSDB-PDEL'], Csdb::class, $CSDBModels->getModel()->getTable());
         $CSDBModels = $CSDBModels->whereRaw($queryCodeHistory[0], $queryCodeHistory[1]);
@@ -644,7 +629,6 @@ class MainController extends BaseController
       $CSDBModels->setPath($request->getUri());
     } else {
       // menyiapkan csdb object, bisa pakai $query->setEagerLoads([]) atau $query->without(['work_enterprise'])
-      // $CSDBModels = Csdb::with(['lastHistory', 'owner' => fn (BelongsTo $query) => $query->without(['work_enterprise'])->toBase()->select(['id', 'storage'])]);
       $CSDBModels = Csdb::with(['lastHistory', 'accessKey']);
       // sc
       $keywords = array_merge(Helper::explodeSearchKeyAndValue($request->sc, 'filename'), ["path" => [$path]]);
@@ -669,7 +653,6 @@ class MainController extends BaseController
     if ($isDispatch) {
       $userId = $request->user()->id;
       $folders->objectClass = Ddn::class;
-      //$folders->with(['object']);
       $folders = $folders->whereHas(
         'object',
         function (Builder $DDNModel) use ($userId) {
@@ -679,7 +662,6 @@ class MainController extends BaseController
     } else {
       $folders = $folders->where('storage_id', $request->user()->id);
     }
-    // var_dump($folders->toSql());
     // make query and get
     $query = Helper::generateWhereRawQueryString(['path' => [$path . "/"]], $folders->getModel()->getTable());
     $folders = $folders->whereRaw($query[0], $query[1]);
@@ -702,8 +684,8 @@ class MainController extends BaseController
 
     // return
     return Response::make([
-      "infotype" => "note",
-      "message" => '',
+      // "infotype" => "note",
+      // "message" => '',
       "pagination" => $CSDBModels,
       "path" => $path,
       'paths' => $folders ?? [],

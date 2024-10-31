@@ -204,9 +204,9 @@ class CommentCreate extends FormRequest
       'SITA' => $creatorEnterpriseModel->address['SITA'] ?? '',
 
       // status
-      'securityClassification' => $this->get('securityClassification'),
-      'commentPriorityCode' => $this->get('commentPriorityCode'),
-      'responseType' => $this->get('responseType'),
+      'securityClassification' => $this->securityClassification,
+      'commentPriorityCode' => $this->commentPriorityCode ?? 'cp01',
+      'responseType' => $this->responseType,
       'brexDmRef' => $brexDmRef,
       'commentContentSimplePara' => preg_split("/<br\/>|<br>|&#10;/m", $this->remarks),
       'commentRefs' => $commentRefs,

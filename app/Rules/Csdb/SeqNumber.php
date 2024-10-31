@@ -29,7 +29,7 @@ class SeqNumber implements ValidationRule
         case 'ddn':
           $CSDBModel = $CSDBModel->where('filename', 'like', 'DDN-%')
                            ->where('filename', 'like', "%-${value}.xml")
-                           ->first();
+                           ->first(['id']);
           if($CSDBModel){
             $fail("Cannot make DDN due to unique filename constraint.");
             return;
@@ -38,9 +38,18 @@ class SeqNumber implements ValidationRule
         case 'comment':
           $CSDBModel = $CSDBModel->where('filename', 'like', 'COM-%')
                            ->where('filename', 'like', "%-${value}\_%")
-                           ->first();
+                           ->first(['id']);
           if($CSDBModel){
             $fail("Cannot make COM due to unique filename constraint.");
+            return;
+          }
+          break;        
+        case 'dml':
+          $CSDBModel = $CSDBModel->where('filename', 'like', 'DML-%')
+                           ->where('filename', 'like', "%-${value}\_%")
+                           ->first(['id']);
+          if($CSDBModel){
+            $fail("Cannot make DML due to unique filename constraint.");
             return;
           }
           break;        

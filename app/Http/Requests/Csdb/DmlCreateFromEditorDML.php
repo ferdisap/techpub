@@ -39,13 +39,13 @@ class DmlCreateFromEditorDML extends FormRequest
       // ident
       'modelIdentCode' => 'required',
       'yearOfDataIssue' => '',
-      'dmlType' => [new DmlType],
-      'originator' => [new EnterpriseCode(true)],
-      'securityClassification' => [new SecurityClassification],
-      'seqNumber' => [new SeqNumber(true, 'dml')],
-      'inWork' => '', 
-      'day' => '', 
-      'month' => '', 
+      'dmlType' => ['required', new DmlType],
+      'originator' => ['required', new EnterpriseCode(true)],
+      'securityClassification' => ['required', 'string', new SecurityClassification],
+      'seqNumber' => ['required', new SeqNumber(true, 'dml')],
+      'inWork' => 'required', 
+      'day' => 'required', 
+      'month' => 'required', 
 
       // status
       'brexDmRef' => ['required', new BrexDmRef],

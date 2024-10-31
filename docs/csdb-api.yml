@@ -70,7 +70,7 @@ paths:
                     type: string
                     example: "login failed"
                   errors:
-                    $ref: "#/components/schemas/errors"                  
+                    $ref: "#/components/schemas/errors"
         "419":
           $ref: "#/components/responses/Expired"
       requestBody:
@@ -125,32 +125,10 @@ paths:
           $ref: "#/components/responses/Unauthorized"
       security:
         - auth: []
-  /csdb:
-    get:
-      summary: "view csdb application"
-      description: "display view of csdb management system app"
-      tags:
-        - csdb
-      responses:
-        "200":
-          description: success to load view
-          content:
-            text/html:
-              schema:
-                type: string
-              examples:
-                csdb_view_path:
-                  $ref: "#/components/examples/csdb_view_page"
-        "419":
-          $ref: "#/components/responses/Expired"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-      security:
-        - auth: []
   /api/s1000d/csdb/create:
     put:
       summary: creating CSDB object.
-      description: The request should provide the xml string of csdb object, but it is intended for dmodule, and pm only (icn metafile is coming soon).
+      description: The client should provide the xml string of csdb object, but it is intended for dmodule, and pm only (icn metafile is coming soon).
       tags:
         - csdb
       parameters:
@@ -159,19 +137,7 @@ paths:
         $ref: "#/components/requestBodies/csdbcreate"
       responses:
         "200":
-          description: Success creating csdb file
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  infotype:
-                    $ref: "#/components/schemas/infotype"
-                  message:
-                    type: string
-                    example: DMC-S1000D-G-04-10-0301-00A-022A-D_001-00_EN-US.xml has been created.
-                  csdb:
-                    $ref: "#/components/schemas/csdb"
+          $ref: "#/components/responses/csdb_create_success"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "422":
@@ -192,6 +158,264 @@ paths:
                     $ref: "#/components/schemas/errors"
       security:
         - auth: []
+  /api/s1000d/ddn/create:
+    put:
+      summary: create DDN object
+      description: DDN is a part of csdb, but it is not made by xml editor.
+      tags:
+        - csdb
+      parameters:
+        - $ref: "#/components/parameters/bearerAuthorization"
+      requestBody:
+        $ref: "#/components/requestBodies/ddncreate"
+      responses:
+        "200":
+          $ref: "#/components/responses/csdb_create_success"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/ddn_create_fail_validation"
+      security:
+        - auth: []
+  /api/s1000d/dml/create:
+    put:
+      summary: create DDN object
+      description: DDN is a part of csdb, but it is not made by xml editor.
+      tags:
+        - csdb
+      parameters:
+        - $ref: "#/components/parameters/bearerAuthorization"
+      requestBody:
+        $ref: "#/components/requestBodies/dmlcreate"
+      responses:
+        "200":
+          $ref: "#/components/responses/csdb_create_success"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/dml_create_fail_validation"
+      security:
+        - auth: []
+  /api/s1000d/dml/merge/{filename}:
+    put:
+      summary: merge two or more DML
+      description: merging DML will combine all their contents. The DMLs must be an same owner of the requester.
+      tags:
+        - csdb
+      parameters:
+        - $ref: "#/components/parameters/bearerAuthorization"
+        - in: path
+          name: filename
+          schema:
+            type: string
+          required: true
+          description: DDN filename
+          example: DML-MALE-0001Z-P-2024-00008_000-01.xml
+      requestBody:
+        $ref: "#/components/requestBodies/dmlmerge"
+      responses:
+        "200":
+          $ref: "#/components/responses/csdb_create_success"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/csdbNotFound"
+        "422":
+          description: Failed to merge
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  infotype:
+                    $ref: "#/components/schemas/infotype"
+                  message:
+                    type: string
+                    example: "Failed to merge"
+                  errors:
+                    type: object
+                    example:
+                      sourceModels:
+                        type: array
+                        items:
+                          type: string
+                          example: Only DML with type 'P' can be merged.
+  /api/s1000d/comment/create:
+    put:
+      summary: create comment.
+      description: create comment.
+      tags:
+        - csdb
+      parameters:
+        - $ref: "#/components/parameters/bearerAuthorization"
+      requestBody:
+        $ref: "#/components/requestBodies/commentcreate"
+      responses:
+        "200":
+          $ref: "#/components/responses/csdb_create_success"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          description: Fail processing
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - infotype
+                  - message
+                properties:
+                  infotype:
+                    $ref: "#/components/schemas/infotype"
+                  message:
+                    type: string
+                    example: "Cannot create COM due to duplicate filename."
+                  csdb:
+                    $ref: "#/components/schemas/csdb"
+                  errors:
+                    type: object
+                    example:
+                      brexDmRef:
+                        - brexDmRef infocode must be '022'.
+                      commentRefs:
+                        - commentRefs must contain one type of CSDB object.
+                      responseType:
+                        - responseType value must be contain 'rt' and suffixed by the two digit number less than 100
+                      securityClassification:
+                        - securityClassification is required.
+        "499":
+          description: duplicated csdb
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - infotype
+                  - message
+                  - csdb
+                properties:
+                  infotype:
+                    $ref: "#/components/schemas/infotype"
+                  message:
+                    type: string
+                    example: "Cannot create COM due to duplicate filename."
+                  csdb:
+                    $ref: "#/components/schemas/csdb"
+                  errors:
+                    type: object
+  /api/s1000d/csdb/import/{filename}:
+    put:
+      summary: "import CSDB object."
+      description: The client should provide the filenames which available in ddn content.
+      tags:
+        - csdb
+      parameters:
+        - $ref: "#/components/parameters/bearerAuthorization"
+        - in: path
+          name: filename
+          schema:
+            type: string
+          required: true
+          description: DDN filename
+          example: DML-MALE-0001Z-P-2024-00008_000-01.xml
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filenames:
+                  type: array
+                  items:
+                    type: string
+                  example:
+                    - DMC...
+                    - PMC...
+      responses:
+        "200":
+          description: Success importing csdb file.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  infotype:
+                    $ref: "#/components/schemas/infotype"
+                  message:
+                    type: string
+                    example: Success to import xx/xx and fail to import xx/xx.
+                  data:
+                    $ref: "#/components/schemas/successProcessing"
+        "204":
+          $ref: "#/components/responses/routeModelBindingNoContent"
+        "404":
+          $ref: "#/components/responses/csdbNotFound"
+        "299":
+          description: if any failure and any scucess.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  infotype:
+                    $ref: "#/components/schemas/infotype"
+                  message:
+                    type: string
+                    example: Success to import xx/xx and fail to import xx/xx.
+                  data:
+                    $ref: "#/components/schemas/successProcessing"
+                  errors:
+                    $ref: "#/components/schemas/failureProcessing"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          description: Failed to import.;
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  infotype:
+                    $ref: "#/components/schemas/infotype"
+                  message:
+                    type: string
+                    example: "Success to import xx/xx and fail to import xx/xx"
+                  data:
+                    type: object
+                    example:
+                      failure:
+                        - DMC...
+                        - PMC...
+                  errors:
+                    type: object
+                    example:
+                      properties:
+                        failure:
+                          $ref: "#/components/schemas/failureProcessing"
+                        dispatchTo:
+                          type: array
+                          items:
+                            type: string
+                          example:
+                            - DMC...
+                            - PMC...
+        "499":
+          description: duplicated csdb
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  infotype:
+                    $ref: "#/components/schemas/infotype"
+                  message:
+                    type: string
+                    example: "There is none of csdb imported. Some csdb's is prevented to overwrite."
+                  errors:
+                    $ref: "#/components/schemas/failureProcessing"
+      security:
+        - auth: []
   /api/s1000d/csdb/read/{filename}:
     get:
       summary: "get the csdb xml file"
@@ -205,6 +429,16 @@ paths:
             type: string
           required: true
           description: "filename csdb file in xml"
+          example: DML-MALE-0001Z-P-2024-00008_000-01.xml
+        - in: query
+          name: form
+          schema:
+            type: string
+            enum:
+              - json
+              - xml
+          description: output of the csdb object.
+          example: "json"
       responses:
         "200":
           description: "success to load file xml"
@@ -212,12 +446,265 @@ paths:
             text/xml:
               schema:
                 type: string
+            application/json:
+              schema:
+                type: object
+                properties:
+                  csdb:
+                    $ref: "#/components/schemas/csdb"
+                  json:
+                    type: object
+                    description: xml file which transformed into json.
         "204":
           $ref: "#/components/responses/routeModelBindingNoContent"
         "404":
-          description: "Filename is not found in database."
+          $ref: "#/components/responses/csdbNotFound"
       security:
         - auth: []
+  /api/s1000d/ident/{filename}:
+    get:
+      summary: to get an ident of csdb object.
+      description: ICN is has not processed (TBD). The response csdb.ident may not available at all because it is dependent of the type of csdb file.
+      tags:
+        - csdb
+      parameters:
+        - in: path
+          name: filename
+          schema:
+            type: string
+          required: true
+          description: "filename csdb file in xml"
+          example: DML-MALE-0001Z-P-2024-00008_000-01.xml
+      responses:
+        "200":
+          description: "success to get ident"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  csdb:
+                    $ref: "#/components/schemas/csdb_ident"
+        "204":
+          $ref: "#/components/responses/routeModelBindingNoContent"
+        "404":
+          $ref: "#/components/responses/csdbNotFound"
+  /api/s1000d/status/{filename}:
+    get:
+      summary: to get an status of csdb object.
+      description: ICN is has not processed (TBD). The response csdb.ident may not available at all because it is dependent of the type of csdb file.
+      tags:
+        - csdb
+      parameters:
+        - in: path
+          name: filename
+          schema:
+            type: string
+          required: true
+          description: "filename csdb file in xml"
+          example: DML-MALE-0001Z-P-2024-00008_000-01.xml
+      responses:
+        "200":
+          description: "success to get ident"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  csdb:
+                    $ref: "#/components/schemas/csdb_status"
+        "204":
+          $ref: "#/components/responses/routeModelBindingNoContent"
+        "404":
+          $ref: "#/components/responses/csdbNotFound"
+  /api/s1000d/histories/{filename}:
+    get:
+      summary: to get an histories of csdb object.
+      description: to get an histories of csdb object.
+      tags:
+        - csdb
+      parameters:
+        - in: path
+          name: filename
+          schema:
+            type: string
+          required: true
+          description: "filename csdb file in xml"
+          example: DML-MALE-0001Z-P-2024-00008_000-01.xml
+      responses:
+        "200":
+          description: "success to get histories"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  csdb:
+                    $ref: "#/components/schemas/csdb_histories"
+        "404":
+          $ref: "#/components/responses/csdbNotFound"
+  /api/s1000d/comments/{filename}:
+    get:
+      summary: to get an comments of csdb object.
+      description: to get an comments of csdb object.
+      tags:
+        - csdb
+      parameters:
+        - in: path
+          name: filename
+          schema:
+            type: string
+          required: true
+          description: "filename csdb file in xml"
+          example: DML-MALE-0001Z-P-2024-00008_000-01.xml
+      responses:
+        "200":
+          description: "success to get comments"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  csdb:
+                    $ref: "#/components/schemas/csdb_comments"
+        "404":
+          $ref: "#/components/responses/csdbNotFound"
+  /api/s1000d/csdb/all:
+    get:
+      summary: get all csdb and icn object
+      description: get all csdb and icn Object
+      tags:
+        - csdb
+      parameters:
+        - in: query
+          name: stt
+          description: query untuk object yang aktif atau yang sudah di delete.
+          schema:
+            type: string
+            enum:
+              - dct
+              - act
+          example: 1
+        - in: query
+          name: limit
+          description: limit the quantity result.
+          schema:
+            type: string
+          example: "10"
+        - in: query
+          name: sc
+          description: query untuk property model/csdb.
+          schema:
+            type: string
+          example: filename::DMC-... (defaultnya filename)
+      responses:
+        "200":
+          description: "Success on queried."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  csdbs:
+                    $ref: "#/components/schemas/csdb_uri"
+  /api/s1000d/path/{path}:
+    get:
+      summary: get all csdb and icn object by the ath
+      description: get all csdb and icn object by the path. If path is prefixed by the 'DISPATCHED', then it will look for the DDN of the dispatched to the client from other clients
+      tags:
+        - csdb
+      parameters:
+        - in: path
+          name: path
+          required: true
+          description: path of csdb object
+          schema:
+            type: string
+          example: CSDB/DMC/AMM
+        - in: query
+          name: stt
+          description: query untuk object yang aktif atau yang sudah di delete.
+          schema:
+            type: string
+            enum:
+              - dct
+              - act
+          example: 1
+        - in: query
+          name: sc
+          description: query untuk property model/csdb.
+          schema:
+            type: string
+          example: filename::DMC-... (defaultnya filename)
+      responses:
+        "200":
+          $ref: "#/components/responses/csdb_bypath"
+  /api/s1000d/user/search:
+    get:
+      summary: get all user and icn object
+      description: get all user and icn Object
+      tags:
+        - user
+      parameters:
+        - in: query
+          name: limit
+          description: limit the quantity result.
+          schema:
+            type: string
+          example: "10"
+        - in: query
+          name: sc
+          description: query untuk property model/csdb.
+          schema:
+            type: string
+          example: luffy
+      responses:
+        "200":
+          description: "Success on queried."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        first_name:
+                          type: string
+                          example: "Luffy"
+                        middle_name:
+                          type: string
+                          example: "Baka"
+                        last_name:
+                          type: string
+                          example: "Sencho"
+                        email:
+                          type: string
+                          example: luffy@example.com
+  /api/s1000d/csdb/dispatched:
+    get:
+      summary: get all ddn dispatched from other users
+      description: get all ddn dispatched from other users
+      tags:
+        - csdb
+      parameters:
+        - in: query
+          name: limit
+          description: limit the quantity result.
+          schema:
+            type: string
+          example: "10"
+        - in: query
+          name: sc
+          description: query untuk property model/csdb.
+          schema:
+            type: string
+          example: luffy
+      responses:
+        "200":
+          $ref: "#/components/responses/csdb_dispatched"
   /api/s1000d/csdb/update/{filename}:
     post:
       summary: update the xml file of CSDB object
@@ -226,6 +713,15 @@ paths:
         - csdb
       parameters:
         - $ref: "#/components/parameters/filename"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                xmleditor:
+                  example: <dmodule>...</dmodule>
       responses:
         "200":
           description: Success updating csdb file.
@@ -245,6 +741,8 @@ paths:
           $ref: "#/components/responses/routeModelBindingNoContent"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/csdbNotFound"
         "422":
           description: Failed to update.;
           content:
@@ -263,6 +761,54 @@ paths:
                     $ref: "#/components/schemas/errors"
       security:
         - auth: []
+  /api/s1000d/dml/update/{filename}:
+    post:
+      summary: update dml object
+      description: DML is a part of csdb, but it is updated made by xml editor.
+      tags:
+        - csdb
+      parameters:
+        - $ref: "#/components/parameters/bearerAuthorization"
+      requestBody:
+        $ref: "#/components/requestBodies/dmlupdate"
+      responses:
+        "200": 
+          description: Success updating csdb file.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  infotype:
+                    $ref: "#/components/schemas/infotype"
+                  message:
+                    type: string
+                    example: DML-CN235-0001Z-P-2024-00001_000-01.xml has been updated.
+                  csdb:
+                    $ref: "#/components/schemas/csdb"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/csdbNotFound"
+        "422":
+          description: Failed to update.;
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  infotype:
+                    $ref: "#/components/schemas/infotype"
+                  message:
+                    type: string
+                    example: "DMC-S1000D-G-04-10-0301-00A-022A-D_001-00_EN-US.xml is failed to update."
+                  csdb:
+                    $ref: "#/components/schemas/csdb"
+                  errors:
+                    $ref: "#/components/schemas/errors"
+      security:
+        - auth: []
+      
   /api/s1000d/csdb/delete:
     delete:
       summary: soft delete csdb file.
@@ -284,19 +830,19 @@ paths:
       responses:
         "200":
           description: if all's are deleted.
-          content: 
+          content:
             application/json:
               schema:
                 $ref: "#/components/schemas/csdbdelete"
         "299":
           description: if any failure and any scucess.
-          content: 
+          content:
             application/json:
               schema:
                 $ref: "#/components/schemas/cesdbdelete_fail"
         "400":
           description: if all's are failed to delete.
-          content: 
+          content:
             application/json:
               schema:
                 $ref: "#/components/schemas/cesdbdelete_fail"
@@ -382,98 +928,12 @@ paths:
                     example: "filename is required"
       security:
         - auth: []
-  /api/s1000d/all:
-    get:
-      summary: get all csdb and icn object
-      description: get all csdb and icn Object
-      tags:
-        - csdb
-      parameters:
-        - in: query
-          name: stt
-          description: query untuk object yang aktif atau yang sudah di delete.
-          schema: 
-            type: string
-            enum:
-              - dct
-              - act
-          example: 1
-        - in: query
-          name: sc
-          description: query untuk property model/csdb.
-          schema: 
-            type: string
-          example: filename::DMC-... (defaultnya filename)
-      responses:
-        "200":
-          description: "Success on queried."
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  csdbs:
-                    type: array
-                    items:
-                      type: object
-                      $ref: "#/components/schemas/csdb"
-  /api/s1000d/path/{path}:
-    get:
-      summary: get all csdb and icn object with its own folder path
-      description: get all csdb and icn object with its own folder path
-      tags:
-        - csdb
-      parameters:
-        - in: path
-          name: path
-          description: path yang akan dicari
-          required: true
-          schema: 
-            type: string
-          example: csdb/amm (defaultnya csdb)
-        - in: query
-          name: stt
-          description: query untuk object yang aktif atau yang sudah di delete.
-          schema: 
-            type: string
-            enum:
-              - dct
-              - act
-          example: 1
-        - in: query
-          name: sc
-          description: query untuk property model/csdb.
-          schema: 
-            type: string
-          example: filename::DMC-... (defaultnya filename)
-      responses:
-        "200":
-          description: "Success on queried."
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  infotpe: 
-                    $ref: "#/components/schemas/infotype"
-                  message:
-                    type: string
-                    example: ""
-                  path: 
-                    type: string
-                    description: "current path"
-                    example: "csdb/amm"
-                  paths: 
-                    type: array
-                    items: 
-                      type: string
-                    example: 
-                      - csdb/amm/n219
-                      - csdb/amm/male
-                  pagination:
-                    type: object
 components:
   schemas:
+    brexDmRef:
+      type: string
+      description: any csdb file with info code 022
+      example: DMC-S1000d-A-00-00-00-00A-022A-D_000-01_EN-EN.xml
     infotype:
       type: string
       enum:
@@ -484,9 +944,169 @@ components:
       type: object
       properties:
         filename:
+          type: string
           example: DMC-S1000D-G-04-10-0301-00A-022A-D_001-00_EN-US.xml
         path:
+          type: string
           example: "csdb/amm/n219"
+    csdb_uri:
+      type: string
+      description: the string contains {protocol}{path}/{filename}?{params}
+      example:
+        - "s1000d:CSDB/DMC/DMC-S1000D-G-04-10-0301-00A-022A-D_001-00_EN-US.xml/?access_key=oQULMZKQJ%2BV0hlXTxNp3uw%3D%3D%3A%3A03a910460a2b300c0aaf03d0aabfaeab"
+        - "s1000d:IMPORTED/CSDB/DDN/DDN-CN235-0001Z-0001Z-2024-00002.xml/?access_key=oQULMZKQJ%2BV0hlXTxNp3uw%3D%3D%3A%3A03a910460a2b300c0aaf03d0aabfaeab"
+    csdb_ident:
+      type: object
+      properties:
+        filename:
+          type: string
+          example: DMC-S1000D-G-04-10-0301-00A-022A-D_001-00_EN-US.xml
+        path:
+          type: string
+          example: "csdb/amm/n219"
+        owner:
+          type: object
+          properties:
+            email:
+              type: string
+              example: luffy@example.com
+        ident:
+          type: object
+          properties:
+            modelIdentCode:
+              type: string
+            systemDiffCode:
+              type: string
+            systemCode:
+              type: string
+            subSystemCode:
+              type: string
+            subSubSystemcode:
+              type: string
+            assyCode:
+              type: string
+            disassyCode:
+              type: string
+            disassyCodeVariant:
+              type: string
+            infoCode:
+              type: string
+            infoCodeVariant:
+              type: string
+            itemLocationCode:
+              type: string
+            pmIssuer:
+              type: string
+            pmNumber:
+              type: string
+            pmVolume:
+              type: string
+            senderIdent:
+              type: string
+            dmlType:
+              type: string
+            yearOfDataIssue:
+              type: string
+            seqNumber:
+              type: string
+            receiverIdent:
+              type: string
+            commentType:
+              type: string
+            languageIsoCode:
+              type: string
+            countryIsoCode:
+              type: string
+            issueNumber:
+              type: string
+            inWork:
+              type: string
+    csdb_status:
+      type: object
+      properties:
+        filename:
+          type: string
+          example: DMC-S1000D-G-04-10-0301-00A-022A-D_001-00_EN-US.xml
+        path:
+          type: string
+          example: "csdb/amm/n219"
+        status:
+          type: object
+          properties:
+            securityClassification:
+              type: string
+            responsiblePartnerCompany:
+              type: string
+            originator:
+              type: string
+            applicability:
+              type: string
+            brexDmRef:
+              type: string
+            qa:
+              type: string
+            dmlRef:
+              type: string
+            authorization:
+              type: string
+            commentPriority:
+              type: string
+            commentResponse:
+              type: string
+            commentRefs:
+              type: string
+            remarks:
+              type: string
+    csdb_histories:
+      type: object
+      properties:
+        filename:
+          type: string
+          example: DMC-S1000D-G-04-10-0301-00A-022A-D_001-00_EN-US.xml
+        path:
+          type: string
+          example: "csdb/amm/n219"
+        histories:
+          type: array
+          items:
+            type: array
+            example:
+              - 1
+              - CSDB-UPDT
+              - "2024-10-28 20:42:48"
+    csdb_comments:
+      type: object
+      properties:
+        filename:
+          type: string
+          example: DMC-S1000D-G-04-10-0301-00A-022A-D_001-00_EN-US.xml
+        path:
+          type: string
+          example: "csdb/amm/n219"
+        comments:
+          type: array
+          items:
+            type: object
+            properties:
+              filename:
+                type: string
+                example: COM-AKS-0001Z-Q-2024-01200_EN-US.xml
+              path:
+                type: string
+                example: CSDB/COMMENTS
+              initiator:
+                type: object
+                properties:
+                  email:
+                    type: string
+                    example: luffy@example.com
+              last_history:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  created_at:
+                    type: string
     errors:
       type: object
       example:
@@ -494,6 +1114,18 @@ components:
           - email form is required.
         password:
           - password must contains at least 8 characters.
+    failureProcessing:
+      type: object
+      example:
+        failure:
+          - DMC...
+          - PMC...
+    successProcessing:
+      type: object
+      example:
+        success:
+          - DMC...
+            - PMC...
     csdbmodel:
       type: object
       properties:
@@ -533,7 +1165,7 @@ components:
         message:
           type: string
           example: "success: 3/10, failure: 7/10."
-        data: 
+        data:
           type: object
           example:
             success:
@@ -541,13 +1173,13 @@ components:
               - DMC-S1000D-G-07-10-0302-00A-022A-D_001-00_EN-US.xml
     cesdbdelete_fail:
       type: object
-      properties: 
+      properties:
         infotype:
           $ref: "#/components/schemas/infotype"
         message:
           type: string
           example: "success: 3/10, failure: 7/10."
-        data: 
+        data:
           type: object
           example:
             success:
@@ -559,12 +1191,250 @@ components:
             failure:
               - DMC-S1000D-G-04-10-0301-00A-022A-D_001-00_EN-US.xml
               - DMC-S1000D-G-05-10-0302-00A-022A-D_001-00_EN-US.xml
+    securityClassification:
+      type: string
+      enum:
+        - "01"
+        - "02"
+        - "03"
+        - "04"
+        - "05"
+      example: "01"
   requestBodies:
     csdbcreate:
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/csdbcreate"
+    ddncreate:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              brexDmRef:
+                $ref: "#/components/schemas/brexDmRef"
+              dispatchToToPersonEmail:
+                type: string
+                description: target email person to dispatch csdb
+                example: nami@example.com
+              dispatchToFromPersonEmail:
+                type: string
+                description: person email who create dispatch
+                example: luffy@example.com
+              securityClassification:
+                $ref: "#/components/schemas/securityClassification"
+              deliveryListItemsFilename:
+                type: array
+                items:
+                  type: string
+                example:
+                  - "DMC-..."
+                  - "PMC-..."
+              remarks:
+                type: string
+                example: "this is the example of creating dml."
+            required:
+              - brexDmRef
+              - dispatchToToPersonEmail
+              - dispatchFromToPersonEmail
+              - securityClassification
+              - deliveryListItemsFilename
+    dmlcreate:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              brexDmRef:
+                $ref: "#/components/schemas/brexDmRef"
+              modelIdentCode:
+                type: string
+                example: "N219"
+              dmlType:
+                type: string
+                example: "c"
+              originator:
+                type: string
+                example: "0001Z"
+              securityClassification:
+                $ref: "#/components/schemas/securityClassification"
+              dmlRef:
+                type: array
+                items:
+                  type: string
+                example:
+                  - DML-MALE-0001Z-P-2024-00001_000-01.xml
+                  - DML-MALE-0001Z-P-2024-00002_000-01.xml
+              remarks:
+                type: string
+                example: "this is the example of creating dml."
+            required:
+              - brexDmRef
+              - modelIdentCode
+              - dmlType
+              - securityClassification
+    dmlupdate:
+      description: the request that not prefixed by 'ident-' must have same length of array
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              ident-securityClassification:
+                $ref: "#/components/schemas/securityClassification"
+              ident-brexDmRef:
+                $ref: "#/components/schemas/brexDmRef"
+              ident-remarks:
+                type: string
+              entryIdent:
+                type: array
+                items: 
+                  type: string
+                example: 
+                  - DMC-AKS-B-94-54-2404-90A-371C-B_000-01_EN-US.xml
+                  - DMC-AKS-C-78-89-2204-13C-999A-A_000-01_EN-US.xml
+              dmlEntryType:
+                type: array
+                items: 
+                  type: string
+                  enum:
+                    - "n"
+                    - "c"
+                    - "d"
+                    - ""
+                example: 
+                  - ""
+                  - "n"
+              issueType:
+                type: array
+                items: 
+                  type: string
+                  enum:
+                    - ""
+                    - "new"
+                    - "changed"
+                    - "deleted"
+                    - "revised"
+                    - "status"
+                    - "reinstate-changed"
+                    - "reinstate-revised"
+                    - "reinstate-status"
+                example: 
+                  - ""
+                  - "new"
+              securityClassification:
+                type: array
+                items: 
+                  type: string
+                  $ref: "#/components/schemas/securityClassification"
+              enterpriseCode:
+                type: array
+                items: 
+                  type: string
+                example:
+                  - "0001Z"
+                  - "0001Z"              
+              enterpriseName:
+                type: array
+                items: 
+                  type: string
+                example:
+                  - "PTDI"
+                  - "PTDI"              
+              remarks:
+                type: array
+                items: 
+                  type: string
+                example:
+                  - ""
+                  - ""
+              answer:
+                type: array
+                items: 
+                  type: string
+                example:
+                  - ""
+                  - ""
+              answerToEntry:
+                type: array
+                items: 
+                  type: string
+                  enum:
+                    - "y"
+                    - "n"
+                example:
+                  - "y"
+                  - "n"
+            required:
+              - ident-securityClassification
+              - ident-brexDmRef
+              - entryIdent
+    dmlmerge:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              sourceModels:
+                type: array
+                items:
+                  type: string
+                example:
+                  - DML-MALE-0001Z-P-2024-00001_000-01.xml
+                  - DML-MALE-0001Z-P-2024-00002_000-01.xml
+            required:
+              - sourceModels
+    commentcreate:
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - brexDmRef
+              - commentRefs
+              - responseType
+              - securityClassification
+            properties:
+              brexDmRef:
+                $ref: "#/components/schemas/brexDmRef"
+              commentRefs:
+                type: array
+                items:
+                  type: string
+                example:
+                  - DMC-N219-B-12-47-2807-31A-731A-B_000-01_EN-US.xml
+                  - DMC-MALE-A-28-54-0406-06C-087C-A_000-01_EN-US.xml
+              commentType:
+                type: string
+                enum:
+                  - q
+                  - i
+                  - r
+                example: "q"
+              languageIsoCode:
+                type: string
+                example: en
+              countryIsoCode:
+                type: string
+                example: US
+              commentPriorityCode:
+                type: string
+                enum:
+                  - cp01
+                  - cp02
+                  - cp03
+                example: "cp01"
+              responseType:
+                type: string
+                enum:
+                  - rt01
+                  - rt02
+                  - rt03
+                  - rt04
+                example: "rt01"
+              securityClassification:
+                $ref: "#/components/schemas/securityClassification"
   responses:
     Expired:
       description: indicate that the header value of X-XSRF-TOKEN has been destroyed at before or expired.
@@ -599,12 +1469,208 @@ components:
             $ref: "#/components/schemas/csdbmodel"
     routeModelBindingNoContent:
       description: "success but no content. File is no longer exist or cannot be loaded as valid xml."
+    csdbNotFound:
+      description: "Filename of csdb is not found wheter it is in storage or data base."
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: There is no such csdb
     csdb_delete:
       description: response for csdb delete.
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/csdbdelete"            
+            $ref: "#/components/schemas/csdbdelete"
+    csdb_create_success:
+      description: Success creating csdb file
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              infotype:
+                $ref: "#/components/schemas/infotype"
+              message:
+                type: string
+                example: DMC-S1000D-G-04-10-0301-00A-022A-D_001-00_EN-US.xml has been created.
+              csdb:
+                $ref: "#/components/schemas/csdb"
+    ddn_create_fail_validation:
+      description: fail during validation request payload
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              infotype:
+                $ref: "#/components/schemas/infotype"
+              message:
+                type: string
+                example: "Fail processing"
+              errors:
+                type: object
+                example:
+                  seqNumber:
+                    - "Cannot make DDN due to unique filename constrain."
+                    - "seqNumber must contain five numeric characters."
+                  brexDmRef:
+                    - brexDmRef infocode must be '022'.
+                  modelIdentCode:
+                    - modelIdentCode is required.
+                  senderIdent:
+                    - senderIdent is required.
+                  receiverIdent:
+                    - receiverIdent is required.
+                  securityClassification:
+                    - securityClassification is required.
+    dml_create_fail_validation:
+      description: fail during validation request payload
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              infotype:
+                $ref: "#/components/schemas/infotype"
+              message:
+                type: string
+                example: "Fail processing"
+              errors:
+                type: object
+                example:
+                  seqNumber:
+                    - "Cannot make DML due to unique filename constrain."
+                    - "seqNumber must contain five numeric characters."
+                  brexDmRef:
+                    - brexDmRef infocode must be '022'.
+                  modelIdentCode:
+                    - modelIdentCode is required.
+                  dmlType:
+                    - DML type must be value of 'c','p',or 's'.
+                  originator:
+                    - The originator must contain five digits alphanumeric or capital letter.
+                  securityClassification:
+                    - securityClassification is required.
+    csdb_dispatched:
+      description: "Provide ddn dispatched to the client from other users. Each of csdb uri will be prefixed by the IMPORTED at its path."
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              csdbs:
+                $ref: "#/components/schemas/csdb_uri"
+    csdb_bypath:
+      description: provide all csdb based on the given path with pagination data.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              path:
+                type: string
+                description: the current or target request path
+                example: CSDB/DMC/AMM
+              paths:
+                type: array
+                description: the sub path of the target request path
+                items:
+                  type: string
+                example:
+                  - MALE
+                  - N219
+              pagination:
+                type: object
+                properties:
+                  current_page:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        filename:
+                          type: string
+                          example: DMC-MALE-A-00-00-00-00A-00PA-D_000-01_EN-EN.xml
+                        path:
+                          type: string
+                          example: CSDB/DMC/AMM/MALE
+                        last_history:
+                          type: object
+                          properties:
+                            code:
+                              type: string
+                            created_at:
+                              type: string
+                        access_key:
+                          type: object
+                          properties:
+                            key:
+                              type: string
+                              example: kqT6ai7hjcqzasl82t4dgg%3D%3D%3A%3Af18fa1f865561dbe3fbdf6e5f8481664
+                  first_page_url:
+                    type: string
+                    example: http://127.0.0.1:8000/api/s1000d/path/csdb/dmc?page=1
+                  from:
+                    type: integer
+                    example: 1
+                  last_page:
+                    type: integer
+                    example: 10
+                  last_page_url:
+                    type: string
+                    example: http://127.0.0.1:8000/api/s1000d/path/csdb/dmc?page=10
+                  links:
+                    type: array
+                    description: used for the next and previous page, array contains three items, previous, current, next
+                    items:
+                      type: object
+                      properties:
+                        url:
+                          type: string
+                          nullable: true
+                        label:
+                          type: string
+                          example: "1"
+                        active:
+                          type: boolean
+                          example: true
+                    example:
+                      - url: "null"
+                        label: "< Previous"
+                        active: false
+                      - url: "http://127.0.0.1:8000/api/s1000d/path/csdb/dmc?page=1"
+                        label: "1"
+                        active: true
+                      - url: "http://127.0.0.1:8000/api/s1000d/path/csdb/dmc?page=2"
+                        label: "Next >"
+                        active: true
+                  next_page_url:
+                    type: string
+                    nullable: true
+                    example: null
+                  path:
+                    type: string
+                    description: current request url path
+                    example: http://127.0.0.1:8000/api/s1000d/path/csdb/dmc
+                  per_page:
+                    type: integer
+                    example: 100
+                  prev_page_url:
+                    type: string
+                    nullable: true
+                    example: null
+                  to:
+                    type: integer
+                    example: 10
+                  total:
+                    type: integer
+                    example: 10
+                    description: total of page
   securitySchemes:
     auth:
       type: http

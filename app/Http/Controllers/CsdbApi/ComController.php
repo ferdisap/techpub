@@ -22,12 +22,13 @@ class ComController extends BaseController
     $CSDBModel = new Csdb();
     $CSDBModel->CSDBObject = $request->CSDBObject[0];
     $CSDBModel->filename = $CSDBModel->CSDBObject->filename;
-    if (Csdb::where('filename', $CSDBModel->filename)->first()) {
+    if ($duplicatedCSDBModel = Csdb::where('filename', $CSDBModel->filename)->first()) {
       return Response::make([
         'infotype' => 'caution',
         'message' => "Cannot create COM due to duplicate filename.",
+        'csdb' => $duplicatedCSDBModel,
         'errors' => $CSDBModel->CSDBObject->errors->get(),
-      ]);
+      ], 499, ['content-type' => 'application/json']);
     };
     $CSDBModel->path = $request->validated()['path'];
     $CSDBModel->storage_id = $request->user()->id;

@@ -132,4 +132,7 @@ Authorization: Bearer 7|Zn6V43ZBPp2hbrvoirjJx6rYg6rQFYVf1dYosdv6400a2fe1
 
 ###
 
-GET http://127.0.0.1:8000/tesapaja HTTP/1.1
+GET http://127.0.0.1:8000/api/s1000d/user/search HTTP/1.1
+Content-Type: application/json
+X-Requested-With: XMLHttpRequest
+Authorization: Bearer 3|xEyVnL2vDEgHL3OA086YnvrUwKiuhwQLAj3S7BtFf22e4e44
