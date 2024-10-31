@@ -8,6 +8,7 @@ use App\Http\Requests\Csdb\CsdbImportFromDDN;
 use App\Http\Requests\Csdb\CsdbPermanentDelete;
 use App\Http\Requests\Csdb\CsdbRestore;
 use App\Http\Requests\Csdb\CsdbUpdateByXMLEditor;
+use App\Http\Requests\Csdb\UploadICN;
 use App\Http\Resources\HistoryResource;
 use App\Jobs\Csdb\FillObjectTable;
 use App\Models\Csdb;
@@ -26,6 +27,7 @@ use Ptdi\Mpub\Main\Helper;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use App\Models\Csdb\Ddn;
 use App\Models\User;
+use Ptdi\Mpub\Main\ICNDocument;
 
 class MainController extends BaseController
 {
@@ -120,6 +122,43 @@ class MainController extends BaseController
   }
 
   /**
+   * query? isUpdate?string
+   * ini bisa update dan create
+   * @return Response JSON contain SQL object model with initiator data
+   */
+  public function uploadICN(UploadICN $request)
+  {
+    // #1 validation input form
+    $validatedData = $request->validated();
+    $file = $validatedData['entity'];
+    $CSDBModel = $validatedData['oldCSDBModel'];
+    $CSDBModel->CSDBObject->load($file->path());
+    $CSDBModel->filename = $validatedData['filename'];
+    $CSDBModel->path = $validatedData['path'];
+    $CSDBModel->initiator_id = $request->user()->id;
+    $CSDBModel->storage_id = $request->user()->id;
+    if ($CSDBModel->saveDOMandModel($request->user()->storage, [
+      [$request->isUpdate ? 'MAKE_CSDB_UPDT_History' : 'MAKE_CSDB_CRBT_History', [Csdb::class]],
+      [$request->isUpdate ? 'MAKE_USER_UPDT_History' : 'MAKE_USER_CRBT_History', [$request->user(), '', $CSDBModel->filename]],
+    ])) {
+      $CSDBModel->initiator; // agar ada initiator nya
+
+      return Response::make([
+        'infotype' => 'note',
+        'message' => $request->isUpdate ? "{$CSDBModel->filename} has been updated." : "New {$CSDBModel->filename} has been uploaded.",
+        "csdb" => $CSDBModel,
+      ], 200, ['content-type' => 'application/json']);
+    } else {
+      return Response::make([
+        'infotype' => 'warning',
+        'message' => "{$CSDBModel->filename} failed to" . $request->isUpdate ? 'update' : 'upload' . ".",
+        'errors' => $CSDBModel->CSDBObject->errors->get(),
+        'csdb' => $CSDBModel
+      ], 422, ['content-type' => 'application/json']);
+    }
+  }
+
+  /**
    * querykey? = 'form?xml/json (default xml)
    */
   public function read(Request $request, Csdb $CSDBModel)
@@ -152,7 +191,7 @@ class MainController extends BaseController
             ['Content-Type' => 'application/json']
           );
           break;
-        default:
+        case 'xml':
           $formatter = new Formatter();
           return Response::make(
             $formatter->format($CSDBModel->CSDBObject->document->saveXML()),
@@ -160,6 +199,13 @@ class MainController extends BaseController
             ['Content-Type' => 'text/xml']
           );
           break;
+        default:
+          $isICN = $CSDBModel->CSDBObject->document instanceof ICNDocument;
+          return Response::make(
+            $isICN ? $CSDBModel->CSDBObject->document->getFile() : $CSDBModel->CSDBObject->document->saveXML(),
+            200,
+            ['Content-Type' => $isICN ? $CSDBModel->CSDBObject->document->getFileinfo()['mime_type'] : 'text/xml']
+          );
       }
     }
     return abort(204);
@@ -170,7 +216,7 @@ class MainController extends BaseController
     // if($request->route('CSDBModel')->lastHistory->code === 'CSDB-DELL' || $request->route('CSDBModel')->lastHistory->code === 'CSDB-PDEL'){
     //   throw new HttpResponseException(response(["message" => $request->route('CSDBModel')->filename . " has been deleted."],404));
     // }
-    if ($CSDBModel->loadCSDBObject() && $CSDBModel->CSDBObject->document->doctype) {
+    if ($CSDBModel->loadCSDBObject() && isset($CSDBModel->CSDBObject->document->doctype)) {
       $CSDBModel->object;
       if (!$CSDBModel->object) {
         $CSDBModel->setRelations([]); // di set relationnya menjadi kosong karena sebelumnya ada $CSDBModel->object;. Relation 'object' akan gagal karena akan membaca slef::class sehingga akan mencari where 'csdb'.'csdb_id' = ... padahal bukan 'csdb_id' tapi 'id'
@@ -257,7 +303,7 @@ class MainController extends BaseController
 
   public function status(Request $request, Csdb $CSDBModel)
   {
-    if ($CSDBModel->loadCSDBObject() && $CSDBModel->CSDBObject->document->doctype) {
+    if ($CSDBModel->loadCSDBObject() && isset($CSDBModel->CSDBObject->document->doctype)) {
       $CSDBModel->object;
       if (!$CSDBModel->object) {
         $CSDBModel->setRelations([]); // di set relationnya menjadi kosong karena sebelumnya ada $CSDBModel->object;. Relation 'object' akan gagal karena akan membaca slef::class sehingga akan mencari where 'csdb'.'csdb_id' = ... padahal bukan 'csdb_id' tapi 'id'

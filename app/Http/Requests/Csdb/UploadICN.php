@@ -8,8 +8,9 @@ use Closure;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
-use Ptdi\Mpub\Main\CSDBError;
-use Ptdi\Mpub\Main\CSDBValidator;
+// use Ptdi\Mpub\Main\CSDBError;
+use Ptdi\Mpub\Main\CSDBStatic;
+// use Ptdi\Mpub\Main\CSDBValidator;
 
 class UploadICN extends FormRequest
 {
@@ -20,6 +21,7 @@ class UploadICN extends FormRequest
    */
   public function authorize(): bool
   {
+    if(isset($this->fail['checkOldCsdb'])) return false;
     return true;
   }
 
@@ -32,11 +34,22 @@ class UploadICN extends FormRequest
   {
     return [
       "filename" => ['required', function (string $attribute, mixed $value,  Closure $fail) {
-        if(isset($this->fail['checkOldCsdb'])) $fail($this->fail['checkOldCsdb']);
-        CSDBError::$processId = 'ICNFilenameValidation';
-        $validator = new CSDBValidator('ICNName', ["validatee" => $value]);
-        $validator->setStoragePath(CSDB_STORAGE_PATH . "/" . $this->user()->storage);
-        if (!$validator->validate()) $fail(join(", ", CSDBError::getErrors(true, 'ICNFilenameValidation')));
+        $decodedFilename = CSDBStatic::decode_infoEntityIdent($value);
+        // $infoEntityIdent = $decodedF
+        if(!isset($decodedFilename['prefix']) || ($decodedFilename['prefix'] !== 'ICN-')){
+          $fail("Filename shall be prefixed by 'ICN-");
+        }
+        if(!$decodedFilename['extension']){
+          $fail("Extension shall be existed.");
+          return;
+        }
+        if(!(count($decodedFilename['infoEntityIdent']) === 9 OR count($decodedFilename['infoEntityIdent']) === 4)){
+          $fail("Naming file '". $decodedFilename['prefix'] . join("-", $decodedFilename['infoEntityIdent']). $decodedFilename['extension'] . "' is uncomply.");
+        }
+        // CSDBError::$processId = 'ICNFilenameValidation';
+        // $validator = new CSDBValidator('ICNName', ["validatee" => $value]);
+        // $validator->setStoragePath(CSDB_STORAGE_PATH . "/" . $this->user()->storage);
+        // if (!$validator->validate()) $fail(join(", ", CSDBError::getErrors(true, 'ICNFilenameValidation')));
       }],
       "entity" => ['required', function (string $attribute, mixed $value,  Closure $fail) {
         $ext = strtolower($value->getClientOriginalExtension());
@@ -68,7 +81,7 @@ class UploadICN extends FormRequest
       $oldCSDBModel = new Csdb();
     }
     $this->merge([
-      'path' => $this->path ?? 'CSDB',
+      'path' => $this->path ?? 'CSDB/ICN',
       'oldCSDBModel' => $oldCSDBModel
     ]);
   }

@@ -74,7 +74,7 @@ class DmlController extends Controller
     ])) {
       return Response::make([
         'infotype' => 'note',
-        'message' => "{$CSDBModel->filename} has been update.",
+        'message' => "{$CSDBModel->filename} has been updated.",
         "csdb" => $CSDBModel,
       ], 200, ['content-type' => 'application/json']);
     }

@@ -42,6 +42,7 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::put("/s1000d/comment/create",[ComController::class, 'create'])->name('api.create_comment');
   Route::put("/s1000d/ddn/create",[CsdbApiDdnController::class, 'create'])->name('api.create_ddn');
   Route::put("/s1000d/csdb/import/{CSDBModel:filename}",[MainController::class, 'import'])->name('api.import_csdb');
+  Route::post("/s1000d/icn/upload", [MainController::class, 'uploadICN'])->name('api.upload_ICN');
 
   // read
   Route::get('/s1000d/csdb/read/{CSDBModel:filename}', [MainController::class, 'read'])
@@ -86,7 +87,7 @@ Route::middleware('auth:sanctum')->group(function () {
   // #### below belum di test
 
 
-  Route::post("/s1000d/icn/upload", [CsdbController::class, 'uploadICN'])->name('api.upload_ICN');
+  // Route::post("/s1000d/icn/upload", [CsdbController::class, 'uploadICN'])->name('api.upload_ICN');
   Route::post('/s1000d/csdb/update/path', [CsdbController::class, 'change_object_path'])->name('api.change_object_path');
   Route::post("/s1000d/dml/update/{filename}",[DmlController::class, 'update'])->name('api.dmlupdate');
   // Route::post("/s1000d/comment/create",[CommentController::class, 'create'])->name('api.create_comment');

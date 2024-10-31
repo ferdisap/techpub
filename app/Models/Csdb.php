@@ -392,7 +392,7 @@ class Csdb extends Model
     $CSDBModel = $CSDBModel->whereRaw('(filename = ? )', [$filename]);
 
     // filter by storage
-    if($storage_id > 0) $CSDBModels = $CSDBModels->whereRaw("({$table}.storage_id = ? )", [$storage_id]);
+    if($storage_id > 0) $CSDBModel = $CSDBModel->whereRaw("({$table}.storage_id = ? )", [$storage_id]);
     // $CSDBModel = $CSDBModel->whereRaw('(storage_id = ? )',[request()->user()->id]);
     // if (self::$storage_user_id === 0) ($CSDBModel = $CSDBModel->whereRaw('(storage_id = ? )', [request()->user()->id]));
     // elseif (self::$storage_user_id) ($CSDBModel = $CSDBModel->whereRaw('(storage_id = ? )', [self::$storage_user_id]));

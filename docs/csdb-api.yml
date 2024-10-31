@@ -416,6 +416,67 @@ paths:
                     $ref: "#/components/schemas/failureProcessing"
       security:
         - auth: []
+  /api/s1000d/icn/upload:
+    post: 
+      summary: upload ICN file
+      description: upload ICN file
+      tags:
+        - csdb
+      parameters:
+        - $ref: "#/components/parameters/bearerAuthorization"
+      requestBody:
+        content:
+          multipart/form-data:
+            schema: 
+              type: object
+              required:
+                - filename
+                - entity
+              properties:
+                filename:
+                  type: string
+                  example: ICN-0001Z-00012-001-01.jpg
+                entity:
+                  type: string
+                  format: binary
+                path: 
+                  type: string
+                  example: "CSDB/ICN"
+      responses:
+        "200":
+          description: Success uploading csdb file.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  infotype:
+                    $ref: "#/components/schemas/infotype"
+                  message:
+                    type: string
+                    example: ICN-0001Z-00012-001-01.jpg has beeen uploaded.
+                  csdb:
+                    $ref: "#/components/schemas/csdb"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          description: failed to upload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  infotype:
+                    $ref: "#/components/schemas/infotype"
+                  message:
+                    type: string
+                    example: ICN-0001Z-00012-001-01.jpg failed to upload.
+                  csdb:
+                    $ref: "#/components/schemas/csdb"
+                  errors:
+                    type: object
+      security:
+        - auth: []
   /api/s1000d/csdb/read/{filename}:
     get:
       summary: "get the csdb xml file"
