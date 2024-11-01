@@ -720,10 +720,12 @@ class Csdb extends Model
         }
 
         // create csdb access key
-        $this->accessKey()->whereNull('abilities')->firstOrCreate([
-          'csdb_id' => $this->id,
-          'key' => \Illuminate\Support\Str::random(),
-        ]);
+        if(get_class($this) === Csdb::class){
+          $this->accessKey()->whereNull('abilities')->firstOrCreate([
+            'csdb_id' => $this->id,
+            'key' => \Illuminate\Support\Str::random(),
+          ]);
+        }
 
         // fill object dilakukan oleh worker. @dispatchSync return 404 Not Found
         // $fillObjectTableConfig = ['connection' => 'sync', 'mailNotification' => true];

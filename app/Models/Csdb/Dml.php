@@ -149,7 +149,7 @@ class Dml extends Csdb
     for ($i = 0; $i < $l; $i++) {
       // create entryIdent
       $data['entryIdent'][$i] = CSDBStatic::decode_ident($data['entryIdent'][$i])['xml_string'];
-      // if ($dmlType !== 's') $data['entryIdent'][$i] = preg_replace('/<(language|issueInfo)[\w\d\s="]+\/>/m', '', $data['entryIdent'][$i]);
+      if ($dmlType !== 's') $data['entryIdent'][$i] = preg_replace('/<(language|issueInfo)[\w\d\s="]+\/>/m', '', $data['entryIdent'][$i]);
 
       // create issueType
       $data['issueType'][$i] = $data['issueType'][$i] ? (' issueType=' . '"' . $data['issueType'][$i] . '"') : '';

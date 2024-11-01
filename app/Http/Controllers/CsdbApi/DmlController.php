@@ -25,6 +25,7 @@ use Ptdi\Mpub\Helper;
 use Ptdi\Mpub\Main\CSDBError;
 use Ptdi\Mpub\Main\CSDBObject;
 use App\Rules\Csdb\BrexDmRef as BrexDmRefRules;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Ptdi\Mpub\Main\CSDBStatic;
 
 class DmlController extends Controller
@@ -138,5 +139,52 @@ class DmlController extends Controller
     return Response::make([
       'csdb' => $CSDBModel
     ], 200, ['content-type' => 'application/json']);    
+  }
+
+  /**
+   * dari dml ke csl
+   * @return App\Http\Controllers\CsdbApi\MainController
+   * @return Illuminate\Support\Facades\Response
+   */
+  public function csl(Request $request, string $filename)
+  {
+    $mainController = new MainController();
+    $dmlFilename = $filename;
+    $filename = preg_replace("/-P-|-C-/",'-S-', $filename);
+    $request->route()->setParameter('filename', $filename); // biar bisa pakai method 'with'
+    $CSDBModel = Csdb::getCsdb($filename,[],$request->user()->id)->with(['object'])->first();
+    if(!$CSDBModel){
+      $CSDBModel = new Csdb();
+      $CSDBModel->CSDBObject = Csdb::getObject($dmlFilename,[], $request->user()->id)->first()->toCsl($request->user());      
+      $CSDBModel->filename = $CSDBModel->CSDBObject->filename;
+      $CSDBModel->path = "CSDB/CSL";
+      $CSDBModel->storage_id = $request->user()->id;
+      $CSDBModel->initiator_id = $request->user()->id;
+      if(!($CSDBModel->saveDOMandModel($request->user()->storage, [
+        ['MAKE_CSDB_CRBT_History', [Csdb::class]],
+        ['MAKE_USER_CRBT_History', [$request->user(), '', $CSDBModel->filename]]
+      ],['connection' => 'sync' ])))
+      {
+        $CSDBModel->object = Dml::fillTable($CSDBModel->id, $CSDBModel->CSDBObject, $request->user()->id); 
+      }
+    }
+    return $CSDBModel ? $mainController->read($request, $CSDBModel) :
+    throw new HttpResponseException(response(["message" => "There is no such csdb."],404));
+  }
+
+  /**
+   * dari csl get dml
+   * queryKey? complete?bool
+   * @return App\Http\Controllers\CsdbApi\MainController
+   * @return Illuminate\Support\Facades\Response
+   */
+  public function dml(Request $request, string $filename)
+  {
+    $mainController = new MainController();
+    $filename = preg_replace("/-S-/", $request->complete ? '-C-' : '-P-', $filename);
+    $request->route()->setParameter('filename', $filename); // biar bisa pakai method 'with'
+    $CSDBModel = Csdb::getCsdb($filename,[],$request->user()->id)->with(['object'])->first();
+    return $CSDBModel ? $mainController->read($request, $CSDBModel) :
+    throw new HttpResponseException(response(["message" => "There is no such csdb."],404));
   }
 }

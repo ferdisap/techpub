@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Csdb;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\CsdbApi\MainController;
 use App\Http\Requests\Csdb\DmlCreateFromEditorDML;
 use App\Http\Requests\Csdb\DmlMerge;
 use App\Http\Requests\Csdb\DmlUpdateFromEditorDML;
@@ -25,6 +26,7 @@ use Ptdi\Mpub\Helper;
 use Ptdi\Mpub\Main\CSDBError;
 use Ptdi\Mpub\Main\CSDBObject;
 use App\Rules\Csdb\BrexDmRef as BrexDmRefRules;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Ptdi\Mpub\Main\CSDBStatic;
 
 class DmlController extends Controller
@@ -83,6 +85,9 @@ class DmlController extends Controller
     return $this->ret2(400, ["fail to merge and save DML."]);
   }
 
+  /**
+   * @deprecated
+   */
   public function getCsl(Request $request, string $filename)
   {
     $origFilename = $filename;
@@ -150,4 +155,5 @@ class DmlController extends Controller
     $json = CSDBStatic::xml_to_json($DMLModel->CSDBObject->document);
     return $this->ret2(200, ['model' => $DMLModel->makeHidden(['id']), 'json' => $json, 'transformed' => '', 'mime' => 'text/html']); // ini yang dipakai vue
   }
+
 }

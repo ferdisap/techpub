@@ -59,7 +59,9 @@ Route::middleware('auth:sanctum')->group(function () {
   ->name('api.histories');
   Route::get("/s1000d/comments/{CSDBModel:filename}",[MainController::class, 'comments'])
   ->missing(fn() => throw new HttpResponseException(response(["message" => "There is no such csdb."],404)))
-  ->name('api.comments');  
+  ->name('api.comments');
+  Route::get("/s1000d/csl/{filename}", [CsdbApiDmlController::class, 'csl'])->name('api.dml_to_csl'); // filename itu adalah DML type P/C
+  Route::get("/s1000d/dml/{filename}", [CsdbApiDmlController::class, 'dml'])->name('api.csl_to_dml'); // filename itu adalah DML type S
 
   // index
   Route::get("/s1000d/csdb/all",[MainController::class, 'all'])->name('api.get_csdbs'); // api.get_allobjects_list
@@ -116,7 +118,7 @@ Route::middleware('auth:sanctum')->group(function () {
   // Route::get("/s1000d/ddn/dispatched",[DdnController::class, 'list'])->name('api.get_ddn_list');
   // dml
   Route::get("/s1000d/dmrl/all",[DmlController::class, 'get_dmrl_list'])->name('api.get_dmrl_list');
-  Route::get("/s1000d/csl/{filename}", [DmlController::class, 'getCsl'])->name('api.get_csl');
+  // Route::get("/s1000d/csl/{filename}", [DmlController::class, 'getCsl'])->name('api.get_csl');
   // search
   Route::get("/s1000d/csdb/search",[CsdbController::class, 'get_object_csdbs'])->name('api.search_csdb'); // api.get_object_csdbs
   Route::get("/s1000d/enterprise/search", [EnterpriseController::class, 'get_enterprises'])->middleware('auth:sanctum')->name('api.get_enterprises');

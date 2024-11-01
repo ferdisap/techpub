@@ -163,8 +163,8 @@ class MainController extends BaseController
    */
   public function read(Request $request, Csdb $CSDBModel)
   {
-    if ($request->route('CSDBModel')->lastHistory->code === 'CSDB-DELL' || $request->route('CSDBModel')->lastHistory->code === 'CSDB-PDEL') {
-      throw new HttpResponseException(response(["message" => $request->route('CSDBModel')->filename . " has been deleted."], 404));
+    if ($CSDBModel->lastHistory->code === 'CSDB-DELL' || $CSDBModel->lastHistory->code === 'CSDB-PDEL') {
+      throw new HttpResponseException(response(["message" => $CSDBModel->filename . " has been deleted."], 404));
     }
     $storage = $CSDBModel->owner->storage;
     $CSDBModel->CSDBObject->load(CSDB_STORAGE_PATH . "/" . $storage . "/" . $CSDBModel->filename);
