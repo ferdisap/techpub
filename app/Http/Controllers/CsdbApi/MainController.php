@@ -199,6 +199,26 @@ class MainController extends BaseController
             ['Content-Type' => 'text/xml']
           );
           break;
+        case 'pdf':
+          $modelIdentCode = 'CN235';
+          $config = new \DOMDocument();
+          $config->load(\Ptdi\Mpub\Transformer\Transformator::config_uri());
+          $xpath = new \DOMXPath($config);
+          $xslFo = $xpath->evaluate("string(//config/output/method[@type='pdf']/path[@product-name='$modelIdentCode'])");
+          if (!$xslFo) $xslFo = $xpath->evaluate("string(//config/output/method[@type='pdf']/path[@product-name='*'])");
+
+          $output = CSDB_VIEW_PATH . '/transformed' . '/' . str_replace('.xml', '.fo', $CSDBModel->filename);
+          $CSDBModel->loadCSDBObject();
+          $fo = $CSDBModel->CSDBObject->transform_to_fo($xslFo, $output);
+          if (!$fo) abort(204);
+          $pdf = $CSDBModel->CSDBObject->transform_to_pdf($fo, str_replace('.fo', '.pdf', $fo));
+          if (!$pdf) abort(204);
+
+          return Response::make(
+            file_get_contents($pdf),
+            200,
+            ['Content-Type' => 'application/pdf']
+          );
         default:
           $isICN = $CSDBModel->CSDBObject->document instanceof ICNDocument;
           return Response::make(
