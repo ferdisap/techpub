@@ -10,6 +10,7 @@ use App\Models\Csdb\Comment;
 use App\Models\Csdb\Ddn;
 use App\Models\Csdb\Dmc;
 use App\Models\Csdb\Dml;
+use App\Models\Csdb\Imf;
 use App\Models\Csdb\Pmc;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
@@ -44,17 +45,20 @@ class FillObjectTable implements ShouldQueue
       $csdbobject = false;
       switch ($doctype) {
         case 'dmodule':
-          $csdbobject = Dmc::fillTable($this->CSDBModel->id, $this->CSDBModel->CSDBObject, $this->initiator->id);
+          Dmc::fillTable($this->CSDBModel->id, $this->CSDBModel->CSDBObject, $this->initiator->id);
           break;
         case 'pm':
-          $csdbobject = Pmc::fillTable($this->CSDBModel->id, $this->CSDBModel->CSDBObject, $this->initiator->id);
+          Pmc::fillTable($this->CSDBModel->id, $this->CSDBModel->CSDBObject, $this->initiator->id);
           break;
         case 'dml':
-          $csdbobject = Dml::fillTable($this->CSDBModel->id, $this->CSDBModel->CSDBObject, $this->initiator->id);
+          Dml::fillTable($this->CSDBModel->id, $this->CSDBModel->CSDBObject, $this->initiator->id);
           break;
         case 'ddn':
           $csdbobject = Ddn::fillTable($this->CSDBModel->id, $this->CSDBModel->CSDBObject, $this->initiator->id);          
           if($csdbobject && $this->mailTo) event(new DdnCreated($csdbobject));
+          break;
+        case 'icnMetadataFile':
+          Imf::fillTable($this->CSDBModel->id, $this->CSDBModel->CSDBObject, $this->initiator->id);
           break;
         case 'comment':
           $csdbobject = Comment::fillTable($this->CSDBModel->id, $this->CSDBModel->CSDBObject, $this->initiator->id);

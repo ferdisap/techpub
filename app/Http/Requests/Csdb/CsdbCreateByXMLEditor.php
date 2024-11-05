@@ -12,6 +12,7 @@ use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\Storage;
 use Ptdi\Mpub\Main\CSDBError;
 use Ptdi\Mpub\Main\CSDBObject;
+use Ptdi\Mpub\Main\CSDBStatic;
 use Ptdi\Mpub\Main\CSDBValidator;
 use Ptdi\Mpub\Main\XSIValidator;
 use Ptdi\Mpub\Validation\CSDBValidatee;
@@ -59,26 +60,23 @@ class CsdbCreateByXMLEditor extends FormRequest
         $filename = $value[0]->filename;
         $initial = $value[0]->getInitial();
         $code = preg_replace("/_.+/", '', $filename);
-        $collection = Csdb::selectRaw('filename')->whereRaw("filename LIKE '{$code}%'")->get()->toArray();
+        $collection = Csdb::selectRaw('filename')->whereRaw("filename LIKE '{$code}%'")->get(['filename'])->toArray();
         array_walk($collection, function (&$v) {
           $v = $v['filename'];
         });
         if (empty($collection)) {
-          $issueInfo = $domXpath->evaluate("//identAndStatusSection/{$initial}Address/{$initial}Ident/issueInfo")[0];
+          $issueInfo = $domXpath->evaluate("//{$initial}Address/{$initial}Ident/issueInfo")[0];
           $issueInfo->setAttribute('issueNumber', '000');
           $issueInfo->setAttribute('inWork', '01');
         } else {
           $collection_issueNumber = [];
           $collection_inWork = [];
           array_walk($collection, function ($file, $i) use (&$collection_issueNumber, &$collection_inWork) {
-            $file = explode('_', $file);
-            if (isset($file[1])) {
-              $issueInfo = explode("-", $file[1]);
-              $collection_issueNumber[$i] = $issueInfo[0];
-              $collection_inWork[$i] = $issueInfo[1];
-            }
+            $issueInfo = CSDBStatic::decode_ident($file)['issueInfo'];
+            $collection_issueNumber[$i] = $issueInfo['issueNumber'];
+            $collection_inWork[$i] = $issueInfo['inWork'];
           });
-          $issueInfo = $domXpath->evaluate("//identAndStatusSection/{$initial}Address/{$initial}Ident/issueInfo")[0];
+          $issueInfo = $domXpath->evaluate("//{$initial}Address/{$initial}Ident/issueInfo")[0];
           $max_in = max($collection_issueNumber);
           $max_in = array_keys(array_filter($collection_issueNumber, fn ($v) => $v == $max_in))[0]; // output key. bukan value array
           $max_in = $collection_issueNumber[$max_in];
@@ -91,10 +89,10 @@ class CsdbCreateByXMLEditor extends FormRequest
           $issueInfo->setAttribute('inWork', str_pad($max_iw, 2, '0', STR_PAD_LEFT));
         }
 
-        $qa = $domXpath->evaluate("//identAndStatusSection/{$initial}Status/qualityAssurance")[0];
+        $qa = $domXpath->evaluate("//{$initial}Status/qualityAssurance")[0];
         if (!$qa) {
           $qa = $value[0]->document->createElement('qualityAssurance');
-          $identStatus = $domXpath->evaluate("//identAndStatusSection/{$initial}Status")[0];
+          $identStatus = $domXpath->evaluate("//{$initial}Status")[0];
           $identStatus->appendChild($qa);
         }
         $unverified = $value[0]->document->createElement('unverified');

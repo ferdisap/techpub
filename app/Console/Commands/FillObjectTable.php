@@ -38,11 +38,11 @@ class FillObjectTable extends Command
     $CSDBObject->load(CSDB_STORAGE_PATH. DIRECTORY_SEPARATOR . $storage . DIRECTORY_SEPARATOR . $filename);
     
     // set user id
-    Csdb::$storage_user_id = User::where('storage', $storage)->first()->id;
+    // Csdb::$storage_user_id = User::where('storage', $storage)->first()->id;
 
     // execute fillTable
     if($CSDBObject->document && ($CSDBObject->document instanceof \DOMDocument)){
-      if(call_user_func_array($objectClass.'::fillTable',[$csdbId, $CSDBObject])){
+      if(call_user_func_array($objectClass.'::fillTable',[$csdbId, $CSDBObject, User::where('storage', $storage)->first(['id'])->id])){
         echo 'success';
         return true;
       } else {

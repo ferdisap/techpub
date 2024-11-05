@@ -812,6 +812,9 @@ class Csdb extends Model
       case 'COM':
         $class .= 'Comment';
         break;
+      case 'IMF':
+        $class .= 'Imf';
+        break;
       default:
         return '';
     }
