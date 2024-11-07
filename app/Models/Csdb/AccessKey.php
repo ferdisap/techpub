@@ -40,24 +40,24 @@ class AccessKey extends Model
    *
    * @var array
    */
-  protected $fillable = ['csdb_id', 'key', 'abilities', 'expires_at'];
+  protected $fillable = ['csdb_id', 'user_id', 'key', 'abilities', 'expires_at'];
 
   /**
    * The attributes that should be hidden for serialization.
    * @var array<int, string>
    */
-  protected $hidden = ['id', 'csdb_id', 'abilities', 'expires_at'];
+  protected $hidden = ['id', 'csdb_id', 'user_id', 'abilities', 'expires_at'];
 
-  /**
-   * @return App\Models\Csdb
-   */
-  public function resolveRouteBinding($value, $field = null)
-  {
-    $ability = request()->route('ability');
-    $date = \Carbon\Carbon::now();
-    return $ability ? Csdb::with(['accessKey' => fn(HasMany $AccessKeyModel) => $AccessKeyModel->where($field, urldecode($value))])->where('abilities', 'like', '%'. $ability .'%')->whereDate('expires_at', '>', $date)->firstOrFail() :
-    Csdb::with(['accessKey' => fn(HasMany $AccessKeyModel) => $AccessKeyModel->where($field, urldecode($value))])->orderBy('expires_at', 'desc')->whereDate('expires_at', '>', $date)->firstOrFail();
-  }
+  // /**
+  //  * @return App\Models\Csdb
+  //  */
+  // public function resolveRouteBinding($value, $field = null)
+  // {
+  //   $ability = request()->route('ability');
+  //   $date = \Carbon\Carbon::now();
+  //   return $ability ? Csdb::with(['accessKeys' => fn (HasMany $AccessKeyModel) => $AccessKeyModel->where($field, self::decryptAccessKey(urldecode($value)))])->where('abilities', 'like', '%' . $ability . '%')->whereDate('expires_at', '>', $date)->firstOrFail() :
+  //     Csdb::with(['accessKeys' => fn (HasMany $AccessKeyModel) => $AccessKeyModel->where($field, self::decryptAccessKey(urldecode($value)))])->orderBy('expires_at', 'desc')->whereDate('expires_at', '>', $date)->firstOrFail();
+  // }
 
   /**
    * Set the model created_at touse current timezone.
@@ -105,7 +105,7 @@ class AccessKey extends Model
       list($cryptedKey, $enc_iv) = explode("::", $cryptedKey);
       return openssl_decrypt($cryptedKey, 'aes-128-ctr', openssl_digest(php_uname(), 'SHA256', TRUE), 0, hex2bin($enc_iv));
     } catch (\Throwable $th) {
-      throw new HttpResponseException(response(["message" => "access_key is not valid."],400));
+      throw new HttpResponseException(response(["message" => "access_key is not valid."], 400));
     }
   }
 }

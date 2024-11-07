@@ -16,13 +16,15 @@ content-type: application/json
 
 
 ###POST http://127.0.0
+# untuk luffy Bearer 3|xEyVnL2vDEgHL3OA086YnvrUwKiuhwQLAj3S7BtFf22e4e44
+# untuk nami Bearer 11|AjSqzL75J0HAK0iZTwdJm9RLTb7DYIo2n3evpOgY3e7344e4
 POST http://127.0.0.1:8000/api/login HTTP/1.1
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 X-DEVICE-NAME: http_client
 
 {
-  "email": "luffy@example.com",
+  "email": "nami@example.com",
   "password": "password"
 }
 
@@ -124,11 +126,12 @@ X-Requested-With: XMLHttpRequest
 Authorization: Bearer 3|xEyVnL2vDEgHL3OA086YnvrUwKiuhwQLAj3S7BtFf22e4e44
 
 ###
+# GET http://127.0.0.1:8000/api/s1000d/csdb/read/DDN-MALE-0001Z-0001Z-2024-00001.xml?form=json HTTP/1.1
 
-GET http://127.0.0.1:8000/api/s1000d/csdb/read/DDN-MALE-0001Z-0001Z-2024-00001.xml?form=json HTTP/1.1
+GET http://127.0.0.1:8000/api/s1000d/csdb/read/IMF-0001Z-00012-001-01_000-01.xml?form=html&user_access_key=iXZL8T1KyEiUlcWacED%2FCg%3D%3D%3A%3A5d0d9dae37277e3f3063412ae9d3c74b HTTP/1.1
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
-Authorization: Bearer 7|Zn6V43ZBPp2hbrvoirjJx6rYg6rQFYVf1dYosdv6400a2fe1
+Authorization: Bearer 3|xEyVnL2vDEgHL3OA086YnvrUwKiuhwQLAj3S7BtFf22e4e44
 
 ###
 

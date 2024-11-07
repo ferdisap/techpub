@@ -13,7 +13,8 @@ return new class extends Migration
   {
     Schema::create('access_key', function (Blueprint $table) {
       $table->id();
-      $table->string('csdb_id');
+      $table->string('csdb_id')->nullable();
+      $table->string('user_id')->nullable();
       $table->string('key')->unique();
       $table->text('abilities')->nullable();
       $table->timestamp('expires_at')->nullable();

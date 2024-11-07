@@ -74,12 +74,18 @@ class RegisteredUserController extends Controller
     ]);
 
     $user->work_in()->associate($enterprise);
+    $this->accessKey()->whereNull('abilities')->firstOrCreate([
+      'user_id' => $user->id,
+      'abilities' => 'GET',
+      'key' => \Illuminate\Support\Str::random(),
+    ]);
     
     $user->save();
 
     event(new Registered($user));
 
     Auth::login($user);
+    
 
     // jika previous route hanya untuk guest (eg: route('register')) maka ke HOME (dashboard)
     // jika previous route bukan untuk guest/bebas maka back() saja

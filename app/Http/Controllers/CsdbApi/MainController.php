@@ -28,6 +28,7 @@ use Illuminate\Contracts\Database\Eloquent\Builder;
 use App\Models\Csdb\Ddn;
 use App\Models\User;
 use Ptdi\Mpub\Main\ICNDocument;
+use Ptdi\Mpub\Transformer\Html;
 
 class MainController extends BaseController
 {
@@ -175,7 +176,7 @@ class MainController extends BaseController
           if (isset($CSDBModel->object)) $CSDBModel->object->makeHidden(['content', 'json']); // karena pakai supervisor untuk membuat object jadi belum tentu
           else {
             $CSDBModel->setRelations([]); // di set relationnya menjadi kosong karena sebelumnya ada $CSDBModel->object;. Relation 'object' akan gagal karena akan membaca slef::class sehingga akan mencari where 'csdb'.'csdb_id' = ... padahal bukan 'csdb_id' tapi 'id'
-            FillObjectTable::dispatchSync($request->user(), $CSDBModel, false);
+            FillObjectTable::dispatchSync($CSDBModel->owner, $CSDBModel, false);
             // $fill = new FillObjectTable($request->user(), $CSDBModel, false); // ini bisa
             // $fill->handle(); // ini bisa
             $CSDBModel->object;
@@ -199,8 +200,21 @@ class MainController extends BaseController
             ['Content-Type' => 'text/xml']
           );
           break;
+        case 'html':
+          $config = new \DOMDocument();
+          $config->load(\Ptdi\Mpub\Transformer\Transformator::config_uri());
+          $xpath = new \DOMXPath($config);
+          $xsl = $xpath->evaluate("string(//config/output/method[@type='html']/path[@product-name='*'])");
+
+          $html = new Html($xsl);
+          return Response::make(
+            $html->createHtml($CSDBModel->CSDBObject->document->baseURI),
+            200,
+            ['Content-Type' => 'text/html']
+          );
+          break;
         case 'pdf':
-          $modelIdentCode = 'CN235';
+          $modelIdentCode = 'CN235'; // nanti diubah sesuai
           $config = new \DOMDocument();
           $config->load(\Ptdi\Mpub\Transformer\Transformator::config_uri());
           $xpath = new \DOMXPath($config);

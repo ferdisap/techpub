@@ -11,6 +11,7 @@ use App\Http\Controllers\UserController;
 use App\Jobs\Csdb\FillObjectTable;
 use App\Mail\Csdb\DataDispatchNote;
 use App\Models\Csdb;
+use App\Models\Csdb\AccessKey;
 use App\Models\Csdb\Ddn;
 use App\Models\Enterprise;
 use Illuminate\Support\Facades\Auth;
@@ -71,6 +72,16 @@ Route::get("/api/json/{filename}", [CsdbController::class, 'read_json'])->middle
 Route::get("/api/content/html/{filename}", [DmlController::class, 'read_html_content'])->middleware('auth')->name('api.get_html_content');
 
 Route::get('/tesapaja', function () {
+  // return AccessKey::decryptAccessKey(urldecode('joo3XhsTIJ5%2BcOgZs821WA%3D%3D%3A%3A728407afa3f410706fefbb685863b255'));
+  // return App\Models\User::with(['accessKey' => fn($AccessKeyModel) => $AccessKeyModel->where('key', AccessKey::decryptAccessKey(urldecode('joo3XhsTIJ5%2BcOgZs821WA%3D%3D%3A%3A728407afa3f410706fefbb685863b255')))])->first();
+  // return App\Models\User::with('accessKey')->find(1);
+  // $access_key = AccessKey::create([
+  //   'csdb_id' => 'undefined', // nanti dihapus, jika table csdb_id nullable
+  //   'user_id' => 2,
+  //   'abilities' => 'GET',
+  //   'key' => \Illuminate\Support\Str::random(),
+  // ]);
+  // return $access_key;
   // $accessKey = "9611222007552"; // from client
   // $cipher_method = 'aes-128-ctr';
   // $enc_key = openssl_digest(php_uname(), 'SHA256', TRUE);

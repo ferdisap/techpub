@@ -34,6 +34,13 @@ use Illuminate\Support\Facades\Route;
 //     return 'foobar';
 //   })->name('api.get_csdbs'); // api.get_allobjects_list
 // });
+
+
+// sementara di sini, karena auth:sanctum harus menggunakan bearer token, sementara user belum tentu authenticate login jika ingin hanya melihat/GET csdb
+Route::get('/s1000d/csdb/read/{CSDBModel:filename}', [MainController::class, 'read'])
+->missing(fn() => throw new HttpResponseException(response(["message" => "There is no such csdb."],404)))
+->name('api.read_object');
+
 Route::middleware('auth:sanctum')->group(function () {
   // create
   Route::put("/s1000d/csdb/create",[MainController::class, 'create'])->name('api.create_csdb');
@@ -45,9 +52,6 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post("/s1000d/icn/upload", [MainController::class, 'uploadICN'])->name('api.upload_ICN');
 
   // read
-  Route::get('/s1000d/csdb/read/{CSDBModel:filename}', [MainController::class, 'read'])
-  ->missing(fn() => throw new HttpResponseException(response(["message" => "There is no such csdb."],404)))
-  ->name('api.read_object');
   Route::get('/s1000d/ident/{CSDBModel:filename}', [MainController::class, 'ident'])
   ->missing(fn() => throw new HttpResponseException(response(["message" => "There is no such csdb."],404)))
   ->name('api.ident_object');

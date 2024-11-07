@@ -163,7 +163,12 @@ class Csdb extends Model
       }
     }
     else {
-      $storageId = request()->storage ? (User::where('storage', request()->storage)->first()->id) : request()->user()->id;
+      // pernah dicoba, saat urldecode, masih ada kekurangan, misal key tidak ada space, tapi ketikda di encode url, akan berubah jadi string
+      if($key = request()->user_access_key){
+        $storageId = AccessKey::where('key', AccessKey::decryptAccessKey(urldecode($key)))->pluck('user_id')[0];
+      } else {
+        $storageId = request()->storage ? (User::where('storage', request()->storage)->first()->id) : request()->user()->id;
+      }
       return $this->with(['accessKey'])->where($field, $value)->where('storage_id', $storageId)->firstOrFail();
     }
   }

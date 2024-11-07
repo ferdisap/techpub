@@ -48,7 +48,7 @@ class Authenticate extends Controller
     // $request->ensureIsNotRateLimited();
 
     // search user
-    $user = User::where('email', $request->validated('email'))->first();
+    $user = User::with('accessKey')->where('email', $request->validated('email'))->first();
     if (!$user || !Hash::check($request->password, $user->password)) {
       // javscript response.data = {message:?string, errors:{email: ?Array[?string]}}
       throw new HttpResponseException(response([
@@ -78,6 +78,7 @@ class Authenticate extends Controller
       'message' => 'login success',
       'token_type' => 'Bearer',
       'access_token' => $token,
+      'access_key' => $user->accessKey->key
     ]);
   }
 
