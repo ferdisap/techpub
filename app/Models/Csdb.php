@@ -164,7 +164,19 @@ class Csdb extends Model
     }
     else {
       // pernah dicoba, saat urldecode, masih ada kekurangan, misal key tidak ada space, tapi ketikda di encode url, akan berubah jadi string
+      // waktu itu keynya adalah 'riSOcosVhVJEBoXu',
+      // ketika di enrypt dan di encodeurl, jadinya 'M4UIWdfZEzvDf8S0+KGt4Q==::6fb86781a23dc55afc59f6eb8ad0fab0',
+      // ketika di receive oleh laravel, kemudian di decode kembali, maka jadinya 'M4UIWdfZEzvDf8S0 KGt4Q==::6fb86781a23dc55afc59f6eb8ad0fab' --> ada spasinya
+      // maka seringkali menemukan space saat di urlencode
       if($key = request()->user_access_key){
+        // $v = 'riSOcosVhVJEBoXu';
+        // $key = \urlencode(AccessKey::encryptAccessKey($v));
+        // while(str_contains(\urldecode($key),' ')){
+        //   $key = \urlencode(AccessKey::encryptAccessKey($v));
+        //   dump($key);
+        // }
+        // dd($key);
+        // dd(urldecode($key), str_contains(\urldecode($key),' '));
         $storageId = AccessKey::where('key', AccessKey::decryptAccessKey(urldecode($key)))->pluck('user_id')[0];
       } else {
         $storageId = request()->storage ? (User::where('storage', request()->storage)->first()->id) : request()->user()->id;

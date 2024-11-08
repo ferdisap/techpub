@@ -67,7 +67,15 @@ class AccessKey extends Model
     return Attribute::make(
       // set: fn (string $v) => self::encryptAccessKey($v),
       // get: fn (string $v) => self::decryptAccessKey($v),
-      get: fn (string $v) => \urlencode(self::encryptAccessKey($v)),
+      // get: fn (string $v) => \urlencode(self::encryptAccessKey($v)),
+      get: function(string $v){
+        $key = \urlencode(self::encryptAccessKey($v));
+        while(str_contains(\urldecode($key),' ')){
+          $key = \urlencode(self::encryptAccessKey($v));
+          // throw new \Error(str_contains(\urldecode($key),' ') ? 'true' : 'false' . ' => ' . $key);
+        }
+        return $key;
+      }
     );
   }
 
