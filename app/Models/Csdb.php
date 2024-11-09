@@ -176,7 +176,7 @@ class Csdb extends Model
         //   dump($key);
         // }
         // dd($key);
-        // dd(urldecode($key), str_contains(\urldecode($key),' '));
+        // dd(urldecode($key), str_contains(\urldecode($key),' '), str_contains(\urldecode($key),'+'), AccessKey::decryptAccessKey(urldecode($key)));
         $storageId = AccessKey::where('key', AccessKey::decryptAccessKey(urldecode($key)))->pluck('user_id')[0];
       } else {
         $storageId = request()->storage ? (User::where('storage', request()->storage)->first()->id) : request()->user()->id;

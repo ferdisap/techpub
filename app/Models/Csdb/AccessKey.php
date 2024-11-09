@@ -70,7 +70,7 @@ class AccessKey extends Model
       // get: fn (string $v) => \urlencode(self::encryptAccessKey($v)),
       get: function(string $v){
         $key = \urlencode(self::encryptAccessKey($v));
-        while(str_contains(\urldecode($key),' ')){
+        while(str_contains(\urldecode($key),' ') || str_contains(\urldecode($key),'+')){
           $key = \urlencode(self::encryptAccessKey($v));
           // throw new \Error(str_contains(\urldecode($key),' ') ? 'true' : 'false' . ' => ' . $key);
         }

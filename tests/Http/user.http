@@ -30,6 +30,13 @@ X-DEVICE-NAME: http_client
 
 ###
 
+POST http://127.0.0.1:8000/api/auth-check HTTP/1.1
+Content-Type: application/json
+X-Requested-With: XMLHttpRequest
+Authorization: Bearer 3|xEyVnL2vDEgHL3OA086YnvrUwKiuhwQLAj3S7BtFf22e4e44
+
+###
+
 GET http://127.0.0.1:8000/api/s1000d/csdb/all HTTP/1.1
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
