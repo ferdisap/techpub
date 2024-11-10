@@ -12,10 +12,20 @@ use Illuminate\Http\Exceptions\HttpResponseException;
 use Ptdi\Mpub\Main\CSDBStatic;
 // use Ptdi\Mpub\Main\CSDBValidator;
 
+
+/**
+ * NOTE
+ * - part?int
+ * - total?int
+ */
+// revisi selanjutnya validasi ditambahkan $CSDBModel->CSDBObject->document->getFileinfo()['mime_type'], if(!isset(['mime_type'])) $fail('...')
 class UploadICN extends FormRequest
 {
   public bool $isUpdate = false;
   public array $fail = [];
+
+  public bool $chunk = false;
+  public bool $end = true;
   /**
    * Determine if the user is authorized to make this request.
    */
@@ -63,9 +73,20 @@ class UploadICN extends FormRequest
     ];
   }
 
+  // jika !part, tapi isUpdate maka history akan akan update;
+  // elseif part/total < total, chunk true. Jika chunk maka tidak akan membuat history. 
   protected function prepareForValidation(): void
   {
     $oldCSDBModel = Csdb::getCsdb($this->filename,[], $this->user()->id)->first();
+
+    // jika part/total < total maka chunk
+    if($this->part){
+      $this->chunk = true;
+      if(((int)$this->part) < ((int)$this->total)){
+        $this->end = false;
+      }
+    }
+
     if($oldCSDBModel){
       if(($oldCSDBModel->storage_id != $this->user()->id)){
         $this->fail['checkOldCsdb'] = "You are not authorize to update the " . $oldCSDBModel->filename . ".";
@@ -75,11 +96,13 @@ class UploadICN extends FormRequest
         $this->fail['checkOldCsdb'] = $oldCSDBModel->filename . " has been deleted({$code}).";
         return;
       } 
+      // jika bukan chunk upload
       $this->isUpdate = true;
     } 
     else {
       $oldCSDBModel = new Csdb();
     }
+
     $this->merge([
       'path' => $this->path ?? 'CSDB/ICN',
       'oldCSDBModel' => $oldCSDBModel

@@ -138,18 +138,42 @@ class MainController extends BaseController
     $CSDBModel->path = $validatedData['path'];
     $CSDBModel->initiator_id = $request->user()->id;
     $CSDBModel->storage_id = $request->user()->id;
-    if ($CSDBModel->saveDOMandModel($request->user()->storage, [
-      [$request->isUpdate ? 'MAKE_CSDB_UPDT_History' : 'MAKE_CSDB_CRBT_History', [Csdb::class]],
-      [$request->isUpdate ? 'MAKE_USER_UPDT_History' : 'MAKE_USER_CRBT_History', [$request->user(), '', $CSDBModel->filename]],
-    ])) {
-      $CSDBModel->initiator; // agar ada initiator nya
 
-      return Response::make([
-        'infotype' => 'note',
-        'message' => $request->isUpdate ? "{$CSDBModel->filename} has been updated." : "New {$CSDBModel->filename} has been uploaded.",
-        "csdb" => $CSDBModel,
-      ], 200, ['content-type' => 'application/json']);
+    if (($request->chunk && !$request->end) || (!$request->chunk)) {
+      $CSDBModel->fileAppend = true;
+      $save = $CSDBModel->saveDOMandModel(
+        $request->user()->storage,
+        // jika chunk dan part terakhir ATAU tidak chunk (upload biasa)
+        // jika chunk tapi !end, maka tidak akan membuat history
+        [
+          [$request->isUpdate ? 'MAKE_CSDB_UPDT_History' : 'MAKE_CSDB_CRBT_History', [Csdb::class]],
+          [$request->isUpdate ? 'MAKE_USER_UPDT_History' : 'MAKE_USER_CRBT_History', [$request->user(), '', $CSDBModel->filename]],
+        ]
+      );
+      $data = [
+        'chunk' => [
+          'part' => $request->part,
+          'total' => $request->total,
+        ]
+      ];
+      if ($save) {
+        $CSDBModel->initiator; // agar ada initiator nya
+        $CSDBModel->accessKey;
+        return Response::make($data, 200, ['content-type' => 'application/json']);
+      }
+      return Response::make($data, $save ? 200 : 422, ['content-type' => 'application/json']);
     } else {
+      if ($request->chunk) $CSDBModel->fileAppend = true;
+      $save = $CSDBModel->saveDOMandModel($request->user()->storage, [], []);
+      if ($save) {
+        $CSDBModel->initiator; // agar ada initiator nya
+        $CSDBModel->accessKey;
+        return Response::make([
+          'infotype' => 'note',
+          'message' => $request->isUpdate ? "{$CSDBModel->filename} has been updated." : "New {$CSDBModel->filename} has been uploaded.",
+          "csdb" => $CSDBModel,
+        ], 200, ['content-type' => 'application/json']);
+      }
       return Response::make([
         'infotype' => 'warning',
         'message' => "{$CSDBModel->filename} failed to" . $request->isUpdate ? 'update' : 'upload' . ".",
@@ -234,12 +258,27 @@ class MainController extends BaseController
             ['Content-Type' => 'application/pdf']
           );
         default:
-          $isICN = $CSDBModel->CSDBObject->document instanceof ICNDocument;
-          return Response::make(
-            $isICN ? $CSDBModel->CSDBObject->document->getFile() : $CSDBModel->CSDBObject->document->saveXML(),
+          // stream response, ref https://laracasts.com/discuss/channels/laravel/streaming-video-from-laravel-chrome-cant-fast-forward-or-rewind?page=1&replyId=879625
+          return Response::stream(
+            function () use ($CSDBModel): void {
+              readfile($CSDBModel->CSDBObject->document->getURI(), 'r');
+            },
             200,
-            ['Content-Type' => $isICN ? $CSDBModel->CSDBObject->document->getFileinfo()['mime_type'] : 'text/xml']
+            [
+              'X-Accel-Buffering' => 'no',
+              'Content-Length' => $CSDBModel->CSDBObject->document->getFileInfo()['filesize'],
+              'Accept-Ranges' => 'bytes',
+              'Content-Type' => $CSDBModel->CSDBObject->document->getFileinfo()['mime_type'],
+            ]
           );
+          return;
+          // non stream response
+          // $isICN = $CSDBModel->CSDBObject->document instanceof ICNDocument;
+          // return Response::make(
+          //   $isICN ? $CSDBModel->CSDBObject->document->getFile() : $CSDBModel->CSDBObject->document->saveXML(),
+          //   200,
+          //   ['Content-Type' => $isICN ? $CSDBModel->CSDBObject->document->getFileinfo()['mime_type'] : 'text/xml']
+          // );
       }
     }
     return abort(204);

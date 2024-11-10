@@ -160,3 +160,9 @@ GET http://127.0.0.1:8000/api/s1000d/csdb/read/DMC-MALE-A-15-00-01-00A-018A-A_00
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 Authorization: Bearer 9|iuuE4q042tzM9vzOYIY5kKpfXhviEhjGxb7JHhfx17244b63
+
+###
+
+POST http://127.0.0.1:8000/api/s1000d/icn/upload/tes HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer 9|iuuE4q042tzM9vzOYIY5kKpfXhviEhjGxb7JHhfx17244b63

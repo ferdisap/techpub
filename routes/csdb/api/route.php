@@ -40,6 +40,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/s1000d/csdb/read/{CSDBModel:filename}', [MainController::class, 'read'])
 ->missing(fn() => throw new HttpResponseException(response(["message" => "There is no such csdb."],404)))
 ->name('api.read_object');
+Route::post("/s1000d/icn/upload/tes", [MainController::class, 'uploadICNChunked'])->name('api.upload_ICN');
+Route::get("/s1000d/icn/upload/tes", [MainController::class, 'uploadICNChunked'])->name('api.upload_ICN');
 
 Route::middleware('auth:sanctum')->group(function () {
   // create

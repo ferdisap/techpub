@@ -108,6 +108,11 @@ class Csdb extends Model
   ];
 
   /**
+   * if true then saving file to storage using @saveDOMandModel will not create history, accesskey, etc
+   */
+  // public bool $chunk = false;
+
+  /**
    * Indicates if the modul should be timestamped
    * 
    * @var bool
@@ -690,6 +695,8 @@ class Csdb extends Model
     return $found;
   }
 
+  public bool $fileAppend = false;
+
   /**
    * sudah termasuk revert save
    * save file dulu, kemudian model
@@ -706,61 +713,67 @@ class Csdb extends Model
       if ($name = User::find($this->initiator_id)) $storageName = $name->storage;
       else return false;
     }
+    if(!is_dir($dir = storage_path("csdb/{$storageName}"))){
+      mkdir($dir,0777,true);
+    }
+
     $filename = $this->filename ?? $this->csdb->filename;
-    $save_file = fn () => Storage::disk('csdb')->put($storageName . "/" . $filename, ($this->CSDBObject->document instanceof \DOMDocument ? $this->CSDBObject->document->saveXML() : $this->CSDBObject->document->getFile()));
-    $revert_save_file =
-      fn () => ($fileContents = Storage::disk('csdb')->get($storageName . "/" . $filename))
-        ? Storage::disk('csdb')->put($storageName . "/" . $filename, $fileContents)
-        : Storage::disk('csdb')->delete($storageName . "/" . $filename);
+    $save_file = fn () => file_put_contents($dir.DIRECTORY_SEPARATOR.$filename, ($this->CSDBObject->document instanceof \DOMDocument ? $this->CSDBObject->document->saveXML() : $this->CSDBObject->document->getFile()), $this->fileAppend ? FILE_APPEND : 0);
+    $revert_save_file = fn () => Storage::disk('csdb')->delete($storageName . "/" . $filename);
     if ($save_file()) {
       if ($this->save()) {
-        // create history
-        $HISTORYModels = [];
-        foreach ($historyStaticFunction as $history) {
-          if ($history instanceof History) {
-            $HISTORYModels[] = $history;
-          } else {
-            $method = $history[0];
-            $params = $history[1];
-            foreach ($params as $i => $p) {
-              if ($p === self::class) {
-                $params[$i] = $this;
-              };
+        if(!empty($historyStaticFunction)){
+          // create history
+          $HISTORYModels = [];
+          foreach ($historyStaticFunction as $history) {
+            if ($history instanceof History) {
+              $HISTORYModels[] = $history;
+            } else {
+              $method = $history[0];
+              $params = $history[1];
+              foreach ($params as $i => $p) {
+                if ($p === self::class) {
+                  $params[$i] = $this;
+                };
+              }
+              $HISTORYModels[] = call_user_func_array(array(History::class, $method), $params);
             }
-            $HISTORYModels[] = call_user_func_array(array(History::class, $method), $params);
+          }
+          if (!(History::saveModel($HISTORYModels))) {
+            $this->delete();
+            $revert_save_file();
+            return false;
+          }
+  
+          // create csdb access key
+          if(get_class($this) === Csdb::class){
+            $this->accessKey()->whereNull('abilities')->firstOrCreate([
+              'csdb_id' => $this->id,
+              'key' => \Illuminate\Support\Str::random(),
+            ]);
+          }
+  
+        }
+        if(!empty($config)){
+          // fill object dilakukan oleh worker. @dispatchSync return 404 Not Found
+          // $fillObjectTableConfig = ['connection' => 'sync', 'mailNotification' => true];
+          // $fillObjectTableConfig = [];
+          // foreach ($config as $key => $value) {
+          //   $fillObjectTableConfig[$key] = $value;
+          // }
+          if (isset($config['connection'])) {
+            // dd($config['connection']);
+            if (get_class($this) === Csdb::class) FillObjectTable::dispatch(request()->user(), $this, $fillObjectTableConfig['mailNotification'] ?? false)->onConnection($config['connection']); // using queue
+            else FillObjectTable::dispatch(request()->user(), $this->csdb, $fillObjectTableConfig['mailNotification'] ?? false)->onConnection($config['connection']);
           }
         }
-        if (!(History::saveModel($HISTORYModels))) {
-          $this->delete();
-          $revert_save_file();
-          return false;
-        }
-
-        // create csdb access key
-        if(get_class($this) === Csdb::class){
-          $this->accessKey()->whereNull('abilities')->firstOrCreate([
-            'csdb_id' => $this->id,
-            'key' => \Illuminate\Support\Str::random(),
-          ]);
-        }
-
-        // fill object dilakukan oleh worker. @dispatchSync return 404 Not Found
-        // $fillObjectTableConfig = ['connection' => 'sync', 'mailNotification' => true];
-        // $fillObjectTableConfig = [];
-        // foreach ($config as $key => $value) {
-        //   $fillObjectTableConfig[$key] = $value;
-        // }
-        if (isset($config['connection'])) {
-          // dd($config['connection']);
-          if (get_class($this) === Csdb::class) FillObjectTable::dispatch(request()->user(), $this, $fillObjectTableConfig['mailNotification'] ?? false)->onConnection($config['connection']); // using queue
-          else FillObjectTable::dispatch(request()->user(), $this->csdb, $fillObjectTableConfig['mailNotification'] ?? false)->onConnection($config['connection']);
-        }
-
         return true;
       }
       $revert_save_file();
       return false;
     }
+    // elseif ($this->chunk) return true; // jika save success dan is chunk maka true 
+    // else return false;
     return false;
   }
 
