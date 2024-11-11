@@ -268,7 +268,8 @@ class MainController extends BaseController
               'X-Accel-Buffering' => 'no',
               'Content-Length' => $CSDBModel->CSDBObject->document->getFileInfo()['filesize'],
               'Accept-Ranges' => 'bytes',
-              'Content-Type' => $CSDBModel->CSDBObject->document->getFileinfo()['mime_type'],
+              // 'Content-Type' => $CSDBModel->CSDBObject->document->getFileinfo()['mime_type'],
+              'Content-Type' => \GuzzleHttp\Psr7\MimeType::fromFilename($CSDBModel->filename),
             ]
           );
           return;

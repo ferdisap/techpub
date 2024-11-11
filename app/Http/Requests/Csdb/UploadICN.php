@@ -8,8 +8,11 @@ use Closure;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Ptdi\Mpub\Main\CSDBObject;
 // use Ptdi\Mpub\Main\CSDBError;
 use Ptdi\Mpub\Main\CSDBStatic;
+use Ptdi\Mpub\Main\ICNDocument;
+
 // use Ptdi\Mpub\Main\CSDBValidator;
 
 
@@ -18,7 +21,7 @@ use Ptdi\Mpub\Main\CSDBStatic;
  * - part?int
  * - total?int
  */
-// revisi selanjutnya validasi ditambahkan $CSDBModel->CSDBObject->document->getFileinfo()['mime_type'], if(!isset(['mime_type'])) $fail('...')
+// revisi selanjutnya validasi ditambahkan $CSDBModel->CSDBObject->document->getFileinfo()['mime_type'], if(!isset(['mime_type'])) $fail('...'), tapi getId3 tidak suport file seperti .stp,iges, dll
 class UploadICN extends FormRequest
 {
   public bool $isUpdate = false;
@@ -61,12 +64,23 @@ class UploadICN extends FormRequest
         // $validator->setStoragePath(CSDB_STORAGE_PATH . "/" . $this->user()->storage);
         // if (!$validator->validate()) $fail(join(", ", CSDBError::getErrors(true, 'ICNFilenameValidation')));
       }],
-      "entity" => ['required', function (string $attribute, mixed $value,  Closure $fail) {
+      "entity" => ['required', function (string $attribute, \Illuminate\Http\UploadedFile $value,  Closure $fail) {
+        
         $ext = strtolower($value->getClientOriginalExtension());
-        $mime = strtolower($value->getMimeType());
-        if ($ext === 'xml' or str_contains($mime, 'text')) {
-          $fail("You should put the non-text file in {$attribute}.");
+        // $mime = strtolower($value->getMimeType());
+        // gunakan mime mpakai class \GuzzleHttp\Psr7\MimeType\MimeType::fromExtension('stp') / ::fromFilename
+
+        $allowable = [
+          'jpg','jpeg','png', 'svg',
+          'mp3', 'wav', 'ogg', 
+          'mp4', 'webm',
+          'stp',
+        ];
+
+        if(!in_array($ext,$allowable)){
+          $fail ("Only ". join(", ", $allowable). " formats currently allowed.");
         }
+        
       }],
       'path' => ['required', new Path],
       'oldCSDBModel' => ''
