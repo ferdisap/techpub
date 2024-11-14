@@ -29,6 +29,9 @@ use App\Rules\Csdb\BrexDmRef as BrexDmRefRules;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Ptdi\Mpub\Main\CSDBStatic;
 
+/**
+ * @deprecated
+ */
 class DmlController extends Controller
 {
   #### csdb4 ####

@@ -20,4 +20,6 @@ use Ptdi\Mpub\Main\CSDBStatic;
 use Ptdi\Mpub\Main\Helper;
 
 // ### Route utama ###
+
+// deprecated
 Route::get("/api/get", [EnterpriseController::class, 'get_enterprises'])->middleware('auth')->name('api.get_enterprises');

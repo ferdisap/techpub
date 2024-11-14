@@ -15,6 +15,9 @@ use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Ptdi\Mpub\Main\CSDBStatic;
 
+/**
+ * @deprecated
+ */
 class DdnController extends Controller
 {
   public function create(DdnCreate $request)

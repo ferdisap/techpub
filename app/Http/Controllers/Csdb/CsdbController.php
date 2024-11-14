@@ -26,6 +26,9 @@ use Ptdi\Mpub\Transformer\Transformator;
 use ZipStream\ZipStream;
 use Ptdi\Mpub\Transformer\Pdf;
 
+/**
+ * @deprecated
+ */
 class CsdbController extends Controller
 {
   public function app()

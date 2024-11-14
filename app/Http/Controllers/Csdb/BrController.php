@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
 
+/**
+ * @deprecated
+ */
 class BrController extends Controller
 {
   public function json_file(Request $request, string $filename)

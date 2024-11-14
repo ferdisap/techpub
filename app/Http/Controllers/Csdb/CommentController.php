@@ -40,6 +40,9 @@ use PrettyXml\Formatter;
 use Ptdi\Mpub\Helper;
 use Ptdi\Mpub\Main\CSDBStatic;
 
+/**
+ * @deprecated
+ */
 class CommentController extends Controller
 {
   /**

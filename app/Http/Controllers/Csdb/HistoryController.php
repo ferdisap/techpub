@@ -8,6 +8,9 @@ use App\Models\Csdb\History;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 
+/**
+ * @deprecated
+ */
 class HistoryController extends Controller
 {
   public function all(Request $request, string $filename)

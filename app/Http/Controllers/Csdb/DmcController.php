@@ -8,6 +8,9 @@ use App\Models\Csdb\Dmc;
 use Illuminate\Http\Request;
 use Ptdi\Mpub\Main\Helper;
 
+/**
+ * @deprecated
+ */
 class DmcController extends Controller
 {
   public function searchCsdbs(Request $request)

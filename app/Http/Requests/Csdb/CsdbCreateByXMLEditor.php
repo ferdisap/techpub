@@ -56,61 +56,69 @@ class CsdbCreateByXMLEditor extends FormRequest
           $xsi->validate();
           if (!$xsi->result()) $fail("Fail to validate by XSI. " . join(", ", $xsi->errors->get('xsi_validation')));
         }
-        $domXpath = new \DOMXPath($value[0]->document);
-        $filename = $value[0]->filename;
-        $initial = $value[0]->getInitial();
-        $code = preg_replace("/_.+/", '', $filename);
-        $collection = Csdb::selectRaw('filename')->whereRaw("filename LIKE '{$code}%'")->get(['filename'])->toArray();
-        array_walk($collection, function (&$v) {
-          $v = $v['filename'];
-        });
-        if (empty($collection)) {
-          $issueInfo = $domXpath->evaluate("//{$initial}Address/{$initial}Ident/issueInfo")[0];
-          $issueInfo->setAttribute('issueNumber', '000');
-          $issueInfo->setAttribute('inWork', '01');
-        } else {
-          $collection_issueNumber = [];
-          $collection_inWork = [];
-          array_walk($collection, function ($file, $i) use (&$collection_issueNumber, &$collection_inWork) {
-            $issueInfo = CSDBStatic::decode_ident($file)['issueInfo'];
-            $collection_issueNumber[$i] = $issueInfo['issueNumber'];
-            $collection_inWork[$i] = $issueInfo['inWork'];
-          });
-          $issueInfo = $domXpath->evaluate("//{$initial}Address/{$initial}Ident/issueInfo")[0];
-          $max_in = max($collection_issueNumber);
-          $max_in = array_keys(array_filter($collection_issueNumber, fn ($v) => $v == $max_in))[0]; // output key. bukan value array
-          $max_in = $collection_issueNumber[$max_in];
-          $max_iw = max($collection_inWork);
-          $max_iw = array_keys(array_filter($collection_inWork, fn ($v) => $v == $max_iw))[0]; // output key. bukan value array
-          $max_iw = $collection_inWork[$max_iw];
-          $max_iw++;
 
-          $issueInfo->setAttribute('issueNumber', str_pad($max_in, 3, '0', STR_PAD_LEFT));
-          $issueInfo->setAttribute('inWork', str_pad($max_iw, 2, '0', STR_PAD_LEFT));
-        }
-
-        $qa = $domXpath->evaluate("//{$initial}Status/qualityAssurance")[0];
-        if (!$qa) {
-          $qa = $value[0]->document->createElement('qualityAssurance');
-          $identStatus = $domXpath->evaluate("//{$initial}Status")[0];
-          $identStatus->appendChild($qa);
-        }
-        $unverified = $value[0]->document->createElement('unverified');
-        $qa->appendChild($unverified);
         try {
+          $domXpath = new \DOMXPath($value[0]->document);
+          $filename = $value[0]->filename;
+          $initial = $value[0]->getInitial();
+          $code = preg_replace("/_.+/", '', $filename);
+          $collection = Csdb::selectRaw('filename')->whereRaw("filename LIKE '{$code}%'")->get(['filename'])->toArray();
+          array_walk($collection, function (&$v) {
+            $v = $v['filename'];
+          });
+          if (empty($collection)) {
+            $issueInfo = $domXpath->evaluate("//{$initial}Address/{$initial}Ident/issueInfo")[0];
+            $issueInfo->setAttribute('issueNumber', '000');
+            $issueInfo->setAttribute('inWork', '01');
+          } else {
+            $collection_issueNumber = [];
+            $collection_inWork = [];
+            array_walk($collection, function ($file, $i) use (&$collection_issueNumber, &$collection_inWork) {
+              $issueInfo = CSDBStatic::decode_ident($file)['issueInfo'];
+              $collection_issueNumber[$i] = $issueInfo['issueNumber'];
+              $collection_inWork[$i] = $issueInfo['inWork'];
+            });
+            $issueInfo = $domXpath->evaluate("//{$initial}Address/{$initial}Ident/issueInfo")[0];
+            $max_in = max($collection_issueNumber);
+            $max_in = array_keys(array_filter($collection_issueNumber, fn ($v) => $v == $max_in))[0]; // output key. bukan value array
+            $max_in = $collection_issueNumber[$max_in];
+            $max_iw = max($collection_inWork);
+            $max_iw = array_keys(array_filter($collection_inWork, fn ($v) => $v == $max_iw))[0]; // output key. bukan value array
+            $max_iw = $collection_inWork[$max_iw];
+            $max_iw++;
+  
+            $issueInfo->setAttribute('issueNumber', str_pad($max_in, 3, '0', STR_PAD_LEFT));
+            $issueInfo->setAttribute('inWork', str_pad($max_iw, 2, '0', STR_PAD_LEFT));
+          }
         } catch (\Throwable $th) {
-          $fail("Fail to determining filename.");
+          $fail("Failed to determine filename. You must provide the document address correctly");
         }
-        if ($this->brex_validate) {
-          $brex = new Brex(
-            new ValidationCSDBValidator($value[0]->getBrexDm()),
-            new CSDBValidatee($value[0])
-          );
-          $brex->validate();
-          if (empty($brex->result())) {
-            $fail("Fail to validate by BREX.");
+
+        $identStatus = $domXpath->evaluate("//{$initial}Status")[0];
+        if($identStatus){
+          // add/set QA
+          $qa = $domXpath->evaluate("//{$initial}Status/qualityAssurance")[0];
+          if (!$qa)  $qa = $value[0]->document->createElement('qualityAssurance');
+          $identStatus->appendChild($qa);
+          while ($qa->firstChild) {
+            $qa->firstChild->remove();
+          };
+          $unverified = $value[0]->document->createElement('unverified');
+          $qa->appendChild($unverified);
+
+          // check brex
+          if ($this->brex_validate) {
+            $brex = new Brex(
+              new ValidationCSDBValidator($value[0]->getBrexDm()),
+              new CSDBValidatee($value[0])
+            );
+            $brex->validate();
+            if (empty($brex->result())) {
+              $fail("Fail to validate by BREX.");
+            }
           }
         }
+        
       }],
     ];
   }

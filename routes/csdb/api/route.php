@@ -10,6 +10,7 @@ use App\Http\Controllers\CsdbApi\ComController;
 use App\Http\Controllers\CsdbApi\DdnController as CsdbApiDdnController;
 use App\Http\Controllers\CsdbApi\DmlController as CsdbApiDmlController;
 use App\Http\Controllers\CsdbApi\MainController;
+use App\Http\Controllers\CsdbApi\XmlValidationController;
 use App\Http\Controllers\EnterpriseController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -76,6 +77,7 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::get("/s1000d/path/{path?}",[MainController::class, 'getCsdbsByPath'])->where('path', '.*')->name('api.index_path'); // api.requestbyfolder.get_allobject_list
   Route::get('/s1000d/user/search', [UserController::class, 'searchModel'])->name('api.user_search_model');
   Route::get('/s1000d/csdb/dispatched', [MainController::class, 'dispatched'])->name('api.ddn_dispatched');
+  Route::get("/enterprise/lists", [EnterpriseController::class, 'lists'])->middleware('auth:sanctum')->name('api.lists_enterprise');
 
   // update
   Route::post("/s1000d/csdb/update/{CSDBModel:filename}", [MainController::class, 'update'])
@@ -91,6 +93,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
   // restore
   Route::post("/s1000d/csdb/restore", [MainController::class, 'restore'])->name('api.restore_csdb'); // api.restore_object
+  
+  // validate
+  Route::get("/s1000d/csdb/validatebrex", [XmlValidationController::class, 'brex'])->name('api.csdb_validatebybrex');
+  Route::get("/s1000d/csdb/validatexsi", [XmlValidationController::class, 'xsi'])->name('api.csdb_validatebyxsi');
 
   // #### below belum di test
 
